@@ -127,7 +127,8 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     transition: opacity 180ms ease;
   }
 
-  .entry-link:hover::before {
+  .entry-link:hover::before,
+  .entry-link:focus-visible::before {
     opacity: 1;
   }
 
@@ -181,12 +182,14 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     transition: color 180ms ease, transform 180ms ease;
   }
 
-  .entry-link:hover h3 {
+  .entry-link:hover h3,
+  .entry-link:focus-visible h3 {
     color: var(--ink);
     transform: translateY(-3px);
   }
 
-  .entry-link:hover .entry-arrow {
+  .entry-link:hover .entry-arrow,
+  .entry-link:focus-visible .entry-arrow {
     color: var(--ink);
     transform: translate(2px, -2px);
   }
@@ -211,11 +214,13 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     opacity: 0;
   }
 
-  .entry-link:hover .token-mask {
+  .entry-link:hover .token-mask,
+  .entry-link:focus-visible .token-mask {
     opacity: 0;
   }
 
-  .entry-link:hover .token-kind {
+  .entry-link:hover .token-kind,
+  .entry-link:focus-visible .token-kind {
     opacity: 1;
   }
 
@@ -249,7 +254,9 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     }
 
     .entry-link:hover h3,
-    .entry-link:hover .entry-arrow {
+    .entry-link:focus-visible h3,
+    .entry-link:hover .entry-arrow,
+    .entry-link:focus-visible .entry-arrow {
       transform: none;
     }
   }

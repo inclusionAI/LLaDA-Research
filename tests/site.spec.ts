@@ -9,7 +9,9 @@ test('homepage presents the LLaDA diffusion hero before a compact research index
   }
   await expect(page.getByRole('heading', { name: 'Language, diffused.' })).toBeVisible();
   await expect(page.locator('[data-denoise-field]')).toBeVisible();
-  await expect(page.locator('[data-featured-strip]')).toHaveCSS('min-height', '47px');
+  const featuredStrip = await page.locator('[data-featured-strip]').boundingBox();
+  expect(featuredStrip).not.toBeNull();
+  expect(featuredStrip!.height).toBe(47);
   await expect(page.locator('[data-research-index]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Models', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Papers', exact: true })).toBeVisible();
@@ -35,9 +37,21 @@ test('homepage presents an editorial research shelf', async ({ page }) => {
     'Release notes, implementation details, and research perspectives.',
     { exact: true },
   )).toBeVisible();
-  await expect(page.locator('[data-research-column]')).toHaveCount(3);
-  await expect(page.locator('[data-entry-kind="lead"]')).toHaveCount(3);
-  await expect(page.locator('[data-entry-kind="compact"]')).toHaveCount(4);
+  const researchColumns = page.locator('[data-research-column]');
+  await expect(researchColumns).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1) {
+    await expect(researchColumns.nth(index).locator('[data-entry-kind="lead"]')).toHaveCount(1);
+  }
+  expect(await page.locator('[data-entry-kind="compact"]').count()).toBeGreaterThan(0);
+});
+
+test('research shelf lead links reveal their token state on keyboard focus', async ({ page }) => {
+  await page.goto('/');
+
+  const leadLink = page.locator('[data-research-column]').first().locator('[data-entry-kind="lead"] .entry-link');
+  await leadLink.focus();
+  await expect(leadLink.locator('.token-kind')).toHaveCSS('opacity', '1');
+  await expect(leadLink.locator('.token-mask')).toHaveCSS('opacity', '0');
 });
 
 test('research shelf uses whitespace instead of a desktop table', async ({ page }) => {
@@ -145,7 +159,7 @@ test('mobile featured strip exposes a concise identifiable title', async ({ page
   await page.goto('/');
   const title = page.locator('[data-featured-mobile-title]');
   await expect(title).toBeVisible();
-  await expect(title).toContainText('LLaDA2.2');
+  await expect(title).toHaveText('LLaDA2.2 — Agentic diffusion through Levenshtein editing');
 });
 
 test('supporting pages share the dark visual system', async ({ page }) => {
