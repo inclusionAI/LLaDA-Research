@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import FeaturedRelease from '../components/FeaturedRelease.astro';
+import ResearchHero from '../components/ResearchHero.astro';
 import ResearchColumn from '../components/ResearchColumn.astro';
 import { selectFeatured, sortPublished } from '../lib/content';
 
@@ -23,8 +24,9 @@ const featured = selectFeatured([
 ---
 
 <BaseLayout>
+  <ResearchHero />
   {featured && <FeaturedRelease entry={featured} />}
-  <section class="research-index shell" aria-labelledby="research-index-title">
+  <section class="research-index shell" data-research-index aria-labelledby="research-index-title">
     <header class="index-header">
       <div>
         <p class="eyebrow">Research index</p>

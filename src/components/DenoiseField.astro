@@ -1,0 +1,317 @@
+<div
+  class="denoise-field"
+  data-denoise-field
+  data-motion="full"
+  data-interacting="false"
+  aria-hidden="true"
+>
+  <canvas></canvas>
+  <div class="static-token-field" data-static-token-field>
+    <span class="mask mask-a">[MASK]</span>
+    <span class="partial partial-a">La</span>
+    <span class="mask mask-b">[ · ]</span>
+    <span class="partial partial-b">DA</span>
+    <span class="resolved resolved-a">language</span>
+    <span class="mask mask-c">▧</span>
+    <span class="resolved resolved-b">diffusion</span>
+    <span class="partial partial-c">∇x</span>
+  </div>
+  <div class="field-readout">
+    <span>MASK / TOKEN</span>
+    <span>PARALLEL DENOISE</span>
+  </div>
+</div>
+
+<script>
+  import { densityForFps, tokenStageForInfluence } from '../lib/particle-field';
+
+  type Particle = {
+    x: number;
+    y: number;
+    originX: number;
+    originY: number;
+    depth: number;
+    seed: number;
+    size: number;
+    glyphIndex: number;
+  };
+
+  const maskGlyphs = ['[MASK]', '[ · ]', '▧', '[  ]', '░'];
+  const partialGlyphs = ['La', 'DA', 'tion', '∇x', 'lang', 'diff'];
+  const resolvedGlyphs = ['LLaDA', 'language', 'token', 'parallel', 'diffusion'];
+
+  document.querySelectorAll<HTMLElement>('[data-denoise-field]').forEach((field) => {
+    const canvas = field.querySelector('canvas');
+    const context = canvas?.getContext('2d', { alpha: true });
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    if (!canvas || !context || motionQuery.matches) {
+      field.dataset.motion = 'reduced';
+      return;
+    }
+
+    let width = 0;
+    let height = 0;
+    let devicePixelRatio = 1;
+    let density = window.matchMedia('(max-width: 700px)').matches ? 0.55 : 1;
+    let particles: Particle[] = [];
+    let frameHandle = 0;
+    let frameCount = 0;
+    let frameWindowStarted = performance.now();
+    let previousFrame = frameWindowStarted;
+    let interactionTimer = 0;
+    const pointer = { x: 0, y: 0, previousX: 0, previousY: 0, speed: 0, active: false, energy: 0 };
+
+    const makeParticle = (index: number): Particle => {
+      const band = index % 5;
+      const angle = Math.random() * Math.PI * 2;
+      const spread = Math.pow(Math.random(), 0.58);
+      const centerX = width * (0.69 + (band - 2) * 0.016);
+      const centerY = height * (0.49 + Math.sin(band * 1.7) * 0.035);
+      const x = centerX + Math.cos(angle) * spread * width * (0.29 + band * 0.012);
+      const y = centerY + Math.sin(angle) * spread * height * (0.22 + band * 0.018);
+
+      return {
+        x,
+        y,
+        originX: x,
+        originY: y,
+        depth: Math.random(),
+        seed: Math.random() * 1000,
+        size: 0.28 + Math.random() * 1.15,
+        glyphIndex: index,
+      };
+    };
+
+    const rebuildParticles = () => {
+      const particleCount = Math.round((width * height) / 165 * density);
+      particles = Array.from({ length: particleCount }, (_, index) => makeParticle(index));
+    };
+
+    const resize = () => {
+      const bounds = field.getBoundingClientRect();
+      width = Math.max(1, bounds.width);
+      height = Math.max(1, bounds.height);
+      devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * devicePixelRatio);
+      canvas.height = Math.round(height * devicePixelRatio);
+      context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      rebuildParticles();
+    };
+
+    const markInteraction = () => {
+      field.dataset.interacting = 'true';
+      window.clearTimeout(interactionTimer);
+      interactionTimer = window.setTimeout(() => {
+        field.dataset.interacting = 'false';
+      }, 1100);
+    };
+
+    const updatePointer = (event: PointerEvent) => {
+      const bounds = field.getBoundingClientRect();
+      const nextX = event.clientX - bounds.left;
+      const nextY = event.clientY - bounds.top;
+      pointer.speed = Math.min(42, Math.hypot(nextX - pointer.x, nextY - pointer.y));
+      pointer.previousX = pointer.x || nextX;
+      pointer.previousY = pointer.y || nextY;
+      pointer.x = nextX;
+      pointer.y = nextY;
+      pointer.active = true;
+      pointer.energy = Math.min(1, pointer.energy + 0.2);
+      markInteraction();
+    };
+
+    field.addEventListener('pointerenter', updatePointer);
+    field.addEventListener('pointermove', updatePointer);
+    field.addEventListener('pointerleave', () => {
+      pointer.active = false;
+      markInteraction();
+    });
+
+    const drawGlyph = (particle: Particle, influence: number, x: number, y: number, alpha: number) => {
+      const stage = tokenStageForInfluence(influence);
+      if (stage === 'noise') return false;
+      const glyphs = stage === 'mask' ? maskGlyphs : stage === 'partial' ? partialGlyphs : resolvedGlyphs;
+      const stride = stage === 'resolved' ? 31 : stage === 'partial' ? 23 : 17;
+      if (particle.glyphIndex % stride !== 0) return false;
+
+      const glyph = glyphs[particle.glyphIndex % glyphs.length];
+      context.font = `${stage === 'resolved' ? 11 : 9}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      context.fillStyle = `rgba(244, 244, 237, ${Math.min(0.92, alpha + influence * 0.35)})`;
+      context.fillText(glyph, x, y);
+      return true;
+    };
+
+    const draw = (now: number) => {
+      const delta = Math.min(2, (now - previousFrame) / 16.67);
+      previousFrame = now;
+      frameCount += 1;
+
+      context.globalCompositeOperation = 'source-over';
+      context.fillStyle = 'rgba(3, 3, 3, 0.17)';
+      context.fillRect(0, 0, width, height);
+
+      pointer.energy += ((pointer.active ? 1 : 0) - pointer.energy) * 0.055;
+      pointer.speed *= 0.9;
+      const radius = Math.min(width, height) * (window.innerWidth < 700 ? 0.34 : 0.3);
+
+      if (pointer.energy > 0.01) {
+        const halo = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, radius * 1.45);
+        halo.addColorStop(0, `rgba(247, 247, 239, ${0.15 * pointer.energy})`);
+        halo.addColorStop(0.24, `rgba(213, 220, 238, ${0.05 * pointer.energy})`);
+        halo.addColorStop(0.62, `rgba(145, 161, 198, ${0.012 * pointer.energy})`);
+        halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        context.fillStyle = halo;
+        context.fillRect(pointer.x - radius * 1.5, pointer.y - radius * 1.5, radius * 3, radius * 3);
+      }
+
+      context.globalCompositeOperation = 'lighter';
+      for (const particle of particles) {
+        const dx = pointer.x - particle.x;
+        const dy = pointer.y - particle.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const local = pointer.energy * Math.max(0, 1 - distance / radius);
+        const influence = local * local;
+        const driftX = Math.sin(now * 0.00018 + particle.seed) * (0.18 + particle.depth * 0.24);
+        const driftY = Math.cos(now * 0.00015 + particle.seed * 1.7) * (0.12 + particle.depth * 0.18);
+
+        if (influence > 0) {
+          const attraction = 0.105 * influence * delta;
+          const curl = 1.5 * influence * delta;
+          particle.x += dx * attraction - (dy / distance) * curl;
+          particle.y += dy * attraction + (dx / distance) * curl;
+        } else {
+          particle.x += (particle.originX - particle.x) * 0.008 * delta + driftX * delta;
+          particle.y += (particle.originY - particle.y) * 0.008 * delta + driftY * delta;
+        }
+
+        const alpha = 0.028 + particle.depth * 0.08 + influence * 0.82;
+        const x = particle.x;
+        const y = particle.y;
+        if (!drawGlyph(particle, influence, x, y, alpha)) {
+          const size = particle.size * (0.65 + particle.depth + influence * 1.75);
+          context.fillStyle = `rgba(229, 231, 224, ${Math.min(0.88, alpha)})`;
+          context.fillRect(x, y, size, size);
+        }
+
+        if (influence > 0.24 && pointer.speed > 3) {
+          context.strokeStyle = `rgba(225, 229, 221, ${influence * Math.min(pointer.speed / 42, 1) * 0.15})`;
+          context.lineWidth = 0.45;
+          context.beginPath();
+          context.moveTo(x, y);
+          context.lineTo(
+            x - (pointer.x - pointer.previousX) * 1.2,
+            y - (pointer.y - pointer.previousY) * 1.2,
+          );
+          context.stroke();
+        }
+      }
+      context.globalCompositeOperation = 'source-over';
+
+      pointer.previousX += (pointer.x - pointer.previousX) * 0.24;
+      pointer.previousY += (pointer.y - pointer.previousY) * 0.24;
+
+      if (frameCount >= 120) {
+        const fps = 120000 / Math.max(1, now - frameWindowStarted);
+        const nextDensity = densityForFps(fps, density);
+        if (nextDensity < density) {
+          density = nextDensity;
+          rebuildParticles();
+        }
+        frameCount = 0;
+        frameWindowStarted = now;
+      }
+
+      frameHandle = requestAnimationFrame(draw);
+    };
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(field);
+    resize();
+    frameHandle = requestAnimationFrame(draw);
+
+    motionQuery.addEventListener('change', (event) => {
+      if (event.matches) {
+        cancelAnimationFrame(frameHandle);
+        field.dataset.motion = 'reduced';
+      } else {
+        field.dataset.motion = 'full';
+        previousFrame = performance.now();
+        frameHandle = requestAnimationFrame(draw);
+      }
+    });
+  });
+</script>
+
+<style>
+  .denoise-field {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 72% 50%, rgb(255 255 248 / 0.035), transparent 30%),
+      #030303;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .static-token-field {
+    position: absolute;
+    inset: 0;
+    display: none;
+    color: #72726d;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.65rem;
+  }
+
+  .static-token-field span {
+    position: absolute;
+  }
+
+  .mask-a { top: 28%; left: 58%; }
+  .mask-b { top: 58%; left: 77%; }
+  .mask-c { top: 43%; left: 91%; }
+  .partial-a { top: 38%; left: 70%; color: #aaa9a3; }
+  .partial-b { top: 65%; left: 63%; color: #aaa9a3; }
+  .partial-c { top: 31%; left: 84%; }
+  .resolved-a { top: 49%; left: 80%; color: #eeeee8; }
+  .resolved-b { top: 72%; left: 88%; color: #c7c7c0; }
+
+  .field-readout {
+    position: absolute;
+    right: 0;
+    bottom: 1rem;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    color: #4c4c48;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+  }
+
+  [data-motion='reduced'] canvas {
+    display: none;
+  }
+
+  [data-motion='reduced'] .static-token-field {
+    display: block;
+    background:
+      radial-gradient(ellipse at 76% 48%, rgb(255 255 248 / 0.09), transparent 8%),
+      repeating-radial-gradient(ellipse at 74% 50%, transparent 0 1.2rem, rgb(255 255 255 / 0.018) 1.25rem 1.32rem, transparent 1.38rem 2.2rem);
+  }
+
+  @media (max-width: 700px) {
+    .field-readout {
+      display: none;
+    }
+
+    .static-token-field {
+      transform: translateX(-9%);
+    }
+  }
+</style>
