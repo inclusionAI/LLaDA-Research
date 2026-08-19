@@ -40,6 +40,30 @@ test('denoise field responds to pointer input and lets the trail settle', async 
   await expect(field).toHaveAttribute('data-interacting', 'false', { timeout: 2_000 });
 });
 
+test('full-motion hero keeps readable parallel token lanes in the composition', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('[data-token-lane]')).toHaveCount(3);
+  await expect(page.locator('[data-token-lane]').first()).toBeVisible();
+  await expect(page.locator('[data-token-lane]').first()).toContainText('[MASK]');
+});
+
+test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'mobile layout assertion');
+  await page.goto('/papers/');
+  const art = page.locator('.card-art').first();
+  const box = await art.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.height).toBeLessThanOrEqual(96);
+});
+
+test('mobile featured strip exposes a concise identifiable title', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'mobile layout assertion');
+  await page.goto('/');
+  const title = page.locator('[data-featured-mobile-title]');
+  await expect(title).toBeVisible();
+  await expect(title).toContainText('LLaDA2.2');
+});
+
 test('supporting pages share the dark visual system', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/', '/404.html']) {
     await page.goto(path);

@@ -26,6 +26,10 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', {
   month: 'short',
   day: '2-digit',
 });
+const [mobileLead, mobileDetail = ''] = entry.data.title.split(':', 2);
+const mobileTitle = mobileDetail
+  ? `${mobileLead} — ${mobileDetail.trim().split(/\s+/).slice(0, 4).join(' ')}`
+  : entry.data.title;
 ---
 
 <aside class="featured-strip shell" data-featured-strip aria-label={`Featured ${entry.kind}`}>
@@ -33,6 +37,7 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', {
     <span class="featured-label">Featured / 01</span>
     <span class="featured-title">
       <strong>{entry.data.title}</strong>
+      <strong class="featured-mobile-title" data-featured-mobile-title>{mobileTitle}</strong>
       <span class="featured-kind">{entry.kind}</span>
     </span>
     <span class="featured-end">
@@ -86,6 +91,10 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', {
     white-space: nowrap;
   }
 
+  .featured-mobile-title {
+    display: none;
+  }
+
   .featured-end {
     display: flex;
     gap: 1.25rem;
@@ -109,22 +118,22 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', {
 
   @media (max-width: 700px) {
     a {
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 0.75rem;
     }
 
     .featured-label {
-      font-size: 0;
-    }
-
-    .featured-label::after {
-      font-size: 0.56rem;
-      content: 'F / 01';
+      display: none;
     }
 
     .featured-kind,
-    .featured-end time {
+    .featured-end time,
+    .featured-title > strong:not(.featured-mobile-title) {
       display: none;
+    }
+
+    .featured-mobile-title {
+      display: block;
     }
   }
 </style>
