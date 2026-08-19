@@ -50,7 +50,7 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
 
   const researchColumns = page.locator('[data-research-column]');
   await expect(researchColumns.nth(0).getByText(
-    'Open diffusion models for language, multimodal creation, and agents.',
+    'Open diffusion models for text generation, editing, and agents.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(1).getByText(
