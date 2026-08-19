@@ -48,6 +48,12 @@ test('research shelf uses whitespace instead of a desktop table', async ({ page 
   await expect(columns.nth(1)).toHaveCSS('border-left-width', '0px');
   await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
 
+  await page.setViewportSize({ width: 1024, height: 900 });
+  const columnGap = await page.locator('.research-grid').evaluate((element) => (
+    Number.parseFloat(getComputedStyle(element).columnGap)
+  ));
+  expect(columnGap).toBeGreaterThanOrEqual(48);
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(columns.nth(1)).toHaveCSS('border-top-width', '1px');
   await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
