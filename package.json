@@ -1,0 +1,29 @@
+{
+  "name": "ant-llada-research-site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "BASE_PATH=/ SITE_URL=http://localhost:4321 astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:lighthouse": "lhci autorun"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^7.0.6",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.2.3",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.62.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
+  }
+}
