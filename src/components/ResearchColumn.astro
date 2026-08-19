@@ -86,7 +86,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   h2 {
     margin: 0;
-    font-size: 1.28rem;
+    font-size: 1.45rem;
     font-weight: 480;
     letter-spacing: -0.045em;
   }
@@ -95,7 +95,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     max-width: 25rem;
     margin: 0.75rem 0 0;
     color: var(--muted);
-    font-size: 0.73rem;
+    font-size: 0.82rem;
     line-height: 1.55;
   }
 
@@ -138,7 +138,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     align-items: center;
     color: var(--muted);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.55rem;
+    font-size: 0.68rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -156,11 +156,11 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   .entry-link--lead h3 {
-    font-size: clamp(1.2rem, 1.55vw, 1.38rem);
+    font-size: clamp(1.32rem, 1.65vw, 1.5rem);
   }
 
   .entry-link--compact h3 {
-    font-size: clamp(0.88rem, 1.05vw, 1rem);
+    font-size: clamp(0.95rem, 1.12vw, 1.06rem);
   }
 
   .entry-link > p {
@@ -168,7 +168,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     overflow: hidden;
     margin: 0.75rem 0 0;
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     line-height: 1.55;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -200,7 +200,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     margin-top: 1rem;
     color: var(--muted);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.54rem;
+    font-size: 0.68rem;
     letter-spacing: 0.08em;
   }
 
@@ -230,7 +230,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     margin-top: 1.75rem;
     padding-bottom: 0.18rem;
     color: var(--ink-soft);
-    font-size: 0.64rem;
+    font-size: 0.72rem;
     letter-spacing: 0.04em;
     background-image: linear-gradient(var(--line-strong), var(--line-strong));
     background-position: 0 100%;
@@ -242,6 +242,12 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   .view-all:hover {
     color: var(--ink);
     background-size: 100% 1px;
+  }
+
+  @media (min-width: 901px) and (max-width: 1100px) {
+    .entry-link > p {
+      -webkit-line-clamp: 3;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

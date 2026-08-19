@@ -34,6 +34,43 @@ test('hero links reveal their rules on hover and keyboard focus', async ({ page 
   await expect(heroLink).toHaveCSS('border-bottom-color', ink);
 });
 
+test('homepage supporting type is readable at desktop and mobile sizes', async ({ page }) => {
+  const expectFontSizeAtLeast = async (selector: string, minimum: number) => {
+    const size = await page.locator(selector).first().evaluate((element) => (
+      Number.parseFloat(getComputedStyle(element).fontSize)
+    ));
+    expect.soft(size, `${selector} font size`).toBeGreaterThanOrEqual(minimum);
+  };
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+
+  await expectFontSizeAtLeast('.hero-kicker', 10.8);
+  await expectFontSizeAtLeast('.hero-summary', 15);
+  await expectFontSizeAtLeast('.hero-links a', 12);
+  await expectFontSizeAtLeast('.featured-label', 10.8);
+  await expectFontSizeAtLeast('.featured-title strong', 12.8);
+  await expectFontSizeAtLeast('.index-eyebrow', 10.8);
+  await expectFontSizeAtLeast('.index-description', 14);
+  await expectFontSizeAtLeast('.column-header h2', 22);
+  await expectFontSizeAtLeast('.column-header p', 13);
+  await expectFontSizeAtLeast('.entry-meta', 10.8);
+  await expectFontSizeAtLeast('.entry-link--lead h3', 21);
+  await expectFontSizeAtLeast('.entry-link--compact h3', 15);
+  await expectFontSizeAtLeast('.entry-link--lead > p', 13);
+  await expectFontSizeAtLeast('.entry-token', 10.8);
+  await expectFontSizeAtLeast('.view-all', 11);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectFontSizeAtLeast('.column-header p', 13);
+  await expectFontSizeAtLeast('.entry-link--lead > p', 13);
+  const featuredStrip = await page.locator('[data-featured-strip]').boundingBox();
+  expect(featuredStrip).not.toBeNull();
+  expect(featuredStrip!.height).toBe(47);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(overflow).toBe(false);
+});
+
 test('homepage presents an editorial research shelf', async ({ page }) => {
   await page.goto('/');
 
