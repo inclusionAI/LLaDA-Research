@@ -27,7 +27,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f5f7fb" />
+    <meta name="theme-color" content="#030303" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={local('favicon.svg')} />
     <link rel="alternate" type="application/rss+xml" title="LLaDA Blog" href={local('rss.xml')} />
@@ -52,7 +52,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
           <a href={local('papers/')}>Papers</a>
           <a href={local('blog/')}>Blog</a>
           <a href={local('about/')}>About</a>
-          <a class="button button-dark" href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub <span class="external-arrow">↗</span></a>
+          <a href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub <span class="external-arrow">↗</span></a>
         </nav>
         <details class="mobile-nav">
           <summary aria-label="Open navigation">☰</summary>

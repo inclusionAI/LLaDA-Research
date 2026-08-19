@@ -51,24 +51,24 @@ const available = definitions.filter(([key]) => Boolean(links[key]));
     padding: 0.65rem 0.9rem;
     border: 1px solid var(--line-strong);
     border-radius: 999px;
-    background: rgb(255 255 255 / 0.7);
+    background: transparent;
     color: var(--ink-soft);
     font-size: 0.73rem;
-    font-weight: 680;
+    font-weight: 520;
     transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
   }
 
   .resource-link:hover {
-    border-color: var(--accent);
+    border-color: var(--ink-soft);
     background: var(--surface);
-    color: var(--accent-deep);
+    color: var(--ink);
     transform: translateY(-2px);
   }
 
   .resource-link.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: white;
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
   }
 
   .compact .resource-link {
@@ -82,7 +82,7 @@ const available = definitions.filter(([key]) => Boolean(links[key]));
   }
 
   .compact .resource-link:hover {
-    color: var(--accent-deep);
+    color: var(--ink);
     transform: none;
   }
 </style>

@@ -43,23 +43,20 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
 <style>
   .content-card {
     display: grid;
-    grid-template-columns: minmax(11rem, 0.38fr) minmax(0, 1fr);
+    grid-template-columns: minmax(10rem, 0.3fr) minmax(0, 1fr);
     overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: rgb(255 255 255 / 0.88);
-    box-shadow: var(--shadow-sm);
-    transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    border-top: 1px solid var(--line);
+    background: transparent;
+    transition: border-color 180ms ease;
   }
 
   .content-card:hover {
     border-color: var(--line-strong);
-    box-shadow: var(--shadow);
-    transform: translateY(-3px);
+    border-color: var(--line-strong);
   }
 
   .card-art {
-    min-height: 14.5rem;
+    min-height: 13rem;
     background: var(--night);
   }
 
@@ -73,7 +70,7 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: clamp(1.4rem, 3vw, 2.3rem);
+    padding: clamp(1.4rem, 3vw, 2.2rem);
   }
 
   .card-meta {
@@ -82,13 +79,14 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     justify-content: space-between;
     color: var(--muted);
     font-size: 0.68rem;
-    font-weight: 680;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .card-meta span {
-    color: var(--accent-deep);
+    color: var(--ink-soft);
   }
 
   h2 {
@@ -100,7 +98,7 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
   }
 
   h2 a:hover {
-    color: var(--accent-deep);
+    color: var(--ink);
   }
 
   p {
@@ -123,7 +121,7 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
   }
 
   .read-link {
-    color: var(--accent-deep);
+    color: var(--ink-soft);
     font-size: 0.73rem;
     font-weight: 720;
   }

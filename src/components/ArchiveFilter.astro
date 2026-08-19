@@ -75,10 +75,9 @@ const { tags, total } = Astro.props;
     gap: 1.25rem;
     align-items: end;
     margin-block: 2rem;
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: rgb(255 255 255 / 0.74);
+    padding-block: 1rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
   }
 
   .search-field {
@@ -99,8 +98,8 @@ const { tags, total } = Astro.props;
     min-height: 2.75rem;
     padding: 0.7rem 0.85rem;
     border: 1px solid var(--line-strong);
-    border-radius: 0.7rem;
-    background: white;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
     color: var(--ink);
   }
 
@@ -121,14 +120,14 @@ const { tags, total } = Astro.props;
     color: var(--muted);
     cursor: pointer;
     font-size: 0.67rem;
-    font-weight: 680;
+    font-weight: 520;
     white-space: nowrap;
   }
 
   .filter-tags button.active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent-deep);
+    border-color: var(--ink-soft);
+    background: var(--ink);
+    color: var(--paper);
   }
 
   .filter-summary {
