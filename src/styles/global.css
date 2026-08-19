@@ -164,7 +164,7 @@ h1, h2, h3 { text-wrap: balance; }
 .footer-inner { display: grid; grid-template-columns: 1fr auto auto; gap: 3rem; align-items: center; min-height: 8rem; }
 .site-footer .brand { color: var(--ink); }
 .footer-nav a { color: var(--muted); }
-.site-footer small { color: #565651; font-size: 0.62rem; }
+.site-footer small { color: var(--muted); font-size: 0.62rem; }
 
 .surface { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .external-arrow { display: inline-block; transition: transform 180ms ease; }

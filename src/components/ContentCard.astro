@@ -24,11 +24,11 @@ const titleTokens = title
 ---
 
 <article class="content-card" data-filter-card data-title={title.toLowerCase()} data-tags={JSON.stringify(tags.map((tag) => tag.toLowerCase()))}>
-  <a class="card-art" href={href} aria-label={`Read ${title}`}>
+  <a class="card-art" href={href} aria-label={resolvedCover ? `Read ${title}` : undefined}>
     {resolvedCover ? (
       <img src={resolvedCover} alt="" width="420" height="300" loading="lazy" />
     ) : (
-      <span class="token-art" aria-hidden="true">
+      <span class="token-art">
         <span class="token-seed">[MASK] → {titleTokens[0] ?? 'LLaDA'}</span>
         <span class="token-line">{titleTokens.slice(1).map((token) => <i>{token}</i>)}</span>
         <span class="token-index">{date.getFullYear()} / {String(date.getMonth() + 1).padStart(2, '0')}</span>

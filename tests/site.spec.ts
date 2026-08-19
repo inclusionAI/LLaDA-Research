@@ -22,6 +22,22 @@ test('homepage uses the dark research theme', async ({ page }) => {
   await expect(page.locator('[data-featured-strip]')).toHaveCSS('border-radius', '0px');
 });
 
+test('desktop hero stays close to 55vh on a short landscape viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/');
+  const hero = await page.locator('.research-hero').boundingBox();
+  expect(hero).not.toBeNull();
+  expect(hero!.height).toBeLessThanOrEqual(432);
+});
+
+test('mobile hero leaves the research index within reach on a short phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  const hero = await page.locator('.research-hero').boundingBox();
+  expect(hero).not.toBeNull();
+  expect(hero!.height).toBeLessThanOrEqual(398);
+});
+
 test('denoise field has a designed reduced-motion state', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
@@ -54,6 +70,29 @@ test('mobile archives prioritize titles over decorative thumbnails', async ({ pa
   const box = await art.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.height).toBeLessThanOrEqual(96);
+});
+
+test('token artwork link exposes its visible mask token in the accessible name', async ({ page }) => {
+  await page.goto('/papers/');
+  await expect(page.locator('.card-art').first()).toHaveAccessibleName(/\[MASK\]/);
+});
+
+test('footer copyright text meets WCAG AA contrast', async ({ page }) => {
+  await page.goto('/');
+  const contrast = await page.locator('.site-footer small').evaluate((element) => {
+    const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (value: string) => {
+      const linear = channels(value).map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    };
+    const foreground = luminance(getComputedStyle(element).color);
+    const background = luminance(getComputedStyle(element.closest('.site-footer')!).backgroundColor);
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  });
+  expect(contrast).toBeGreaterThanOrEqual(4.5);
 });
 
 test('mobile featured strip exposes a concise identifiable title', async ({ page, isMobile }) => {
