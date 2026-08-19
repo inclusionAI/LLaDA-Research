@@ -16,6 +16,45 @@ test('homepage presents the LLaDA diffusion hero before a compact research index
   await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
 });
 
+test('homepage presents an editorial research shelf', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.getByText(
+    'LLaDA turns masked noise into language through iterative, parallel denoising—an open alternative to left-to-right generation.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(page.locator('[data-featured-strip]').getByText('Latest', { exact: true })).toBeVisible();
+  await expect(page.getByText('The work', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Models. Papers. Notes.', exact: true })).toBeVisible();
+  await expect(page.getByText('Open checkpoints for language and multimodal generation.', { exact: true })).toBeVisible();
+  await expect(page.getByText(
+    'Methods for scaling, accelerating, and extending diffusion language models.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(page.getByText(
+    'Release notes, implementation details, and research perspectives.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(page.locator('[data-research-column]')).toHaveCount(3);
+  await expect(page.locator('[data-entry-kind="lead"]')).toHaveCount(3);
+  await expect(page.locator('[data-entry-kind="compact"]')).toHaveCount(4);
+});
+
+test('research shelf uses whitespace instead of a desktop table', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+
+  const columns = page.locator('[data-research-column]');
+  await expect(columns.nth(1)).toHaveCSS('border-left-width', '0px');
+  await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(columns.nth(1)).toHaveCSS('border-top-width', '1px');
+  await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(overflow).toBe(false);
+});
+
 test('homepage uses the dark research theme', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(3, 3, 3)');

@@ -19,13 +19,20 @@ interface Entry {
 interface Props {
   kind: Kind;
   title: string;
+  description: string;
+  ctaLabel: string;
   href: string;
   entries: Entry[];
 }
 
-const { kind, title, href, entries } = Astro.props;
+const { kind, title, description, ctaLabel, href, entries } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const route = kind === 'blog' ? 'blog' : `${kind}s`;
+const tokenFor: Record<Kind, string> = {
+  model: '[MODEL]',
+  paper: '[PAPER]',
+  blog: '[NOTE]',
+};
 const metaFor = (entry: Entry) => {
   if (kind === 'model') return entry.data.modality ?? 'Model';
   if (kind === 'paper') return entry.data.venue ?? 'Paper';
@@ -34,69 +41,47 @@ const metaFor = (entry: Entry) => {
 const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 ---
 
-<section class="research-column" aria-labelledby={`${kind}-title`}>
+<section class="research-column" data-research-column aria-labelledby={`${kind}-title`}>
   <header class="column-header">
-    <div>
-      <span class="column-index">0{kind === 'model' ? 1 : kind === 'paper' ? 2 : 3}</span>
-      <h2 id={`${kind}-title`}>{title}</h2>
-    </div>
-    <span class="entry-count">{entries.length.toString().padStart(2, '0')}</span>
+    <h2 id={`${kind}-title`}>{title}</h2>
+    <p>{description}</p>
   </header>
   <ol>
-    {entries.map((entry) => (
-      <li>
-        <a class="entry-link" href={withBase(base, `${route}/${entry.id}/`)}>
+    {entries.map((entry, index) => (
+      <li data-entry-kind={index === 0 ? 'lead' : 'compact'}>
+        <a
+          class:list={['entry-link', index === 0 ? 'entry-link--lead' : 'entry-link--compact']}
+          href={withBase(base, `${route}/${entry.id}/`)}
+        >
           <div class="entry-meta">
             <span>{metaFor(entry)}</span>
             <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time>
           </div>
           <h3>{entry.data.title}</h3>
-          <p>{entry.data.summary}</p>
+          {index === 0 && (
+            <>
+              <p>{entry.data.summary}</p>
+              <span class="entry-token" aria-hidden="true">
+                <span class="token-mask">[MASK]</span>
+                <span class="token-kind">{tokenFor[kind]}</span>
+              </span>
+            </>
+          )}
           <span class="entry-arrow" aria-hidden="true">↗</span>
         </a>
       </li>
     ))}
   </ol>
-  <a class="view-all" href={withBase(base, href)}>All {title.toLowerCase()} <span aria-hidden="true">→</span></a>
+  <a class="view-all" href={withBase(base, href)}>{ctaLabel} <span aria-hidden="true">→</span></a>
 </section>
 
 <style>
   .research-column {
-    display: flex;
-    flex-direction: column;
     min-width: 0;
-    padding: 1.5rem 1.4rem 1.1rem;
-  }
-
-  .research-column:first-child {
-    padding-left: 0;
-  }
-
-  .research-column:last-child {
-    padding-right: 0;
-  }
-
-  .column-header,
-  .column-header > div {
-    display: flex;
-    align-items: baseline;
   }
 
   .column-header {
-    justify-content: space-between;
-    padding-bottom: 1.25rem;
-  }
-
-  .column-header > div {
-    gap: 0.65rem;
-  }
-
-  .column-index,
-  .entry-count {
-    color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.1em;
+    padding-bottom: 1.8rem;
   }
 
   h2 {
@@ -106,21 +91,44 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     letter-spacing: -0.045em;
   }
 
+  .column-header p {
+    max-width: 25rem;
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    font-size: 0.73rem;
+    line-height: 1.55;
+  }
+
   ol {
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  li {
-    border-top: 1px solid var(--line);
+  li + li {
+    margin-top: 1.35rem;
   }
 
   .entry-link {
     position: relative;
     display: block;
-    min-height: 10.2rem;
-    padding: 1.2rem 2rem 1.2rem 0;
+    overflow: hidden;
+    padding: 0.65rem 2rem 0.65rem 0;
+    isolation: isolate;
+  }
+
+  .entry-link::before {
+    position: absolute;
+    z-index: -1;
+    inset: -50% -10%;
+    background: radial-gradient(circle at 18% 50%, rgb(255 255 255 / 0.035), transparent 48%);
+    content: '';
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .entry-link:hover::before {
+    opacity: 1;
   }
 
   .entry-meta {
@@ -139,18 +147,25 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   h3 {
-    margin: 0.7rem 0 0.6rem;
-    font-size: 1rem;
+    margin: 0.7rem 0 0;
     font-weight: 510;
     line-height: 1.25;
     letter-spacing: -0.025em;
     transition: color 180ms ease, transform 180ms ease;
   }
 
-  p {
+  .entry-link--lead h3 {
+    font-size: clamp(1.2rem, 1.55vw, 1.38rem);
+  }
+
+  .entry-link--compact h3 {
+    font-size: clamp(0.88rem, 1.05vw, 1rem);
+  }
+
+  .entry-link > p {
     display: -webkit-box;
     overflow: hidden;
-    margin: 0;
+    margin: 0.75rem 0 0;
     color: var(--muted);
     font-size: 0.72rem;
     line-height: 1.55;
@@ -168,7 +183,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   .entry-link:hover h3 {
     color: var(--ink);
-    transform: translateX(4px);
+    transform: translateY(-3px);
   }
 
   .entry-link:hover .entry-arrow {
@@ -176,27 +191,66 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     transform: translate(2px, -2px);
   }
 
+  .entry-token {
+    position: relative;
+    display: inline-grid;
+    margin-top: 1rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.08em;
+  }
+
+  .entry-token > span {
+    grid-area: 1 / 1;
+    transition: opacity 180ms ease;
+  }
+
+  .token-kind {
+    color: var(--ink-soft);
+    opacity: 0;
+  }
+
+  .entry-link:hover .token-mask {
+    opacity: 0;
+  }
+
+  .entry-link:hover .token-kind {
+    opacity: 1;
+  }
+
   .view-all {
-    display: flex;
-    justify-content: space-between;
-    margin-top: auto;
-    padding: 1rem 0 0.1rem;
-    border-top: 1px solid var(--line);
+    display: inline-flex;
+    gap: 0.55rem;
+    margin-top: 1.75rem;
+    padding-bottom: 0.18rem;
     color: var(--ink-soft);
     font-size: 0.64rem;
     letter-spacing: 0.04em;
+    background-image: linear-gradient(var(--line-strong), var(--line-strong));
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0 1px;
+    transition: background-size 180ms ease, color 180ms ease;
   }
 
-  @media (max-width: 900px) {
-    .research-column,
-    .research-column:first-child,
-    .research-column:last-child {
-      padding: 1.5rem 0;
-      border-bottom: 1px solid var(--line);
+  .view-all:hover {
+    color: var(--ink);
+    background-size: 100% 1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .entry-link::before,
+    h3,
+    .entry-arrow,
+    .entry-token > span,
+    .view-all {
+      transition: none;
     }
 
-    .entry-link {
-      min-height: auto;
+    .entry-link:hover h3,
+    .entry-link:hover .entry-arrow {
+      transform: none;
     }
   }
 </style>

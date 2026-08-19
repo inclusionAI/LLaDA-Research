@@ -11,6 +11,7 @@ export const resourceLinksSchema = z.object({
 
 export const commonSchema = z.object({
   title: z.string().min(1),
+  shortTitle: z.string().min(1).optional(),
   date: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
   summary: z.string().min(1),

@@ -28,70 +28,88 @@ const featured = selectFeatured([
   {featured && <FeaturedRelease entry={featured} />}
   <section class="research-index shell" data-research-index aria-labelledby="research-index-title">
     <header class="index-header">
-      <h2 id="research-index-title">Research index</h2>
-      <p>Models / Papers / Notes</p>
+      <p class="index-eyebrow">The work</p>
+      <h2 id="research-index-title">Models. Papers. Notes.</h2>
+      <p class="index-description">The LLaDA research program, in one view.</p>
     </header>
     <div class="research-grid">
-      <ResearchColumn kind="model" title="Models" href="models/" entries={publishedModels.slice(0, 3)} />
-      <ResearchColumn kind="paper" title="Papers" href="papers/" entries={publishedPapers.slice(0, 3)} />
-      <ResearchColumn kind="blog" title="Blog" href="blog/" entries={publishedPosts.slice(0, 3)} />
+      <ResearchColumn
+        kind="model"
+        title="Models"
+        description="Open checkpoints for language and multimodal generation."
+        ctaLabel="Explore all models"
+        href="models/"
+        entries={publishedModels.slice(0, 3)}
+      />
+      <ResearchColumn
+        kind="paper"
+        title="Papers"
+        description="Methods for scaling, accelerating, and extending diffusion language models."
+        ctaLabel="Browse all papers"
+        href="papers/"
+        entries={publishedPapers.slice(0, 4)}
+      />
+      <ResearchColumn
+        kind="blog"
+        title="Blog"
+        description="Release notes, implementation details, and research perspectives."
+        ctaLabel="Read all notes"
+        href="blog/"
+        entries={publishedPosts.slice(0, 3)}
+      />
     </div>
   </section>
 </BaseLayout>
 
 <style>
   .research-index {
-    padding-block: 1.8rem 1rem;
+    padding-block: clamp(4.5rem, 6vw, 6rem) 1rem;
   }
 
   .index-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--line);
+    max-width: 42rem;
+    margin-bottom: clamp(2.75rem, 4.5vw, 4rem);
+  }
+
+  .index-eyebrow {
+    margin: 0 0 0.85rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   .index-header h2 {
     margin: 0;
-    font-size: 1.3rem;
-    font-weight: 480;
-    letter-spacing: -0.04em;
+    font-size: clamp(2rem, 4vw, 3.6rem);
+    font-weight: 450;
+    letter-spacing: -0.055em;
   }
 
-  .index-header > p {
-    margin: 0;
+  .index-description {
+    margin: 1rem 0 0;
     color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 0.82rem;
+    line-height: 1.6;
   }
 
   .research-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-bottom: 1px solid var(--line);
-  }
-
-  .research-grid > :global(* + *) {
-    border-left: 1px solid var(--line);
+    gap: clamp(2.75rem, 4.5vw, 4rem);
   }
 
   @media (max-width: 900px) {
     .research-grid {
       grid-template-columns: 1fr;
-      border-bottom: 0;
+      gap: 0;
     }
 
     .research-grid > :global(* + *) {
-      border-left: 0;
-    }
-  }
-
-  @media (max-width: 700px) {
-    .index-header {
-      align-items: center;
+      margin-top: clamp(2rem, 9vw, 2.5rem);
+      padding-top: clamp(2rem, 9vw, 2.5rem);
+      border-top: 1px solid var(--line);
     }
   }
 </style>

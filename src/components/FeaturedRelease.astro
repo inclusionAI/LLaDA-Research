@@ -8,6 +8,7 @@ interface Entry {
   id: string;
   data: {
     title: string;
+    shortTitle?: string;
     summary: string;
     date: Date;
   };
@@ -26,18 +27,15 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', {
   month: 'short',
   day: '2-digit',
 });
-const [mobileLead, mobileDetail = ''] = entry.data.title.split(':', 2);
-const mobileTitle = mobileDetail
-  ? `${mobileLead} — ${mobileDetail.trim().split(/\s+/).slice(0, 4).join(' ')}`
-  : entry.data.title;
+const displayTitle = entry.data.shortTitle ?? entry.data.title;
 ---
 
-<aside class="featured-strip shell" data-featured-strip aria-label={`Featured ${entry.kind}`}>
+<aside class="featured-strip shell" data-featured-strip aria-label={`Latest ${entry.kind}`}>
   <a href={detailUrl}>
-    <span class="featured-label">Featured / 01</span>
+    <span class="featured-label">Latest</span>
     <span class="featured-title">
-      <strong>{entry.data.title}</strong>
-      <strong class="featured-mobile-title" data-featured-mobile-title>{mobileTitle}</strong>
+      <strong class="featured-desktop-title">{displayTitle}</strong>
+      <strong class="featured-mobile-title" data-featured-mobile-title>{displayTitle}</strong>
       <span class="featured-kind">{entry.kind}</span>
     </span>
     <span class="featured-end">
@@ -78,7 +76,6 @@ const mobileTitle = mobileDetail
     min-width: 0;
     gap: 0.8rem;
     align-items: baseline;
-    transition: transform 180ms ease;
   }
 
   .featured-title strong {
@@ -107,10 +104,6 @@ const mobileTitle = mobileDetail
     transition: color 180ms ease, transform 180ms ease;
   }
 
-  a:hover .featured-title {
-    transform: translateX(5px);
-  }
-
   a:hover .featured-arrow {
     color: var(--ink);
     transform: translate(2px, -2px);
@@ -118,17 +111,13 @@ const mobileTitle = mobileDetail
 
   @media (max-width: 700px) {
     a {
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 0.75rem;
-    }
-
-    .featured-label {
-      display: none;
     }
 
     .featured-kind,
     .featured-end time,
-    .featured-title > strong:not(.featured-mobile-title) {
+    .featured-desktop-title {
       display: none;
     }
 
