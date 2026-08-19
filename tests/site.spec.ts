@@ -18,6 +18,22 @@ test('homepage presents the LLaDA diffusion hero before a compact research index
   await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
 });
 
+test('hero links reveal their rules on hover and keyboard focus', async ({ page }) => {
+  await page.goto('/');
+
+  const heroLink = page.locator('.hero-links a').first();
+  const ink = await page.locator('#hero-title').evaluate((element) => getComputedStyle(element).color);
+  await expect(heroLink).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+
+  await heroLink.hover();
+  await expect(heroLink).toHaveCSS('border-bottom-color', ink);
+
+  await page.mouse.move(0, 0);
+  await expect(heroLink).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+  await heroLink.focus();
+  await expect(heroLink).toHaveCSS('border-bottom-color', ink);
+});
+
 test('homepage presents an editorial research shelf', async ({ page }) => {
   await page.goto('/');
 

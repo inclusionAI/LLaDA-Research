@@ -70,13 +70,14 @@ const base = import.meta.env.BASE_URL;
 
   .hero-links a {
     padding-bottom: 0.28rem;
-    border-bottom: 1px solid var(--line-strong);
+    border-bottom: 1px solid transparent;
     color: var(--ink-soft);
     font-size: 0.67rem;
     transition: border-color 180ms ease, color 180ms ease;
   }
 
-  .hero-links a:hover {
+  .hero-links a:hover,
+  .hero-links a:focus-visible {
     border-color: var(--ink);
     color: var(--ink);
   }
