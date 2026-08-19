@@ -1,0 +1,84 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+const {
+  title = 'LLaDA — Diffusion Language Models',
+  description = 'Models, papers, and technical notes from the LLaDA research family.',
+  image,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const base = import.meta.env.BASE_URL;
+const pageTitle = title === 'LLaDA' || title.includes('LLaDA —') ? title : `${title} — LLaDA`;
+const local = (path = '') => `${base}${path}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f5f7fb" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={local('favicon.svg')} />
+    <link rel="alternate" type="application/rss+xml" title="LLaDA Blog" href={local('rss.xml')} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner shell">
+        <a class="brand" href={base} aria-label="LLaDA home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>LLaDA</span>
+        </a>
+        <nav class="desktop-nav" aria-label="Primary navigation">
+          <a href={local('models/')}>Models</a>
+          <a href={local('papers/')}>Papers</a>
+          <a href={local('blog/')}>Blog</a>
+          <a href={local('about/')}>About</a>
+          <a class="button button-dark" href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub <span class="external-arrow">↗</span></a>
+        </nav>
+        <details class="mobile-nav">
+          <summary aria-label="Open navigation">☰</summary>
+          <nav class="mobile-menu" aria-label="Mobile navigation">
+            <a href={local('models/')}>Models</a>
+            <a href={local('papers/')}>Papers</a>
+            <a href={local('blog/')}>Blog</a>
+            <a href={local('about/')}>About</a>
+            <a href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub ↗</a>
+          </nav>
+        </details>
+      </div>
+    </header>
+    <main id="main-content"><slot /></main>
+    <footer class="site-footer">
+      <div class="footer-inner shell">
+        <a class="brand" href={base} aria-label="LLaDA home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>LLaDA</span>
+        </a>
+        <nav class="footer-nav" aria-label="Research links">
+          <a href="https://github.com/inclusionAI" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://huggingface.co/inclusionAI" target="_blank" rel="noreferrer">Hugging Face</a>
+          <a href="https://www.modelscope.cn/organization/inclusionAI" target="_blank" rel="noreferrer">ModelScope</a>
+          <a href="https://www.inclusion-ai.org/" target="_blank" rel="noreferrer">InclusionAI</a>
+        </nav>
+        <small>© 2026 InclusionAI</small>
+      </div>
+    </footer>
+  </body>
+</html>

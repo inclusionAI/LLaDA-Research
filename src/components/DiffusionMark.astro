@@ -1,0 +1,79 @@
+---
+interface Props {
+  label?: string;
+  compact?: boolean;
+}
+
+const { label = 'LLaDA diffusion field', compact = false } = Astro.props;
+---
+
+<figure class:list={['diffusion-mark', { compact }]} aria-label={label} role="img">
+  <svg viewBox="0 0 640 480" aria-hidden="true">
+    <defs>
+      <radialGradient id="field" cx="42%" cy="38%" r="67%">
+        <stop offset="0" stop-color="#a9efff" />
+        <stop offset="0.32" stop-color="#4775ff" />
+        <stop offset="0.7" stop-color="#5a42d7" stop-opacity="0.72" />
+        <stop offset="1" stop-color="#101a37" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="line" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#bff4ff" stop-opacity="0.9" />
+        <stop offset="1" stop-color="#8c83ff" stop-opacity="0.12" />
+      </linearGradient>
+      <filter id="soft"><feGaussianBlur stdDeviation="18" /></filter>
+    </defs>
+    <circle cx="390" cy="222" r="208" fill="url(#field)" filter="url(#soft)" opacity="0.9" />
+    <g fill="none" stroke="url(#line)">
+      <circle cx="386" cy="231" r="80" />
+      <circle cx="386" cy="231" r="122" opacity="0.72" />
+      <circle cx="386" cy="231" r="166" opacity="0.5" />
+      <ellipse cx="386" cy="231" rx="212" ry="112" transform="rotate(-18 386 231)" opacity="0.45" />
+    </g>
+    <g fill="#d9f8ff">
+      <circle cx="296" cy="169" r="4" />
+      <circle cx="465" cy="128" r="3" opacity="0.7" />
+      <circle cx="509" cy="283" r="5" opacity="0.65" />
+      <circle cx="351" cy="347" r="3" opacity="0.6" />
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .diffusion-mark {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    min-height: 16rem;
+    margin: 0;
+    background:
+      linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      #0c1530;
+    background-size: 1.6rem 1.6rem;
+  }
+
+  .diffusion-mark::after {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 75% 50%, transparent 0, rgb(12 21 48 / 0.15) 45%, rgb(12 21 48 / 0.82) 100%);
+    content: "";
+  }
+
+  svg {
+    position: absolute;
+    inset: -8% -4% -8% 1%;
+    width: 108%;
+    height: 116%;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+
+  .compact {
+    min-height: 10rem;
+  }
+
+  @keyframes drift {
+    from { transform: scale(1) rotate(-1deg); }
+    to { transform: scale(1.035) rotate(1deg); }
+  }
+</style>
