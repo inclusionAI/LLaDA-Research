@@ -40,4 +40,13 @@ describe('content selection', () => {
     ], (message) => warnings.push(message));
     expect(warnings).toEqual(['Multiple featured entries found; using featured-new.']);
   });
+
+  it('selects a featured entry across collection types', () => {
+    const entries = [
+      entry('model', '2026-08-01'),
+      entry('paper', '2026-07-01', true),
+      entry('post', '2026-08-19'),
+    ];
+    expect(selectFeatured(entries)?.id).toBe('paper');
+  });
 });

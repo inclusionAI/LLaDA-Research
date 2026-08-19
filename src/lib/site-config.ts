@@ -14,3 +14,9 @@ export function resolveDeploymentConfig(repository = 'Ulov888/ant-llada'): Deplo
     base: repo.toLowerCase() === rootRepository ? '/' : `/${repo}`,
   };
 }
+
+export function withBase(base: string, path = ''): string {
+  const normalizedBase = base === '/' ? '' : `/${base.replace(/^\/+|\/+$/g, '')}`;
+  const normalizedPath = path.replace(/^\/+/, '');
+  return `${normalizedBase}/${normalizedPath}`;
+}

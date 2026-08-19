@@ -1,0 +1,88 @@
+---
+interface ResourceMap {
+  project?: string;
+  paper?: string;
+  pdf?: string;
+  code?: string;
+  model?: string;
+  modelscope?: string;
+}
+
+interface Props {
+  links?: ResourceMap;
+  compact?: boolean;
+}
+
+const { links = {}, compact = false } = Astro.props;
+const definitions: Array<[keyof ResourceMap, string]> = [
+  ['project', 'Project'],
+  ['paper', 'Paper'],
+  ['pdf', 'PDF'],
+  ['code', 'Code'],
+  ['model', 'Models'],
+  ['modelscope', 'ModelScope'],
+];
+const available = definitions.filter(([key]) => Boolean(links[key]));
+---
+
+{available.length > 0 && (
+  <nav class:list={['resource-links', { compact }]} aria-label="External resources">
+    {available.map(([key, label], index) => (
+      <a class:list={['resource-link', { primary: !compact && index === 0 }]} href={links[key]} target="_blank" rel="noreferrer">
+        <span>{label}</span><span class="external-arrow" aria-hidden="true">↗</span>
+      </a>
+    ))}
+  </nav>
+)}
+
+<style>
+  .resource-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+  }
+
+  .resource-link {
+    display: inline-flex;
+    gap: 0.45rem;
+    align-items: center;
+    min-height: 2.55rem;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.7);
+    color: var(--ink-soft);
+    font-size: 0.73rem;
+    font-weight: 680;
+    transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+  }
+
+  .resource-link:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+    color: var(--accent-deep);
+    transform: translateY(-2px);
+  }
+
+  .resource-link.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  .compact .resource-link {
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.68rem;
+  }
+
+  .compact .resource-link:hover {
+    color: var(--accent-deep);
+    transform: none;
+  }
+</style>

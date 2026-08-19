@@ -1,0 +1,164 @@
+---
+import DiffusionMark from './DiffusionMark.astro';
+import ResourceLinks from './ResourceLinks.astro';
+import { withBase } from '../lib/site-config';
+
+type Kind = 'model' | 'paper' | 'blog';
+
+interface Entry {
+  kind: Kind;
+  id: string;
+  data: {
+    title: string;
+    summary: string;
+    date: Date;
+    cover?: string;
+    links?: Record<string, string | undefined>;
+  };
+}
+
+interface Props {
+  entry: Entry;
+}
+
+const { entry } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blog: 'blog' };
+const detailUrl = withBase(base, `${pathByKind[entry.kind]}/${entry.id}/`);
+const formattedDate = entry.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+---
+
+<section class="featured shell" aria-labelledby="featured-title">
+  <div class="featured-copy">
+    <div class="featured-meta">
+      <p class="eyebrow">Featured {entry.kind}</p>
+      <span>{formattedDate}</span>
+    </div>
+    <h1 id="featured-title"><a href={detailUrl}>{entry.data.title}</a></h1>
+    <p class="featured-summary">{entry.data.summary}</p>
+    <div class="featured-actions">
+      <a class="button button-primary" href={detailUrl}>Explore the release <span aria-hidden="true">→</span></a>
+      <ResourceLinks links={entry.data.links} compact />
+    </div>
+  </div>
+  <div class="featured-art">
+    {entry.data.cover ? (
+      <img src={entry.data.cover} width="720" height="520" alt="" loading="eager" />
+    ) : (
+      <DiffusionMark label="LLaDA generative diffusion field" />
+    )}
+    <span class="art-index" aria-hidden="true">LLaDA / 02</span>
+  </div>
+</section>
+
+<style>
+  .featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+    min-height: 26rem;
+    margin-top: 2.25rem;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 0.9);
+    box-shadow: var(--shadow);
+  }
+
+  .featured-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(2rem, 5vw, 4.5rem);
+  }
+
+  .featured-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    max-width: 44rem;
+  }
+
+  .featured-meta .eyebrow {
+    margin: 0;
+  }
+
+  .featured-meta span {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 650;
+  }
+
+  h1 {
+    max-width: 17ch;
+    margin: 1.35rem 0 1rem;
+    font-size: clamp(2.35rem, 5vw, 5.15rem);
+    line-height: 0.96;
+    letter-spacing: -0.07em;
+  }
+
+  h1 a {
+    transition: color 180ms ease;
+  }
+
+  h1 a:hover {
+    color: var(--accent-deep);
+  }
+
+  .featured-summary {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+    line-height: 1.65;
+  }
+
+  .featured-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: center;
+    margin-top: 1.75rem;
+  }
+
+  .featured-art {
+    position: relative;
+    min-height: 20rem;
+  }
+
+  .featured-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .art-index {
+    position: absolute;
+    right: 1.4rem;
+    bottom: 1.2rem;
+    color: rgb(255 255 255 / 0.72);
+    font-size: 0.62rem;
+    font-weight: 680;
+    letter-spacing: 0.15em;
+  }
+
+  @media (max-width: 800px) {
+    .featured {
+      grid-template-columns: 1fr;
+      margin-top: 1rem;
+      border-radius: var(--radius-md);
+    }
+
+    .featured-copy {
+      padding: 2.25rem 1.35rem 2rem;
+    }
+
+    h1 {
+      font-size: clamp(2.25rem, 11vw, 3.7rem);
+    }
+
+    .featured-art {
+      min-height: 14rem;
+      order: -1;
+    }
+  }
+</style>

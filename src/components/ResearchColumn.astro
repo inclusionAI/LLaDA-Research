@@ -1,0 +1,164 @@
+---
+import { withBase } from '../lib/site-config';
+
+type Kind = 'model' | 'paper' | 'blog';
+
+interface Entry {
+  id: string;
+  data: {
+    title: string;
+    summary: string;
+    date: Date;
+    tags: string[];
+    modality?: string;
+    venue?: string;
+    category?: string;
+  };
+}
+
+interface Props {
+  kind: Kind;
+  title: string;
+  href: string;
+  entries: Entry[];
+}
+
+const { kind, title, href, entries } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const route = kind === 'blog' ? 'blog' : `${kind}s`;
+const metaFor = (entry: Entry) => entry.data.modality ?? entry.data.venue ?? entry.data.category ?? 'Research';
+const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+---
+
+<section class="research-column" aria-labelledby={`${kind}-title`}>
+  <header class="column-header">
+    <h2 id={`${kind}-title`}>{title}</h2>
+    <span>{entries.length.toString().padStart(2, '0')}</span>
+  </header>
+  <ol>
+    {entries.map((entry) => (
+      <li>
+        <a class="entry-link" href={withBase(base, `${route}/${entry.id}/`)}>
+          <div class="entry-meta">
+            <span>{metaFor(entry)}</span>
+            <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time>
+          </div>
+          <h3>{entry.data.title}</h3>
+          <p>{entry.data.summary}</p>
+          <span class="entry-arrow" aria-hidden="true">↗</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+  <a class="view-all" href={withBase(base, href)}>View all {title.toLowerCase()} <span aria-hidden="true">→</span></a>
+</section>
+
+<style>
+  .research-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 1.3rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 0.82);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .column-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.25rem 0.2rem 1rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    letter-spacing: -0.035em;
+  }
+
+  .column-header span {
+    color: var(--accent);
+    font-size: 0.64rem;
+    font-weight: 750;
+  }
+
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    border-top: 1px solid var(--line);
+  }
+
+  .entry-link {
+    position: relative;
+    display: block;
+    padding: 1.2rem 2rem 1.2rem 0.2rem;
+  }
+
+  .entry-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.62rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .entry-meta span:first-child {
+    color: var(--accent-deep);
+  }
+
+  h3 {
+    margin: 0.55rem 0 0.5rem;
+    font-size: 0.96rem;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+    transition: color 180ms ease;
+  }
+
+  p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.5;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .entry-arrow {
+    position: absolute;
+    top: 1.18rem;
+    right: 0.25rem;
+    color: var(--line-strong);
+    transition: color 180ms ease, transform 180ms ease;
+  }
+
+  .entry-link:hover h3,
+  .entry-link:hover .entry-arrow {
+    color: var(--accent-deep);
+  }
+
+  .entry-link:hover .entry-arrow {
+    transform: translate(2px, -2px);
+  }
+
+  .view-all {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    padding: 1rem 0.2rem 0.15rem;
+    border-top: 1px solid var(--line);
+    color: var(--accent-deep);
+    font-size: 0.72rem;
+    font-weight: 720;
+  }
+</style>
