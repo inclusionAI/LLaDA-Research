@@ -23,14 +23,14 @@ export interface RelatedEntry {
 
 export function selectRelated<T extends RelatedEntry>(
   entries: T[],
-  currentId: string,
+  current: Pick<RelatedEntry, 'id' | 'kind'>,
   tags: string[],
   limit = 3,
 ): T[] {
   const wanted = new Set(tags.map((tag) => tag.toLowerCase()));
 
   return entries
-    .filter((entry) => entry.id !== currentId)
+    .filter((entry) => entry.id !== current.id || entry.kind !== current.kind)
     .map((entry) => ({
       entry,
       shared: entry.data.tags.filter((tag) => wanted.has(tag.toLowerCase())).length,

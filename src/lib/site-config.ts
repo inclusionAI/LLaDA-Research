@@ -20,3 +20,11 @@ export function withBase(base: string, path = ''): string {
   const normalizedPath = path.replace(/^\/+/, '');
   return `${normalizedBase}/${normalizedPath}`;
 }
+
+export function resolveAssetUrl(base: string, asset: string): string {
+  if (/^[a-z][a-z\d+.-]*:/i.test(asset) || asset.startsWith('//')) {
+    return asset;
+  }
+
+  return withBase(base, asset);
+}

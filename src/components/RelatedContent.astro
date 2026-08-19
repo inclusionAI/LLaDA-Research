@@ -17,12 +17,13 @@ interface Entry {
 
 interface Props {
   currentId: string;
+  currentKind: Kind;
   entries: Entry[];
   tags: string[];
 }
 
-const { currentId, entries, tags } = Astro.props;
-const related = selectRelated(entries, currentId, tags);
+const { currentId, currentKind, entries, tags } = Astro.props;
+const related = selectRelated(entries, { id: currentId, kind: currentKind }, tags);
 const base = import.meta.env.BASE_URL;
 const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blog: 'blog' };
 ---

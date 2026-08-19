@@ -6,7 +6,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { sortPublished } from '../../lib/content';
 import { withBase } from '../../lib/site-config';
 
-const entries = sortPublished(await getCollection('papers'));
+const entries = sortPublished(await getCollection('papers'), import.meta.env.DEV);
 const tags = [...new Set(entries.flatMap(({ data }) => data.tags))].toSorted();
 const base = import.meta.env.BASE_URL;
 ---

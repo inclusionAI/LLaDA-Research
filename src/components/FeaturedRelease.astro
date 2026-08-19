@@ -1,7 +1,7 @@
 ---
 import DiffusionMark from './DiffusionMark.astro';
 import ResourceLinks from './ResourceLinks.astro';
-import { withBase } from '../lib/site-config';
+import { resolveAssetUrl, withBase } from '../lib/site-config';
 
 type Kind = 'model' | 'paper' | 'blog';
 
@@ -26,6 +26,7 @@ const base = import.meta.env.BASE_URL;
 const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blog: 'blog' };
 const detailUrl = withBase(base, `${pathByKind[entry.kind]}/${entry.id}/`);
 const formattedDate = entry.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+const resolvedCover = entry.data.cover ? resolveAssetUrl(base, entry.data.cover) : undefined;
 ---
 
 <section class="featured shell" aria-labelledby="featured-title">
@@ -42,8 +43,8 @@ const formattedDate = entry.data.date.toLocaleDateString('en-US', { year: 'numer
     </div>
   </div>
   <div class="featured-art">
-    {entry.data.cover ? (
-      <img src={entry.data.cover} width="720" height="520" alt="" loading="eager" />
+    {resolvedCover ? (
+      <img src={resolvedCover} width="720" height="520" alt="" loading="eager" />
     ) : (
       <DiffusionMark label="LLaDA generative diffusion field" />
     )}

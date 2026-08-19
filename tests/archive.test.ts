@@ -23,10 +23,18 @@ describe('selectRelated', () => {
   ];
 
   it('excludes the current item and ranks shared tags before date', () => {
-    expect(selectRelated(entries, 'current', ['diffusion', 'language']).map(({ id }) => id)).toEqual([
+    expect(selectRelated(entries, { id: 'current', kind: 'paper' }, ['diffusion', 'language']).map(({ id }) => id)).toEqual([
       'strong',
       'newer',
       'older',
     ]);
+  });
+
+  it('keeps a different collection entry that shares the same id', () => {
+    const collision = [
+      { id: 'llada-2-0-uni', kind: 'model', data: { title: 'Model', tags: ['multimodal'], date: new Date('2026-04-23') } },
+      { id: 'llada-2-0-uni', kind: 'paper', data: { title: 'Paper', tags: ['multimodal'], date: new Date('2026-04-23') } },
+    ];
+    expect(selectRelated(collision, { id: 'llada-2-0-uni', kind: 'paper' }, ['multimodal']).map(({ kind }) => kind)).toEqual(['model']);
   });
 });

@@ -11,9 +11,10 @@ const [models, papers, posts] = await Promise.all([
   getCollection('blog'),
 ]);
 
-const publishedModels = sortPublished(models);
-const publishedPapers = sortPublished(papers);
-const publishedPosts = sortPublished(posts);
+const includeDrafts = import.meta.env.DEV;
+const publishedModels = sortPublished(models, includeDrafts);
+const publishedPapers = sortPublished(papers, includeDrafts);
+const publishedPosts = sortPublished(posts, includeDrafts);
 const featured = selectFeatured([
   ...publishedModels.map((entry) => ({ ...entry, kind: 'model' as const })),
   ...publishedPapers.map((entry) => ({ ...entry, kind: 'paper' as const })),

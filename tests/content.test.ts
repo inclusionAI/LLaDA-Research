@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectFeatured, sortPublished } from '../src/lib/content';
+import { isEntryVisible, selectFeatured, sortPublished } from '../src/lib/content';
 
 const entry = (id: string, date: string, featured = false, draft = false) => ({
   id,
@@ -14,6 +14,16 @@ describe('content selection', () => {
       entry('new', '2026-08-01'),
     ]);
     expect(result.map(({ id }) => id)).toEqual(['new', 'old']);
+  });
+
+  it('includes drafts when local development explicitly requests them', () => {
+    const result = sortPublished([
+      entry('published', '2026-08-01'),
+      entry('draft', '2026-09-01', false, true),
+    ], true);
+    expect(result.map(({ id }) => id)).toEqual(['draft', 'published']);
+    expect(isEntryVisible(true, true)).toBe(true);
+    expect(isEntryVisible(true, false)).toBe(false);
   });
 
   it('selects the newest featured entry', () => {

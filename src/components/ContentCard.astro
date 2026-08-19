@@ -1,6 +1,7 @@
 ---
 import DiffusionMark from './DiffusionMark.astro';
 import ResourceLinks from './ResourceLinks.astro';
+import { resolveAssetUrl } from '../lib/site-config';
 
 interface Props {
   href: string;
@@ -15,11 +16,12 @@ interface Props {
 
 const { href, title, summary, date, tags, meta = 'Research', cover, links } = Astro.props;
 const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) : undefined;
 ---
 
 <article class="content-card" data-filter-card data-title={title.toLowerCase()} data-tags={JSON.stringify(tags.map((tag) => tag.toLowerCase()))}>
   <a class="card-art" href={href} aria-label={`Read ${title}`}>
-    {cover ? <img src={cover} alt="" width="420" height="300" loading="lazy" /> : <DiffusionMark compact label="Abstract LLaDA diffusion field" />}
+    {resolvedCover ? <img src={resolvedCover} alt="" width="420" height="300" loading="lazy" /> : <DiffusionMark compact label="Abstract LLaDA diffusion field" />}
   </a>
   <div class="card-copy">
     <div class="card-meta">

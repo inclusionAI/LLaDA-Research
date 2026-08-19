@@ -3,9 +3,10 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import RelatedContent from '../../components/RelatedContent.astro';
 import ResourceLinks from '../../components/ResourceLinks.astro';
 import ContentLayout from '../../layouts/ContentLayout.astro';
+import { isEntryVisible } from '../../lib/content';
 
 export async function getStaticPaths() {
-  const entries = (await getCollection('models')).filter(({ data }) => !data.draft);
+  const entries = (await getCollection('models')).filter(({ data }) => isEntryVisible(data.draft, import.meta.env.DEV));
   return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
 }
 
@@ -13,9 +14,9 @@ interface Props { entry: CollectionEntry<'models'> }
 const { entry } = Astro.props as Props;
 const { Content } = await render(entry);
 const [models, papers, posts] = await Promise.all([
-  getCollection('models', ({ data }) => !data.draft),
-  getCollection('papers', ({ data }) => !data.draft),
-  getCollection('blog', ({ data }) => !data.draft),
+  getCollection('models', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
+  getCollection('papers', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
+  getCollection('blog', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
 ]);
 const relatedEntries = [
   ...models.map((item) => ({ ...item, kind: 'model' as const })),
@@ -30,5 +31,5 @@ const relatedEntries = [
     <ResourceLinks links={entry.data.links} />
   </div>
   <Content />
-  <RelatedContent currentId={entry.id} entries={relatedEntries} tags={entry.data.tags} />
+  <RelatedContent currentId={entry.id} currentKind="model" entries={relatedEntries} tags={entry.data.tags} />
 </ContentLayout>

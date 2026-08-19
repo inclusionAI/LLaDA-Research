@@ -8,9 +8,13 @@ export interface DatedEntry {
   };
 }
 
-export function sortPublished<T extends DatedEntry>(entries: T[]): T[] {
+export function isEntryVisible(draft: boolean | undefined, includeDrafts = false): boolean {
+  return !draft || includeDrafts;
+}
+
+export function sortPublished<T extends DatedEntry>(entries: T[], includeDrafts = false): T[] {
   return entries
-    .filter(({ data }) => !data.draft)
+    .filter(({ data }) => isEntryVisible(data.draft, includeDrafts))
     .toSorted((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }
 
