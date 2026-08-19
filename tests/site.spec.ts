@@ -45,6 +45,31 @@ test('homepage presents an editorial research shelf', async ({ page }) => {
   expect(await page.locator('[data-entry-kind="compact"]').count()).toBeGreaterThan(0);
 });
 
+test('homepage content uses contribution-first copy', async ({ page }) => {
+  await page.goto('/');
+
+  const researchColumns = page.locator('[data-research-column]');
+  await expect(researchColumns.nth(0).getByText(
+    'An open family of diffusion language models, from scalable text generation to agentic editing.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(researchColumns.nth(1).getByText(
+    'Levenshtein editing brings insertion, deletion, and replacement to agentic diffusion generation.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(researchColumns.nth(2).getByRole('heading', { name: 'A Home for LLaDA Research' })).toBeVisible();
+
+  await page.goto('/papers/');
+  await expect(page.getByText(
+    'Token editing accelerates text diffusion by revising only what needs to change.',
+    { exact: true },
+  )).toBeVisible();
+  await expect(page.getByText(
+    'Scaling discrete diffusion language models to 100B parameters with Mixture-of-Experts.',
+    { exact: true },
+  )).toBeVisible();
+});
+
 test('research shelf lead links reveal their token state on keyboard focus', async ({ page }) => {
   await page.goto('/');
 
