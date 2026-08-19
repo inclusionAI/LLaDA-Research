@@ -50,11 +50,11 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
 
   const researchColumns = page.locator('[data-research-column]');
   await expect(researchColumns.nth(0).getByText(
-    'An open family of diffusion language models, from scalable text generation to agentic editing.',
+    'Open diffusion models for language, multimodal creation, and agents.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(1).getByText(
-    'Levenshtein editing brings insertion, deletion, and replacement to agentic diffusion generation.',
+    'Levenshtein editing enables agentic generation with insert, delete, and replace.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(2).getByRole('heading', { name: 'A Home for LLaDA Research' })).toBeVisible();
@@ -68,6 +68,28 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
     'Scaling discrete diffusion language models to 100B parameters with Mixture-of-Experts.',
     { exact: true },
   )).toBeVisible();
+});
+
+test('homepage lead summaries remain intact at narrow desktop widths', async ({ page }) => {
+  await page.setViewportSize({ width: 901, height: 900 });
+  await page.goto('/');
+
+  const summaries = page.locator('[data-entry-kind="lead"] p');
+  await expect(summaries).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1) {
+    const summary = summaries.nth(index);
+    const fullyVisible = await summary.evaluate((element) => (
+      element.scrollHeight <= element.clientHeight + 1
+    ));
+    const dimensions = await summary.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    expect.soft(
+      fullyVisible,
+      `lead summary ${index + 1} is not fully visible (${dimensions.scrollHeight}px > ${dimensions.clientHeight}px)`,
+    ).toBe(true);
+  }
 });
 
 test('research shelf lead links reveal their token state on keyboard focus', async ({ page }) => {
