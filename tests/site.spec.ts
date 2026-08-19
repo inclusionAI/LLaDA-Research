@@ -29,6 +29,17 @@ test('denoise field has a designed reduced-motion state', async ({ page }) => {
   await expect(page.locator('[data-static-token-field]')).toBeVisible();
 });
 
+test('denoise field responds to pointer input and lets the trail settle', async ({ page }) => {
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+  const box = await field.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width * 0.72, box!.y + box!.height * 0.5);
+  await expect(field).toHaveAttribute('data-interacting', 'true');
+  await page.mouse.move(0, 0);
+  await expect(field).toHaveAttribute('data-interacting', 'false', { timeout: 2_000 });
+});
+
 test('supporting pages share the dark visual system', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/', '/404.html']) {
     await page.goto(path);
