@@ -1,0 +1,138 @@
+---
+import DiffusionMark from './DiffusionMark.astro';
+import ResourceLinks from './ResourceLinks.astro';
+
+interface Props {
+  href: string;
+  title: string;
+  summary: string;
+  date: Date;
+  tags: string[];
+  meta?: string;
+  cover?: string;
+  links?: Record<string, string | undefined>;
+}
+
+const { href, title, summary, date, tags, meta = 'Research', cover, links } = Astro.props;
+const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<article class="content-card" data-filter-card data-title={title.toLowerCase()} data-tags={JSON.stringify(tags.map((tag) => tag.toLowerCase()))}>
+  <a class="card-art" href={href} aria-label={`Read ${title}`}>
+    {cover ? <img src={cover} alt="" width="420" height="300" loading="lazy" /> : <DiffusionMark compact label="Abstract LLaDA diffusion field" />}
+  </a>
+  <div class="card-copy">
+    <div class="card-meta">
+      <span>{meta}</span>
+      <time datetime={date.toISOString()}>{formattedDate}</time>
+    </div>
+    <h2><a href={href}>{title}</a></h2>
+    <p>{summary}</p>
+    <ul class="tag-list" aria-label="Tags">
+      {tags.map((tag) => <li class="tag">{tag}</li>)}
+    </ul>
+    <div class="card-footer">
+      <a class="read-link" href={href}>Read more <span aria-hidden="true">→</span></a>
+      <ResourceLinks links={links} compact />
+    </div>
+  </div>
+</article>
+
+<style>
+  .content-card {
+    display: grid;
+    grid-template-columns: minmax(11rem, 0.38fr) minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 0.88);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .content-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+  }
+
+  .card-art {
+    min-height: 14.5rem;
+    background: var(--night);
+  }
+
+  .card-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(1.4rem, 3vw, 2.3rem);
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 680;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .card-meta span {
+    color: var(--accent-deep);
+  }
+
+  h2 {
+    max-width: 28ch;
+    margin: 0.85rem 0 0.65rem;
+    font-size: clamp(1.35rem, 2.8vw, 2.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  h2 a:hover {
+    color: var(--accent-deep);
+  }
+
+  p {
+    max-width: 42rem;
+    margin: 0 0 1.2rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+  .card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .read-link {
+    color: var(--accent-deep);
+    font-size: 0.73rem;
+    font-weight: 720;
+  }
+
+  @media (max-width: 650px) {
+    .content-card {
+      grid-template-columns: 1fr;
+    }
+
+    .card-art {
+      min-height: 11rem;
+    }
+  }
+</style>

@@ -1,0 +1,162 @@
+---
+interface Props {
+  tags: string[];
+  total: number;
+}
+
+const { tags, total } = Astro.props;
+---
+
+<section class="archive-filter" data-archive-filter aria-label="Filter research archive">
+  <div class="search-field">
+    <label for="archive-search">Search the archive</label>
+    <input id="archive-search" type="search" placeholder="Search titles or topics" autocomplete="off" data-filter-query />
+  </div>
+  <div class="filter-tags" aria-label="Filter by topic">
+    <button class="active" type="button" data-filter-tag="" aria-pressed="true">All</button>
+    {tags.map((tag) => <button type="button" data-filter-tag={tag.toLowerCase()} aria-pressed="false">{tag}</button>)}
+  </div>
+  <div class="filter-summary">
+    <span aria-live="polite" data-filter-status>{total} {total === 1 ? 'entry' : 'entries'}</span>
+    <button type="button" data-filter-clear>Clear filters</button>
+  </div>
+</section>
+
+<script>
+  import { matchesArchiveEntry } from '../lib/archive';
+
+  document.querySelectorAll<HTMLElement>('[data-archive-filter]').forEach((filter) => {
+    const query = filter.querySelector<HTMLInputElement>('[data-filter-query]');
+    const buttons = [...filter.querySelectorAll<HTMLButtonElement>('[data-filter-tag]')];
+    const status = filter.querySelector<HTMLElement>('[data-filter-status]');
+    const clear = filter.querySelector<HTMLButtonElement>('[data-filter-clear]');
+    const cards = [...document.querySelectorAll<HTMLElement>('[data-filter-card]')];
+    let activeTag = '';
+
+    const apply = () => {
+      const value = query?.value.trim() ?? '';
+      let visible = 0;
+
+      cards.forEach((card) => {
+        const title = card.dataset.title ?? '';
+        const tags = JSON.parse(card.dataset.tags ?? '[]') as string[];
+        const matches = matchesArchiveEntry(title, tags, value, activeTag);
+        card.hidden = !matches;
+        if (matches) visible += 1;
+      });
+
+      if (status) status.textContent = `${visible} ${visible === 1 ? 'entry' : 'entries'}`;
+    };
+
+    query?.addEventListener('input', apply);
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeTag = button.dataset.filterTag ?? '';
+        buttons.forEach((item) => {
+          const active = item === button;
+          item.classList.toggle('active', active);
+          item.setAttribute('aria-pressed', String(active));
+        });
+        apply();
+      });
+    });
+    clear?.addEventListener('click', () => {
+      if (query) query.value = '';
+      buttons[0]?.click();
+      query?.focus();
+    });
+  });
+</script>
+
+<style>
+  .archive-filter {
+    display: grid;
+    grid-template-columns: minmax(15rem, 0.8fr) minmax(0, 1.4fr) auto;
+    gap: 1.25rem;
+    align-items: end;
+    margin-block: 2rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 0.74);
+  }
+
+  .search-field {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  label {
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 0.7rem;
+    background: white;
+    color: var(--ink);
+  }
+
+  .filter-tags {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.45rem;
+    padding-block: 0.15rem;
+  }
+
+  .filter-tags button,
+  [data-filter-clear] {
+    min-height: 2.4rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.67rem;
+    font-weight: 680;
+    white-space: nowrap;
+  }
+
+  .filter-tags button.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+  }
+
+  .filter-summary {
+    display: grid;
+    gap: 0.25rem;
+    justify-items: end;
+    color: var(--muted);
+    font-size: 0.7rem;
+  }
+
+  [data-filter-clear] {
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--accent-deep);
+  }
+
+  @media (max-width: 900px) {
+    .archive-filter {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    .filter-summary {
+      grid-auto-flow: column;
+      justify-content: space-between;
+      justify-items: start;
+    }
+  }
+</style>

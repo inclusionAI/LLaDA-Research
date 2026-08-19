@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DiffusionMark from '../components/DiffusionMark.astro';
+---
+
+<BaseLayout title="About" description="About LLaDA, the diffusion language model research family developed by InclusionAI at Ant Group.">
+  <div class="about shell">
+    <header class="page-intro">
+      <div><p class="eyebrow">About the project</p><h1>A different path to intelligence.</h1></div>
+      <p>LLaDA is a family of diffusion language models developed by InclusionAI at Ant Group, spanning large language and unified multimodal research.</p>
+    </header>
+    <section class="about-grid">
+      <div class="about-copy">
+        <p class="eyebrow">Open research</p>
+        <h2>Language, reasoning, understanding, and generation.</h2>
+        <p>The LLaDA2.X series scales diffusion language models and explores faster generation through editing-based approaches. LLaDA2.0-Uni extends the family into multimodal understanding, image generation, and editing.</p>
+        <p>This independent research index organizes official releases, papers, code, model checkpoints, and technical notes in one place.</p>
+        <nav class="about-links" aria-label="Official LLaDA links">
+          <a class="button button-primary" href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">LLaDA2.X ↗</a>
+          <a class="button button-ghost" href="https://github.com/inclusionAI/LLaDA2.0-Uni" target="_blank" rel="noreferrer">LLaDA2.0-Uni ↗</a>
+          <a class="button button-ghost" href="https://huggingface.co/inclusionAI" target="_blank" rel="noreferrer">Hugging Face ↗</a>
+        </nav>
+      </div>
+      <DiffusionMark label="LLaDA diffusion research field" />
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.72fr);
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .about-copy {
+    padding: clamp(2rem, 5vw, 4rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+
+  h2 {
+    max-width: 18ch;
+    margin: 0 0 1.5rem;
+    font-size: clamp(2rem, 4vw, 3.8rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .about-copy > p:not(.eyebrow) {
+    max-width: 48rem;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+
+  .about-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 800px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

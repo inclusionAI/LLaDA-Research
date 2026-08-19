@@ -1,0 +1,34 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import RelatedContent from '../../components/RelatedContent.astro';
+import ResourceLinks from '../../components/ResourceLinks.astro';
+import ContentLayout from '../../layouts/ContentLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = (await getCollection('models')).filter(({ data }) => !data.draft);
+  return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'models'> }
+const { entry } = Astro.props as Props;
+const { Content } = await render(entry);
+const [models, papers, posts] = await Promise.all([
+  getCollection('models', ({ data }) => !data.draft),
+  getCollection('papers', ({ data }) => !data.draft),
+  getCollection('blog', ({ data }) => !data.draft),
+]);
+const relatedEntries = [
+  ...models.map((item) => ({ ...item, kind: 'model' as const })),
+  ...papers.map((item) => ({ ...item, kind: 'paper' as const })),
+  ...posts.map((item) => ({ ...item, kind: 'blog' as const })),
+];
+---
+
+<ContentLayout {...entry.data}>
+  <div slot="aside" class="resource-panel">
+    <p>{entry.data.family} · {entry.data.modality} · {entry.data.status}</p>
+    <ResourceLinks links={entry.data.links} />
+  </div>
+  <Content />
+  <RelatedContent currentId={entry.id} entries={relatedEntries} tags={entry.data.tags} />
+</ContentLayout>

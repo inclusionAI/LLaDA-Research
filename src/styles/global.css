@@ -352,6 +352,32 @@ a:hover .external-arrow {
   display: none !important;
 }
 
+.archive-page {
+  padding-bottom: 2rem;
+}
+
+.archive-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.resource-panel {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.78);
+  box-shadow: var(--shadow-sm);
+}
+
+.resource-panel > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
 @media (max-width: 800px) {
   :root {
     --header-height: 4.2rem;

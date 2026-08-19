@@ -1,0 +1,97 @@
+---
+import { selectRelated } from '../lib/archive';
+import { withBase } from '../lib/site-config';
+
+type Kind = 'model' | 'paper' | 'blog';
+
+interface Entry {
+  id: string;
+  kind: Kind;
+  data: {
+    title: string;
+    summary: string;
+    tags: string[];
+    date: Date;
+  };
+}
+
+interface Props {
+  currentId: string;
+  entries: Entry[];
+  tags: string[];
+}
+
+const { currentId, entries, tags } = Astro.props;
+const related = selectRelated(entries, currentId, tags);
+const base = import.meta.env.BASE_URL;
+const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blog: 'blog' };
+---
+
+{related.length > 0 && (
+  <section class="related" aria-labelledby="related-title">
+    <p class="eyebrow">Continue exploring</p>
+    <h2 id="related-title">Related research</h2>
+    <div class="related-grid">
+      {related.map((entry) => (
+        <a href={withBase(base, `${pathByKind[entry.kind]}/${entry.id}/`)}>
+          <span>{entry.kind}</span>
+          <h3>{entry.data.title}</h3>
+          <p>{entry.data.summary}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .related {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .related > h2 {
+    margin: 0 0 1.25rem;
+    font-size: 2rem;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .related-grid a {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    text-decoration: none;
+  }
+
+  .related-grid span {
+    color: var(--accent-deep);
+    font-size: 0.62rem;
+    font-weight: 720;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .related-grid h3 {
+    margin: 0.65rem 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  .related-grid p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 700px) {
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import ArchiveFilter from '../../components/ArchiveFilter.astro';
+import ContentCard from '../../components/ContentCard.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sortPublished } from '../../lib/content';
+import { withBase } from '../../lib/site-config';
+
+const entries = sortPublished(await getCollection('blog'));
+const tags = [...new Set(entries.flatMap(({ data }) => data.tags))].toSorted();
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="Blog" description="Release notes and technical perspectives from LLaDA research.">
+  <div class="archive-page shell">
+    <header class="page-intro">
+      <div><p class="eyebrow">Field notes</p><h1>Blog</h1></div>
+      <p>Release notes, engineering details, and perspectives on diffusion language and multimodal modeling.</p>
+    </header>
+    <ArchiveFilter tags={tags} total={entries.length} />
+    <div class="archive-list">
+      {entries.map((entry) => (
+        <ContentCard
+          href={withBase(base, `blog/${entry.id}/`)}
+          title={entry.data.title}
+          summary={entry.data.summary}
+          date={entry.data.date}
+          tags={entry.data.tags}
+          meta={`${entry.data.category}${entry.data.readingTime ? ` · ${entry.data.readingTime}` : ''}`}
+          cover={entry.data.cover}
+          links={entry.data.links}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>

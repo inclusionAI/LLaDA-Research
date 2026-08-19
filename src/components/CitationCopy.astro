@@ -1,0 +1,90 @@
+---
+interface Props {
+  citation?: string;
+}
+
+const { citation } = Astro.props;
+---
+
+{citation && (
+  <section class="citation" data-citation>
+    <div class="citation-header">
+      <h2>Citation</h2>
+      <button type="button" data-citation-copy data-citation-value={citation}>Copy citation</button>
+    </div>
+    <pre><code>{citation}</code></pre>
+    <p class="copy-status" aria-live="polite" data-copy-status></p>
+  </section>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-citation]').forEach((section) => {
+    const button = section.querySelector<HTMLButtonElement>('[data-citation-copy]');
+    const status = section.querySelector<HTMLElement>('[data-copy-status]');
+    button?.addEventListener('click', async () => {
+      const citation = button.dataset.citationValue ?? '';
+      try {
+        await navigator.clipboard.writeText(citation);
+        button.textContent = 'Copied';
+        if (status) status.textContent = 'Citation copied to clipboard.';
+        window.setTimeout(() => {
+          button.textContent = 'Copy citation';
+          if (status) status.textContent = '';
+        }, 2000);
+      } catch {
+        if (status) status.textContent = 'Select the citation text and copy it manually.';
+      }
+    });
+  });
+</script>
+
+<style>
+  .citation {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .citation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--accent-deep);
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 720;
+  }
+
+  pre {
+    overflow-x: auto;
+    margin: 0.85rem 0 0;
+    padding: 0.8rem;
+    border-radius: 0.6rem;
+    background: var(--surface-soft);
+    color: var(--ink-soft);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .copy-status {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.66rem;
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import ArchiveFilter from '../../components/ArchiveFilter.astro';
+import ContentCard from '../../components/ContentCard.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sortPublished } from '../../lib/content';
+import { withBase } from '../../lib/site-config';
+
+const entries = sortPublished(await getCollection('models'));
+const tags = [...new Set(entries.flatMap(({ data }) => data.tags))].toSorted();
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="Models" description="Explore released models across the LLaDA diffusion research family.">
+  <div class="archive-page shell">
+    <header class="page-intro">
+      <div><p class="eyebrow">Research archive</p><h1>Models</h1></div>
+      <p>Language and multimodal diffusion models, checkpoints, code, and official release resources.</p>
+    </header>
+    <ArchiveFilter tags={tags} total={entries.length} />
+    <div class="archive-list">
+      {entries.map((entry) => (
+        <ContentCard
+          href={withBase(base, `models/${entry.id}/`)}
+          title={entry.data.title}
+          summary={entry.data.summary}
+          date={entry.data.date}
+          tags={entry.data.tags}
+          meta={`${entry.data.modality} · ${entry.data.status}`}
+          cover={entry.data.cover}
+          links={entry.data.links}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
