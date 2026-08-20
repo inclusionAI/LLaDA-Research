@@ -307,6 +307,32 @@ test('parallel semantic convergence resolves quickly and edits three positions t
   await expect(field.locator('[data-coherence-region]')).toHaveCount(0);
 });
 
+test('coherence field responds without separating from the hero', async ({ page }) => {
+  const cases = [
+    { width: 1440, height: 1000, lines: '3', maximumSide: 390 },
+    { width: 820, height: 900, lines: '3', maximumSide: 340 },
+    { width: 390, height: 844, lines: '2', maximumSide: 280 },
+  ];
+
+  for (const viewport of cases) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto('/');
+    const field = page.locator('[data-denoise-field]');
+    const hero = page.locator('.research-hero');
+    await expect(field).toHaveAttribute('data-semantic-lines', viewport.lines);
+    const side = Number(await field.getAttribute('data-coherence-side'));
+    expect(side).toBeGreaterThan(0);
+    expect(side).toBeLessThanOrEqual(viewport.maximumSide);
+    const [fieldBox, heroBox] = await Promise.all([field.boundingBox(), hero.boundingBox()]);
+    expect(fieldBox).not.toBeNull();
+    expect(heroBox).not.toBeNull();
+    expect(Math.abs(fieldBox!.width - heroBox!.width)).toBeLessThan(2);
+    expect(Math.abs(fieldBox!.height - heroBox!.height)).toBeLessThan(2);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
+  }
+});
+
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout assertion');
   await page.goto('/papers/');

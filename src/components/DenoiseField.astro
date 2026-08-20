@@ -84,8 +84,8 @@
       const tablet = width >= 700 && width < 960;
       const side = mobile ? Math.min(width * 0.7, 280) : tablet ? Math.min(width * 0.34, 340) : Math.min(390, Math.max(280, width * 0.27));
       return {
-        centerX: width * (mobile ? 0.76 : tablet ? 0.77 : 0.78),
-        centerY: height * (mobile ? 0.62 : tablet ? 0.56 : 0.5),
+        centerX: width * (mobile ? 0.84 : tablet ? 0.78 : 0.78),
+        centerY: height * (mobile ? 0.7 : tablet ? 0.57 : 0.5),
         side,
         feather: Math.max(32, Math.min(48, side * 0.12)),
       };
@@ -99,7 +99,7 @@
       const sampleSize = Math.max(1, Math.round(side));
       samplingCanvas.width = sampleSize;
       samplingCanvas.height = sampleSize;
-      const fontSize = Math.max(9, Math.min(12, side * 0.032));
+      const fontSize = Math.max(10, Math.min(14, side * 0.038));
       const gap = fontSize * 0.82;
       const lineGap = side * (semanticLineCount === 2 ? 0.18 : 0.145);
       const visibleLines = lines.slice(0, semanticLineCount);
@@ -124,8 +124,8 @@
           const sampleHeight = Math.min(sampleSize - top, Math.ceil(fontSize * 1.35));
           const pixels = samplingContext.getImageData(left, top, sampleWidth, sampleHeight).data;
 
-          for (let y = 0; y < sampleHeight; y += 2) {
-            for (let x = 0; x < sampleWidth; x += 2) {
+          for (let y = 0; y < sampleHeight; y += 1) {
+            for (let x = 0; x < sampleWidth; x += 1) {
               if (pixels[(y * sampleWidth + x) * 4 + 3] > 80) {
                 points.push({
                   x: centerX - side / 2 + left + x,
@@ -144,7 +144,8 @@
     const makeParticle = (index: number): Particle => {
       const band = index % 7;
       const centerY = height * (0.18 + band * 0.105);
-      const x = width * (0.38 + Math.random() * 0.64);
+      const fieldStart = width < 700 ? 0.5 : 0.38;
+      const x = width * (fieldStart + Math.random() * (1.02 - fieldStart));
       const y = centerY + (Math.random() + Math.random() - 1) * height * 0.105;
       return {
         x,
@@ -165,15 +166,15 @@
       const replacementTargets = sampleLines(editedLines);
       const replacementsByGroup = [0, 1, 2].map((group) => replacementTargets.filter((point) => point.editGroup === group));
       const { centerX, centerY } = geometry();
-      const candidates = [...particles].sort((a, b) => (
+      const candidates = particles.filter((particle) => particle.index % 2 === 0).sort((a, b) => (
         Math.hypot(a.originX - centerX, a.originY - centerY) - Math.hypot(b.originX - centerX, b.originY - centerY)
       ));
-      const targetCount = Math.min(candidates.length, Math.max(320, Math.min(900, initialTargets.length)));
+      const targetCount = Math.min(candidates.length, width < 700 ? 520 : 900);
       const groupOffsets = [0, 0, 0];
 
       for (let index = 0; index < targetCount; index += 1) {
         const particle = candidates[index];
-        const target = initialTargets[index % Math.max(1, initialTargets.length)];
+        const target = initialTargets[Math.floor(index * initialTargets.length / Math.max(1, targetCount))];
         if (!target) continue;
         particle.target = target;
         if (target.editGroup >= 0) {
@@ -199,6 +200,7 @@
       ratio = Math.min(window.devicePixelRatio || 1, 2);
       semanticLineCount = width < 700 ? 2 : 3;
       field.dataset.semanticLines = String(semanticLineCount);
+      field.dataset.coherenceSide = String(Math.round(geometry().side));
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -239,8 +241,8 @@
       const size = particle.size * (0.72 + particle.depth);
       if (particle.material === 'stroke') {
         const angle = Math.atan2(driftY, driftX);
-        const length = 3 + particle.depth * 6;
-        context.strokeStyle = `rgba(${channels}, ${alpha * 0.82})`;
+        const length = 2.5 + particle.depth * 5;
+        context.strokeStyle = `rgba(${channels}, ${alpha * 0.68})`;
         context.lineWidth = 0.35 + particle.depth * 0.2;
         context.beginPath();
         context.moveTo(x, y);
@@ -351,7 +353,7 @@
           context.fillStyle = mineral
             ? `rgba(197, 207, 162, ${Math.min(0.82, alpha)})`
             : `rgba(232, 234, 226, ${Math.min(0.86, alpha)})`;
-          const semanticSize = 0.55 + particle.depth * 0.7;
+          const semanticSize = 0.68 + particle.depth * 0.76;
           context.fillRect(particle.x, particle.y, semanticSize, semanticSize * 0.78);
         } else if (particle.material !== 'semantic' || phase.coherence > 0.08) {
           drawAmbientMaterial(particle, particle.x, particle.y, alpha, driftX, driftY);
