@@ -9,9 +9,8 @@ test('homepage presents the LLaDA diffusion hero before a compact research index
   }
   await expect(page.getByRole('heading', { name: 'Language, diffused.' })).toBeVisible();
   await expect(page.locator('[data-denoise-field]')).toBeVisible();
-  const featuredStrip = await page.locator('[data-featured-strip]').boundingBox();
-  expect(featuredStrip).not.toBeNull();
-  expect(featuredStrip!.height).toBe(47);
+  await expect(page.getByRole('region', { name: 'Research updates' })).toBeVisible();
+  await expect(page.locator('[data-update-entry]')).toHaveCount(4);
   await expect(page.locator('[data-research-index]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Models', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Papers', exact: true })).toBeVisible();
@@ -48,8 +47,8 @@ test('homepage supporting type is readable at desktop and mobile sizes', async (
   await expectFontSizeAtLeast('.hero-kicker', 10.8);
   await expectFontSizeAtLeast('.hero-summary', 15);
   await expectFontSizeAtLeast('.hero-links a', 12);
-  await expectFontSizeAtLeast('.featured-label', 10.8);
-  await expectFontSizeAtLeast('.featured-title strong', 12.8);
+  await expectFontSizeAtLeast('.update-kind', 10.8);
+  await expectFontSizeAtLeast('.update-title', 12.8);
   await expectFontSizeAtLeast('.index-eyebrow', 10.8);
   await expectFontSizeAtLeast('.index-description', 14);
   await expectFontSizeAtLeast('.column-header h2', 22);
@@ -64,9 +63,7 @@ test('homepage supporting type is readable at desktop and mobile sizes', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await expectFontSizeAtLeast('.column-header p', 13);
   await expectFontSizeAtLeast('.entry-link--lead > p', 13);
-  const featuredStrip = await page.locator('[data-featured-strip]').boundingBox();
-  expect(featuredStrip).not.toBeNull();
-  expect(featuredStrip!.height).toBe(47);
+  await expect(page.locator('[data-update-entry]')).toHaveCount(4);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
 });
@@ -78,9 +75,23 @@ test('homepage presents an editorial research shelf', async ({ page }) => {
     'LLaDA turns masked noise into language through iterative, parallel denoising—an open alternative to left-to-right generation.',
     { exact: true },
   )).toBeVisible();
-  await expect(page.locator('[data-featured-strip]').getByText('Latest', { exact: true })).toBeVisible();
-  await expect(page.getByText('The work', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Models. Papers. Notes.', exact: true })).toBeVisible();
+  const updates = page.getByRole('region', { name: 'Research updates' });
+  await expect(updates.locator('[data-update-entry]')).toHaveCount(4);
+  await expect(updates.getByText('Paper', { exact: true })).toHaveCount(2);
+  await expect(updates.getByText('Model', { exact: true })).toHaveCount(1);
+  await expect(updates.getByText('Note', { exact: true })).toHaveCount(1);
+  await expect(updates.getByRole('link', { name: /^Model .* LLaDA2\.2$/ })).toContainText('Model');
+  await expect(updates.getByRole('link', { name: /A Home for LLaDA Research/ })).toContainText('Note');
+  await expect(page.getByText('Latest', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Research program', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', {
+    name: 'Diffusion language models, from foundations to scale.',
+    exact: true,
+  })).toBeVisible();
+  await expect(page.getByText(
+    'Models, papers, and technical notes across the LLaDA research program.',
+    { exact: true },
+  )).toBeVisible();
   await expect(page.getByText('Open checkpoints for language and multimodal generation.', { exact: true })).toBeVisible();
   await expect(page.getByText(
     'Methods for scaling, accelerating, and extending diffusion language models.',
@@ -178,7 +189,7 @@ test('research shelf uses whitespace instead of a desktop table', async ({ page 
 test('homepage uses the dark research theme', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(3, 3, 3)');
-  await expect(page.locator('[data-featured-strip]')).toHaveCSS('border-radius', '0px');
+  await expect(page.locator('[data-research-updates]')).toHaveCSS('border-radius', '0px');
 });
 
 test('desktop hero stays close to 55vh on a short landscape viewport', async ({ page }) => {
@@ -254,12 +265,26 @@ test('footer copyright text meets WCAG AA contrast', async ({ page }) => {
   expect(contrast).toBeGreaterThanOrEqual(4.5);
 });
 
-test('mobile featured strip exposes a concise identifiable title', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'mobile layout assertion');
+test('research updates form a two-column desktop grid and four mobile rows', async ({ page, isMobile }) => {
   await page.goto('/');
-  const title = page.locator('[data-featured-mobile-title]');
-  await expect(title).toBeVisible();
-  await expect(title).toHaveText('LLaDA2.2 — Agentic diffusion through Levenshtein editing');
+  const entries = page.locator('[data-update-entry]');
+  await expect(entries).toHaveCount(4);
+  const boxes = await Promise.all(Array.from({ length: 4 }, (_, index) => entries.nth(index).boundingBox()));
+  expect(boxes.every(Boolean)).toBe(true);
+
+  if (isMobile) {
+    expect(boxes[0]!.y).toBeLessThan(boxes[1]!.y);
+    expect(boxes[1]!.y).toBeLessThan(boxes[2]!.y);
+    expect(boxes[2]!.y).toBeLessThan(boxes[3]!.y);
+    expect(Math.abs(boxes[0]!.x - boxes[1]!.x)).toBeLessThan(2);
+  } else {
+    expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(2);
+    expect(boxes[0]!.x).toBeLessThan(boxes[1]!.x);
+    expect(boxes[2]!.y).toBeGreaterThan(boxes[0]!.y);
+  }
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(overflow).toBe(false);
 });
 
 test('supporting pages share the dark visual system', async ({ page }) => {

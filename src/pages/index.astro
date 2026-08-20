@@ -1,10 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import FeaturedRelease from '../components/FeaturedRelease.astro';
+import ResearchUpdates from '../components/ResearchUpdates.astro';
 import ResearchHero from '../components/ResearchHero.astro';
 import ResearchColumn from '../components/ResearchColumn.astro';
-import { selectFeatured, sortPublished } from '../lib/content';
+import { sortPublished } from '../lib/content';
 
 const [models, papers, posts] = await Promise.all([
   getCollection('models'),
@@ -16,21 +16,24 @@ const includeDrafts = import.meta.env.DEV;
 const publishedModels = sortPublished(models, includeDrafts);
 const publishedPapers = sortPublished(papers, includeDrafts);
 const publishedPosts = sortPublished(posts, includeDrafts);
-const featured = selectFeatured([
-  ...publishedModels.map((entry) => ({ ...entry, kind: 'model' as const })),
-  ...publishedPapers.map((entry) => ({ ...entry, kind: 'paper' as const })),
-  ...publishedPosts.map((entry) => ({ ...entry, kind: 'blog' as const })),
-]);
+const researchUpdates = [
+  ...publishedPapers.slice(0, 2).map((entry) => ({ ...entry, kind: 'paper' as const })),
+  ...publishedModels
+    .filter(({ data }) => data.status === 'released')
+    .slice(0, 1)
+    .map((entry) => ({ ...entry, kind: 'model' as const })),
+  ...publishedPosts.slice(0, 1).map((entry) => ({ ...entry, kind: 'blog' as const })),
+];
 ---
 
 <BaseLayout>
   <ResearchHero />
-  {featured && <FeaturedRelease entry={featured} />}
+  <ResearchUpdates entries={researchUpdates} />
   <section class="research-index shell" data-research-index aria-labelledby="research-index-title">
     <header class="index-header">
-      <p class="index-eyebrow">The work</p>
-      <h2 id="research-index-title">Models. Papers. Notes.</h2>
-      <p class="index-description">The LLaDA research program, in one view.</p>
+      <p class="index-eyebrow">Research program</p>
+      <h2 id="research-index-title">Diffusion language models, from foundations to scale.</h2>
+      <p class="index-description">Models, papers, and technical notes across the LLaDA research program.</p>
     </header>
     <div class="research-grid">
       <ResearchColumn
