@@ -379,14 +379,24 @@ test('model detail pages enumerate checkpoint releases', async ({ page }) => {
   }
 });
 
-test('llada 2 model resources preserve official collections', async ({ page }) => {
-  for (const [path, collection] of [
-    ['/models/llada-2-0/', 'https://huggingface.co/collections/inclusionAI/llada20'],
-    ['/models/llada-2-1/', 'https://huggingface.co/collections/inclusionAI/llada21'],
+test('llada 2 model resources link checkpoints and official collections', async ({ page }) => {
+  for (const { path, model, collection } of [
+    {
+      path: '/models/llada-2-0/',
+      model: 'https://huggingface.co/inclusionAI/LLaDA2.0-flash',
+      collection: 'https://huggingface.co/collections/inclusionAI/llada20',
+    },
+    {
+      path: '/models/llada-2-1/',
+      model: 'https://huggingface.co/inclusionAI/LLaDA2.1-flash',
+      collection: 'https://huggingface.co/collections/inclusionAI/llada21',
+    },
   ]) {
     await page.goto(path);
+    await expect(page.locator('.prose').getByRole('link', { name: 'official collection' }))
+      .toHaveAttribute('href', collection);
     await expect(page.getByRole('navigation', { name: 'External resources' })
-      .getByRole('link', { name: 'Models' })).toHaveAttribute('href', collection);
+      .getByRole('link', { name: 'Models' })).toHaveAttribute('href', model);
   }
 });
 
