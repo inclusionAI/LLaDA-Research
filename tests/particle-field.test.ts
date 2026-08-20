@@ -53,6 +53,13 @@ describe('coherencePhaseAt', () => {
       editProgress,
     ]);
   });
+
+  it('keeps replacement targets resolved after the edit finishes', () => {
+    expect(coherencePhaseAt(1259).replacement).toBe(0);
+    expect(coherencePhaseAt(1350).replacement).toBeGreaterThan(0);
+    expect(coherencePhaseAt(1440).replacement).toBe(1);
+    expect(coherencePhaseAt(2200).replacement).toBe(1);
+  });
 });
 
 describe('coherence field material', () => {

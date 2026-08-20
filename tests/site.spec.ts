@@ -297,6 +297,16 @@ test('coherence field keeps one dense multi-material animation system', async ({
   await expect(field.locator('canvas')).toHaveCount(1);
 });
 
+test('parallel semantic convergence resolves quickly and edits three positions together', async ({ page }) => {
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+
+  await expect(field).toHaveAttribute('data-edit-count', '3');
+  await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
+  await expect(field).toHaveAttribute('data-coherence-state', 'resolved', { timeout: 900 });
+  await expect(field.locator('[data-coherence-region]')).toHaveCount(0);
+});
+
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout assertion');
   await page.goto('/papers/');

@@ -14,6 +14,7 @@ export type CoherencePhase = {
   coherence: number;
   decode: number;
   edit: number;
+  replacement: number;
   disperse: number;
 };
 export type ParticleMaterial = 'micro' | 'stroke' | 'mask' | 'semantic';
@@ -80,9 +81,10 @@ export function coherencePhaseAt(elapsedMs: number): CoherencePhase {
       : elapsed < 1440
         ? 1 - progress(elapsed, 1260, 1440)
         : 0;
+  const replacement = elapsed < 1260 ? 0 : progress(elapsed, 1260, 1440);
   const disperse = elapsed < 2250 ? 0 : progress(elapsed, 2250, 3000);
 
-  return { name, coherence, decode, edit, disperse };
+  return { name, coherence, decode, edit, replacement, disperse };
 }
 
 export function materialForIndex(index: number): ParticleMaterial {
