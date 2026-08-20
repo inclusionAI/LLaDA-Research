@@ -1,29 +1,18 @@
 <div
   class="denoise-field"
   data-denoise-field
+  data-visual-system="coherence-field"
+  data-decode-window-ms="650"
+  data-edit-mode="simultaneous"
+  data-coherence-state="noise"
   data-motion="full"
   data-interacting="false"
   aria-hidden="true"
 >
   <canvas></canvas>
-  <div class="static-token-field" data-static-token-field>
-    <span class="mask mask-a">[MASK]</span>
-    <span class="partial partial-a">La</span>
-    <span class="mask mask-b">[ · ]</span>
-    <span class="partial partial-b">DA</span>
-    <span class="resolved resolved-a">language</span>
-    <span class="mask mask-c">▧</span>
-    <span class="resolved resolved-b">diffusion</span>
-    <span class="partial partial-c">∇x</span>
-  </div>
-  <div class="token-lanes" aria-hidden="true">
-    <span data-token-lane><i>[MASK]</i><i>[MASK]</i><b>La</b><b>DA</b></span>
-    <span data-token-lane><i>[ · ]</i><b>language</b><i>▧</i><b>parallel</b></span>
-    <span data-token-lane><i>[MASK]</i><b>diffusion</b><b>token</b><i>[  ]</i></span>
-  </div>
   <div class="field-readout">
     <span>MASK / TOKEN</span>
-    <span>PARALLEL DENOISE</span>
+    <span>PARALLEL DIFFUSION / EDITING</span>
   </div>
 </div>
 
@@ -50,8 +39,37 @@
     const context = canvas?.getContext('2d', { alpha: true });
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    if (!canvas || !context || motionQuery.matches) {
+    if (!canvas || !context) return;
+
+    const drawReducedSnapshot = () => {
+      const bounds = field.getBoundingClientRect();
+      const width = Math.max(1, bounds.width);
+      const height = Math.max(1, bounds.height);
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+
+      for (let index = 0; index < Math.round((width * height) / 310); index += 1) {
+        const seed = (index * 73) % 997;
+        const x = width * (0.4 + ((seed * 37) % 601) / 1000);
+        const y = height * (0.18 + ((seed * 61) % 641) / 1000);
+        const depth = (index % 3) / 2;
+        context.fillStyle = `rgba(190, 195, 187, ${0.08 + depth * 0.1})`;
+        context.fillRect(x, y, 0.5 + depth * 0.65, 0.5 + depth * 0.65);
+      }
+
+      context.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+      context.fillStyle = 'rgba(232, 234, 226, 0.72)';
+      context.fillText('[MASK]  language  diff·', width * 0.63, height * 0.44);
+      context.fillText('parallel  [··]  token', width * 0.68, height * 0.53);
+    };
+
+    if (motionQuery.matches) {
       field.dataset.motion = 'reduced';
+      field.dataset.coherenceState = 'partial';
+      drawReducedSnapshot();
       return;
     }
 
@@ -261,56 +279,6 @@
     height: 100%;
   }
 
-  .static-token-field {
-    position: absolute;
-    inset: 0;
-    display: none;
-    color: #72726d;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.65rem;
-  }
-
-  .token-lanes {
-    position: absolute;
-    top: 24%;
-    right: 1%;
-    display: grid;
-    width: 55%;
-    gap: clamp(2.4rem, 7vh, 4.8rem);
-    color: #5d5d58;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: clamp(0.48rem, 0.7vw, 0.62rem);
-    letter-spacing: 0.05em;
-    pointer-events: none;
-  }
-
-  .token-lanes > span {
-    display: flex;
-    gap: clamp(1.2rem, 3.5vw, 4.5rem);
-    align-items: center;
-    white-space: nowrap;
-  }
-
-  .token-lanes > span:nth-child(2) { transform: translateX(9%); }
-  .token-lanes > span:nth-child(3) { transform: translateX(-4%); }
-  .token-lanes i { color: #444440; font-style: normal; }
-  .token-lanes b { color: #888881; font-weight: 450; text-shadow: 0 0 1.2rem rgb(255 255 245 / 0.16); }
-
-  [data-interacting='true'] .token-lanes b { color: #b7b7b0; }
-
-  .static-token-field span {
-    position: absolute;
-  }
-
-  .mask-a { top: 28%; left: 58%; }
-  .mask-b { top: 58%; left: 77%; }
-  .mask-c { top: 43%; left: 91%; }
-  .partial-a { top: 38%; left: 70%; color: #aaa9a3; }
-  .partial-b { top: 65%; left: 63%; color: #aaa9a3; }
-  .partial-c { top: 31%; left: 84%; }
-  .resolved-a { top: 49%; left: 80%; color: #eeeee8; }
-  .resolved-b { top: 72%; left: 88%; color: #c7c7c0; }
-
   .field-readout {
     position: absolute;
     right: 0;
@@ -324,34 +292,10 @@
     letter-spacing: 0.14em;
   }
 
-  [data-motion='reduced'] canvas {
-    display: none;
-  }
-
-  [data-motion='reduced'] .static-token-field {
-    display: block;
-    background:
-      radial-gradient(ellipse at 76% 48%, rgb(255 255 248 / 0.09), transparent 8%),
-      repeating-radial-gradient(ellipse at 74% 50%, transparent 0 1.2rem, rgb(255 255 255 / 0.018) 1.25rem 1.32rem, transparent 1.38rem 2.2rem);
-  }
-
-  [data-motion='reduced'] .token-lanes { display: none; }
-
   @media (max-width: 700px) {
     .field-readout {
       display: none;
     }
 
-    .static-token-field {
-      transform: translateX(-9%);
-    }
-
-    .token-lanes {
-      top: 23%;
-      right: -36%;
-      width: 105%;
-      gap: 3.6rem;
-      opacity: 0.72;
-    }
   }
 </style>

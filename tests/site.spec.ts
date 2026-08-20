@@ -258,8 +258,10 @@ test('mobile hero leaves the research index within reach on a short phone', asyn
 test('denoise field has a designed reduced-motion state', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.locator('[data-denoise-field]')).toHaveAttribute('data-motion', 'reduced');
-  await expect(page.locator('[data-static-token-field]')).toBeVisible();
+  const field = page.locator('[data-denoise-field]');
+  await expect(field).toHaveAttribute('data-motion', 'reduced');
+  await expect(field).toHaveAttribute('data-coherence-state', 'partial');
+  await expect(field.locator('canvas')).toBeVisible();
 });
 
 test('denoise field responds to pointer input and lets the trail settle', async ({ page }) => {
@@ -273,11 +275,16 @@ test('denoise field responds to pointer input and lets the trail settle', async 
   await expect(field).toHaveAttribute('data-interacting', 'false', { timeout: 2_000 });
 });
 
-test('full-motion hero keeps readable parallel token lanes in the composition', async ({ page }) => {
+test('single coherence field replaces persistent background token lanes', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('[data-token-lane]')).toHaveCount(3);
-  await expect(page.locator('[data-token-lane]').first()).toBeVisible();
-  await expect(page.locator('[data-token-lane]').first()).toContainText('[MASK]');
+  const field = page.locator('[data-denoise-field]');
+
+  await expect(field.locator('canvas')).toHaveCount(1);
+  await expect(field.locator('[data-token-lane]')).toHaveCount(0);
+  await expect(field.locator('[data-static-token-field]')).toHaveCount(0);
+  await expect(field).toHaveAttribute('data-visual-system', 'coherence-field');
+  await expect(field).toHaveAttribute('data-decode-window-ms', '650');
+  await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
 });
 
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
