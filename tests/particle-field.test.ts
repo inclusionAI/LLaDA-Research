@@ -4,6 +4,7 @@ import {
   coherencePhaseAt,
   densityForFps,
   materialForIndex,
+  resolveParticlePosition,
   tokenStageForInfluence,
 } from '../src/lib/particle-field';
 
@@ -76,5 +77,18 @@ describe('coherence field material', () => {
     expect(coherenceWeight(50, 50, 50, 50, 40, 10)).toBe(1);
     expect(coherenceWeight(70, 50, 50, 50, 40, 10)).toBeCloseTo(0.5, 5);
     expect(coherenceWeight(81, 50, 50, 50, 40, 10)).toBe(0);
+  });
+
+  it('places resolved particles directly on their semantic targets', () => {
+    expect(resolveParticlePosition(
+      { x: 12, y: 18 },
+      { x: 80, y: 64 },
+      1,
+    )).toEqual({ x: 80, y: 64 });
+    expect(resolveParticlePosition(
+      { x: 12, y: 18 },
+      { x: 80, y: 64 },
+      0.5,
+    )).toEqual({ x: 46, y: 41 });
   });
 });

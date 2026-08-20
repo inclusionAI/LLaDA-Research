@@ -108,3 +108,15 @@ export function coherenceWeight(
   if (feather <= 0) return signedDistance <= 0 ? 1 : 0;
   return 1 - smoothstep((signedDistance + feather) / (feather * 2));
 }
+
+export function resolveParticlePosition(
+  ambient: { x: number; y: number },
+  semantic: { x: number; y: number },
+  coherence: number,
+): { x: number; y: number } {
+  const blend = Math.max(0, Math.min(1, coherence));
+  return {
+    x: ambient.x + (semantic.x - ambient.x) * blend,
+    y: ambient.y + (semantic.y - ambient.y) * blend,
+  };
+}

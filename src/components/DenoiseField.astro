@@ -8,6 +8,7 @@
   data-density-basis="165"
   data-animation-loops="1"
   data-edit-count="3"
+  data-pointer-glyphs="mask partial resolved"
   data-coherence-state="noise"
   data-motion="full"
   data-interacting="false"
@@ -26,6 +27,8 @@
     coherenceWeight,
     densityForFps,
     materialForIndex,
+    resolveParticlePosition,
+    tokenStageForInfluence,
   } from '../lib/particle-field';
   import type { CoherencePhase, ParticleMaterial } from '../lib/particle-field';
 
@@ -46,17 +49,35 @@
   };
 
   const maskGlyphs = ['[··]', '[  ]', '▧', '░'];
-  const generatedLines = [
+  const partialGlyphs = ['DIFF', 'LANG', 'TOK', '∇x'];
+  const resolvedGlyphs = ['LLaDA', 'language', 'parallel', 'editing'];
+  const desktopGeneratedLines = [
     ['DIFFUSION', 'MODELS', 'GENERATE', 'LANGUAGE'],
     ['TOKENS', 'EMERGE', 'IN', 'PARALLEL'],
     ['LANGUAGE', 'FORMS', 'THROUGH', 'DENOISING'],
   ];
-  const editedLines = [
+  const desktopEditedLines = [
     ['DIFFUSION', 'MODELS', 'EDIT', 'LANGUAGE'],
     ['TOKENS', 'UPDATE', 'IN', 'PARALLEL'],
     ['LANGUAGE', 'ADAPTS', 'THROUGH', 'DENOISING'],
   ];
-  const editTokenByRow = [2, 1, 1];
+  const desktopEditGroups = [
+    [-1, -1, 0, -1],
+    [-1, 1, -1, -1],
+    [-1, 2, -1, -1],
+  ];
+  const mobileGeneratedLines = [
+    ['MASKS', 'FORM', 'TEXT'],
+    ['TOKENS', 'RESOLVE', 'PARALLEL'],
+  ];
+  const mobileEditedLines = [
+    ['TOKENS', 'FORM', 'LANGUAGE'],
+    ['TOKENS', 'EDIT', 'PARALLEL'],
+  ];
+  const mobileEditGroups = [
+    [0, -1, 1],
+    [-1, 2, -1],
+  ];
 
   document.querySelectorAll<HTMLElement>('[data-denoise-field]').forEach((field) => {
     const canvas = field.querySelector('canvas');
@@ -84,14 +105,14 @@
       const tablet = width >= 700 && width < 960;
       const side = mobile ? Math.min(width * 0.7, 280) : tablet ? Math.min(width * 0.34, 340) : Math.min(390, Math.max(280, width * 0.27));
       return {
-        centerX: width * (mobile ? 0.84 : tablet ? 0.78 : 0.78),
-        centerY: height * (mobile ? 0.7 : tablet ? 0.57 : 0.5),
+        centerX: mobile ? width - side / 2 - 4 : width * (tablet ? 0.78 : 0.78),
+        centerY: height * (mobile ? 0.8 : tablet ? 0.57 : 0.5),
         side,
         feather: Math.max(32, Math.min(48, side * 0.12)),
       };
     };
 
-    const sampleLines = (lines: string[][]) => {
+    const sampleLines = (lines: string[][], editGroups: number[][]) => {
       const { centerX, centerY, side } = geometry();
       const samplingCanvas = document.createElement('canvas');
       const samplingContext = samplingCanvas.getContext('2d', { willReadFrequently: true });
@@ -130,7 +151,7 @@
                 points.push({
                   x: centerX - side / 2 + left + x,
                   y: centerY - side / 2 + top + y,
-                  editGroup: tokenIndex === editTokenByRow[row] ? row : -1,
+                  editGroup: editGroups[row]?.[tokenIndex] ?? -1,
                 });
               }
             }
@@ -162,8 +183,15 @@
     };
 
     const assignSemanticTargets = () => {
-      const initialTargets = sampleLines(generatedLines);
-      const replacementTargets = sampleLines(editedLines);
+      const mobile = width < 700;
+      const initialTargets = sampleLines(
+        mobile ? mobileGeneratedLines : desktopGeneratedLines,
+        mobile ? mobileEditGroups : desktopEditGroups,
+      );
+      const replacementTargets = sampleLines(
+        mobile ? mobileEditedLines : desktopEditedLines,
+        mobile ? mobileEditGroups : desktopEditGroups,
+      );
       const replacementsByGroup = [0, 1, 2].map((group) => replacementTargets.filter((point) => point.editGroup === group));
       const { centerX, centerY } = geometry();
       const candidates = particles.filter((particle) => particle.index % 2 === 0).sort((a, b) => (
@@ -185,6 +213,7 @@
           particle.replacement = target;
         }
       }
+      field.dataset.targetParticles = String(targetCount);
     };
 
     const rebuildParticles = () => {
@@ -200,7 +229,9 @@
       ratio = Math.min(window.devicePixelRatio || 1, 2);
       semanticLineCount = width < 700 ? 2 : 3;
       field.dataset.semanticLines = String(semanticLineCount);
-      field.dataset.coherenceSide = String(Math.round(geometry().side));
+      const coherenceGeometry = geometry();
+      field.dataset.coherenceSide = String(Math.round(coherenceGeometry.side));
+      field.dataset.coherenceX = String(Math.round(coherenceGeometry.centerX));
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -250,14 +281,25 @@
         context.stroke();
         return;
       }
-      if (particle.material === 'mask' && particle.index % 5 === 0) {
-        context.font = `${7 + particle.depth * 2}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-        context.fillStyle = `rgba(${channels}, ${alpha * 0.7})`;
+      if (particle.material === 'mask') {
+        context.font = `${5.5 + particle.depth * 1.5}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+        context.fillStyle = `rgba(${channels}, ${alpha * 0.26})`;
         context.fillText(maskGlyphs[particle.index % maskGlyphs.length], x, y);
         return;
       }
       context.fillStyle = `rgba(${channels}, ${alpha})`;
       context.fillRect(x, y, size, size * 0.72);
+    };
+
+    const drawPointerGlyph = (particle: Particle, influence: number) => {
+      if (influence < 0.18 || particle.index % 29 !== 0) return false;
+      const stage = tokenStageForInfluence(influence);
+      if (stage === 'noise') return false;
+      const glyphs = stage === 'mask' ? maskGlyphs : stage === 'partial' ? partialGlyphs : resolvedGlyphs;
+      context.font = `${stage === 'resolved' ? 9 : 7}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      context.fillStyle = `rgba(232, 234, 226, ${Math.min(0.72, 0.18 + influence * 0.58)})`;
+      context.fillText(glyphs[particle.index % glyphs.length], particle.x, particle.y);
+      return true;
     };
 
     const drawPhaseEdges = (phase: CoherencePhase) => {
@@ -306,6 +348,8 @@
         context.fillRect(pointer.x - pointerRadius * 1.5, pointer.y - pointerRadius * 1.5, pointerRadius * 3, pointerRadius * 3);
       }
 
+      let targetError = 0;
+      let targetSamples = 0;
       for (const particle of particles) {
         const driftX = Math.sin(now * 0.00018 + particle.seed) * (0.16 + particle.depth * 0.22);
         const driftY = Math.cos(now * 0.00015 + particle.seed * 1.7) * (0.11 + particle.depth * 0.16);
@@ -317,7 +361,9 @@
 
         if (particle.target) {
           const localCoherence = coherenceWeight(particle.originX, particle.originY, centerX, centerY, side, feather);
-          semanticStrength = phase.coherence * (0.48 + localCoherence * 0.52);
+          semanticStrength = phase.coherence * (
+            phase.decode + (1 - phase.decode) * (0.48 + localCoherence * 0.52)
+          );
           const replacement = particle.replacement || particle.target;
           let semanticX = particle.target.x + (replacement.x - particle.target.x) * phase.replacement;
           let semanticY = particle.target.y + (replacement.y - particle.target.y) * phase.replacement;
@@ -328,8 +374,13 @@
           const bandX = Math.max(centerX - side * 0.46, Math.min(centerX + side * 0.46, particle.originX));
           const orderedX = bandX + (semanticX - bandX) * phase.decode;
           const orderedY = semanticY;
-          desiredX += (orderedX - desiredX) * semanticStrength;
-          desiredY += (orderedY - desiredY) * semanticStrength;
+          const resolved = resolveParticlePosition(
+            { x: desiredX, y: desiredY },
+            { x: orderedX, y: orderedY },
+            semanticStrength,
+          );
+          desiredX = resolved.x;
+          desiredY = resolved.y;
         }
 
         const pointerDx = pointer.x - particle.x;
@@ -341,12 +392,25 @@
           desiredY += pointerDy * pointerInfluence * 0.028;
         }
 
-        const easing = 0.055 + semanticStrength * 0.18;
-        particle.x += (desiredX - particle.x) * easing * delta;
-        particle.y += (desiredY - particle.y) * easing * delta;
+        if (semanticStrength > 0) {
+          particle.x = desiredX;
+          particle.y = desiredY;
+        } else {
+          particle.x += (desiredX - particle.x) * 0.055 * delta;
+          particle.y += (desiredY - particle.y) * 0.055 * delta;
+        }
         const semanticActive = Boolean(particle.target && phase.decode > 0.04 && semanticStrength > 0.05);
         const editing = Boolean(particle.target && particle.target.editGroup >= 0 && phase.edit > 0.04);
-        const alpha = Math.min(0.9, 0.045 + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48);
+        const mobileCopyOcclusion = width < 700
+          && particle.x < width * 0.84
+          && particle.y > height * 0.43
+          && particle.y < height * 0.76
+          ? 0.25
+          : 1;
+        const alpha = Math.min(
+          0.9,
+          (0.045 + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48) * mobileCopyOcclusion,
+        );
 
         if (semanticActive) {
           const mineral = editing && particle.index % 4 === 0;
@@ -355,8 +419,14 @@
             : `rgba(232, 234, 226, ${Math.min(0.86, alpha)})`;
           const semanticSize = 0.68 + particle.depth * 0.76;
           context.fillRect(particle.x, particle.y, semanticSize, semanticSize * 0.78);
-        } else if (particle.material !== 'semantic' || phase.coherence > 0.08) {
+        } else if (!drawPointerGlyph(particle, pointerInfluence) && (particle.material !== 'semantic' || phase.coherence > 0.08)) {
           drawAmbientMaterial(particle, particle.x, particle.y, alpha, driftX, driftY);
+        }
+
+        if (field.dataset.coherenceState === 'resolved' && particle.target) {
+          const target = phase.replacement >= 1 ? (particle.replacement || particle.target) : particle.target;
+          targetError += Math.hypot(particle.x - target.x, particle.y - target.y);
+          targetSamples += 1;
         }
 
         if (pointerInfluence > 0.24 && pointer.speed > 3 && particle.index % 7 === 0) {
@@ -370,6 +440,10 @@
           );
           context.stroke();
         }
+      }
+
+      if (targetSamples > 0) {
+        field.dataset.targetError = (targetError / targetSamples).toFixed(2);
       }
 
       drawPhaseEdges(phase);
@@ -389,13 +463,25 @@
     };
 
     const draw = (now: number) => {
+      frameHandle = 0;
       renderFrame(now);
+      frameHandle = requestAnimationFrame(draw);
+    };
+
+    const stopAnimation = () => {
+      if (frameHandle) cancelAnimationFrame(frameHandle);
+      frameHandle = 0;
+    };
+
+    const startAnimation = () => {
+      if (frameHandle || document.hidden || motionQuery.matches) return;
       frameHandle = requestAnimationFrame(draw);
     };
 
     const drawReducedSnapshot = () => {
       field.dataset.motion = 'reduced';
       field.dataset.coherenceState = 'partial';
+      field.dataset.reducedTargets = field.dataset.targetParticles || '0';
       renderFrame(performance.now(), {
         name: 'decode',
         coherence: 0.82,
@@ -415,30 +501,33 @@
     if (motionQuery.matches) {
       drawReducedSnapshot();
     } else {
-      frameHandle = requestAnimationFrame(draw);
+      startAnimation();
     }
 
     motionQuery.addEventListener('change', (event) => {
-      cancelAnimationFrame(frameHandle);
+      stopAnimation();
       if (event.matches) {
         drawReducedSnapshot();
       } else {
         field.dataset.motion = 'full';
         previousFrame = performance.now();
         cycleStarted = previousFrame;
-        frameHandle = requestAnimationFrame(draw);
+        frameWindowStarted = previousFrame;
+        startAnimation();
       }
     });
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         hiddenAt = performance.now();
-        cancelAnimationFrame(frameHandle);
+        stopAnimation();
       } else if (!motionQuery.matches) {
         const resumedAt = performance.now();
         cycleStarted += resumedAt - hiddenAt;
         previousFrame = resumedAt;
-        frameHandle = requestAnimationFrame(draw);
+        frameWindowStarted = resumedAt;
+        frameCount = 0;
+        startAnimation();
       }
     });
   });

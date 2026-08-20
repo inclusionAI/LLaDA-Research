@@ -261,6 +261,7 @@ test('denoise field has a designed reduced-motion state', async ({ page }) => {
   const field = page.locator('[data-denoise-field]');
   await expect(field).toHaveAttribute('data-motion', 'reduced');
   await expect(field).toHaveAttribute('data-coherence-state', 'partial');
+  expect(Number(await field.getAttribute('data-reduced-targets'))).toBeGreaterThan(0);
   await expect(field.locator('canvas')).toBeVisible();
 });
 
@@ -271,6 +272,7 @@ test('denoise field responds to pointer input and lets the trail settle', async 
   expect(box).not.toBeNull();
   await page.mouse.move(box!.x + box!.width * 0.72, box!.y + box!.height * 0.5);
   await expect(field).toHaveAttribute('data-interacting', 'true');
+  await expect(field).toHaveAttribute('data-pointer-glyphs', 'mask partial resolved');
   await page.mouse.move(0, 0);
   await expect(field).toHaveAttribute('data-interacting', 'false', { timeout: 2_000 });
 });
@@ -304,6 +306,7 @@ test('parallel semantic convergence resolves quickly and edits three positions t
   await expect(field).toHaveAttribute('data-edit-count', '3');
   await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
   await expect(field).toHaveAttribute('data-coherence-state', 'resolved', { timeout: 900 });
+  expect(Number(await field.getAttribute('data-target-error'))).toBeLessThan(3);
   await expect(field.locator('[data-coherence-region]')).toHaveCount(0);
 });
 
@@ -321,11 +324,14 @@ test('coherence field responds without separating from the hero', async ({ page 
     const hero = page.locator('.research-hero');
     await expect(field).toHaveAttribute('data-semantic-lines', viewport.lines);
     const side = Number(await field.getAttribute('data-coherence-side'));
+    const centerX = Number(await field.getAttribute('data-coherence-x'));
     expect(side).toBeGreaterThan(0);
     expect(side).toBeLessThanOrEqual(viewport.maximumSide);
+    expect(centerX - side / 2).toBeGreaterThanOrEqual(0);
     const [fieldBox, heroBox] = await Promise.all([field.boundingBox(), hero.boundingBox()]);
     expect(fieldBox).not.toBeNull();
     expect(heroBox).not.toBeNull();
+    expect(centerX + side / 2).toBeLessThanOrEqual(fieldBox!.width);
     expect(Math.abs(fieldBox!.width - heroBox!.width)).toBeLessThan(2);
     expect(Math.abs(fieldBox!.height - heroBox!.height)).toBeLessThan(2);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
