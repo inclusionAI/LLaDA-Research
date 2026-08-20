@@ -5,8 +5,10 @@ import {
   densityForFps,
   materialForIndex,
   resolveParticlePosition,
+  semanticSkeletonLayers,
   semanticFontSize,
   semanticSkeletonOpacity,
+  sourceAlphaForCompositedOpacity,
   tokenStageForInfluence,
 } from '../src/lib/particle-field';
 
@@ -110,5 +112,35 @@ describe('semantic typography', () => {
     expect(semanticSkeletonOpacity(1, 1, 0, 1)).toBe(0);
     expect(semanticSkeletonOpacity(1, 0, 1, 1)).toBe(0);
     expect(semanticSkeletonOpacity(1, 0, 0, 1)).toBeLessThanOrEqual(0.28);
+  });
+
+  it('compensates source alpha so retained canvas trails converge to the requested opacity', () => {
+    const targetOpacity = 0.28;
+    const trailRetention = 0.8;
+    const sourceOpacity = sourceAlphaForCompositedOpacity(targetOpacity, trailRetention);
+    let compositedOpacity = 0;
+
+    for (let frame = 0; frame < 240; frame += 1) {
+      compositedOpacity = sourceOpacity + compositedOpacity * trailRetention * (1 - sourceOpacity);
+    }
+
+    expect(sourceOpacity).toBeCloseTo(0.07216, 4);
+    expect(compositedOpacity).toBeCloseTo(targetOpacity, 4);
+    expect(compositedOpacity).toBeLessThanOrEqual(0.28);
+  });
+
+  it('crossfades changed glyphs without switching unchanged token opacity', () => {
+    expect(semanticSkeletonLayers(0.24, 0.25, true)).toEqual({
+      initial: 0.18,
+      replacement: 0.06,
+    });
+    expect(semanticSkeletonLayers(0.24, 0.75, true)).toEqual({
+      initial: 0.06,
+      replacement: 0.18,
+    });
+    expect(semanticSkeletonLayers(0.24, 0.5, false)).toEqual({
+      initial: 0.24,
+      replacement: 0,
+    });
   });
 });

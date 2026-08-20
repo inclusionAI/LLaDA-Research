@@ -368,11 +368,19 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
 
   await expect(field).toHaveAttribute('data-skeleton-max-opacity', '0.28');
   await expect(field).toHaveAttribute('data-skeleton-surface', 'canvas');
-  await expect.poll(async () => field.evaluate((element) => (
-    element.getAttribute('data-coherence-state') === 'resolved'
+  await expect(field).toHaveAttribute('data-skeleton-compositing', 'trail-compensated');
+  await expect(field).toHaveAttribute('data-skeleton-layout-transition', 'interpolated-crossfade');
+  await expect(field).toHaveAttribute('data-skeleton-mobile-occlusion', 'shared');
+  await expect.poll(async () => field.evaluate((element) => {
+    const compositedOpacity = Number(element.getAttribute('data-skeleton-opacity'));
+    const sourceOpacity = Number(element.getAttribute('data-skeleton-source-opacity'));
+    return element.getAttribute('data-coherence-state') === 'resolved'
       && element.getAttribute('data-skeleton-state') === 'active'
-      && Number(element.getAttribute('data-skeleton-opacity')) > 0
-  )), { timeout: 3_500 }).toBe(true);
+      && compositedOpacity > 0
+      && compositedOpacity <= 0.28
+      && sourceOpacity > 0
+      && sourceOpacity < compositedOpacity;
+  }), { timeout: 3_500 }).toBe(true);
   await expect(field.locator('canvas')).toHaveCount(1);
 });
 

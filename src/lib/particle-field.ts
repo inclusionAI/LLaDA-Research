@@ -137,3 +137,27 @@ export function semanticSkeletonOpacity(
   const pointerBoost = 1 + Math.max(0, Math.min(1, pointerProximity)) * 0.12;
   return Math.min(0.28, 0.24 * reveal * stability * pointerBoost);
 }
+
+export function sourceAlphaForCompositedOpacity(
+  compositedOpacity: number,
+  trailRetention: number,
+): number {
+  const target = Math.max(0, Math.min(1, compositedOpacity));
+  const retention = Math.max(0, Math.min(1, trailRetention));
+  const denominator = 1 - target * retention;
+  return denominator <= 0 ? target : target * (1 - retention) / denominator;
+}
+
+export function semanticSkeletonLayers(
+  opacity: number,
+  replacement: number,
+  changed: boolean,
+): { initial: number; replacement: number } {
+  const clampedOpacity = Math.max(0, Math.min(1, opacity));
+  if (!changed) return { initial: clampedOpacity, replacement: 0 };
+  const progress = Math.max(0, Math.min(1, replacement));
+  return {
+    initial: clampedOpacity * (1 - progress),
+    replacement: clampedOpacity * progress,
+  };
+}
