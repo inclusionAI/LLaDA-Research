@@ -68,6 +68,44 @@ test('homepage supporting type is readable at desktop and mobile sizes', async (
   expect(overflow).toBe(false);
 });
 
+test('site typography hierarchy distinguishes headings, supporting copy, and metadata', async ({ page }) => {
+  const fontSize = async (selector: string) => page.locator(selector).first().evaluate((element) => (
+    Number.parseFloat(getComputedStyle(element).fontSize)
+  ));
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+
+  const columnTitle = await fontSize('.column-header h2');
+  const columnDescription = await fontSize('.column-header p');
+  const leadTitle = await fontSize('[data-entry-kind="lead"] h3');
+  const compactTitle = await fontSize('[data-entry-kind="compact"] h3');
+  const leadSummary = await fontSize('[data-entry-kind="lead"] > .entry-link > p');
+  expect(columnTitle).toBeGreaterThanOrEqual(28);
+  expect(columnDescription).toBeGreaterThanOrEqual(15);
+  expect(leadTitle).toBeGreaterThanOrEqual(21);
+  expect(compactTitle).toBeGreaterThanOrEqual(16);
+  expect(leadSummary).toBeGreaterThanOrEqual(14);
+  expect(columnTitle).toBeGreaterThan(leadTitle);
+  expect(leadTitle).toBeGreaterThan(compactTitle);
+  expect(await fontSize('.desktop-nav a')).toBeGreaterThanOrEqual(12);
+
+  await page.goto('/models/');
+  expect(await fontSize('.page-intro > p')).toBeGreaterThanOrEqual(16);
+  expect(await fontSize('.content-card h2')).toBeGreaterThanOrEqual(24);
+  expect(await fontSize('.content-card .card-copy > p')).toBeGreaterThanOrEqual(15);
+  expect(await fontSize('.card-meta')).toBeGreaterThanOrEqual(11);
+  expect(await fontSize('.filter-tags button')).toBeGreaterThanOrEqual(12);
+
+  await page.goto('/models/llada-2-2/');
+  expect(await fontSize('.content-summary')).toBeGreaterThanOrEqual(18);
+  expect(await fontSize('.prose')).toBeGreaterThanOrEqual(17);
+
+  await page.goto('/about/');
+  expect(await fontSize('.button')).toBeGreaterThanOrEqual(12);
+  expect(await fontSize('.about-copy > p:not(.eyebrow)')).toBeGreaterThanOrEqual(16);
+});
+
 test('homepage presents an editorial research shelf', async ({ page }) => {
   await page.goto('/');
 

@@ -3,16 +3,16 @@
   max-width: 19ch; margin: 0.7rem 0 1.4rem;
   font-size: clamp(2.7rem, 6vw, 5.7rem); font-weight: 430; line-height: 0.96; letter-spacing: -0.068em;
 }
-.content-summary { max-width: 48rem; margin: 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.65; }
-.content-meta { display: flex; flex-wrap: wrap; gap: 0.75rem 1.4rem; align-items: center; margin-top: 2rem; color: var(--muted); font-size: 0.7rem; }
+.content-summary { max-width: 48rem; margin: 0; color: var(--muted); font-size: clamp(1.125rem, 2vw, 1.375rem); line-height: 1.65; }
+.content-meta { display: flex; flex-wrap: wrap; gap: 0.75rem 1.4rem; align-items: center; margin-top: 2rem; color: var(--muted); font-family: var(--font-mono); font-size: var(--type-meta); letter-spacing: 0.04em; }
 .content-body { display: grid; grid-template-columns: minmax(0, 44rem) minmax(12rem, 1fr); gap: clamp(2.5rem, 7vw, 7rem); align-items: start; padding-block: 3.5rem 6rem; }
-.prose { min-width: 0; color: var(--ink-soft); font-size: 1rem; line-height: 1.85; }
+.prose { min-width: 0; max-width: 42rem; color: var(--ink-soft); font-size: var(--type-body-lg); line-height: 1.78; }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3 { color: var(--ink); font-weight: 500; line-height: 1.15; letter-spacing: -0.035em; }
 .prose h2 { margin: 3.5rem 0 1rem; font-size: clamp(1.8rem, 4vw, 2.65rem); }
 .prose h3 { margin: 2.5rem 0 0.8rem; font-size: 1.4rem; }
 .prose a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-strong); text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
-.prose pre { overflow-x: auto; padding: 1.35rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #090909; color: #ddddD7; font-size: 0.82rem; line-height: 1.65; }
+.prose pre { overflow-x: auto; padding: 1.35rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #090909; color: #ddddD7; font-size: 0.8125rem; line-height: 1.65; }
 .prose code:not(pre code) { padding: 0.14rem 0.35rem; border: 1px solid var(--line); border-radius: 0.2rem; background: var(--surface-soft); font-size: 0.88em; }
 .prose blockquote { margin: 2rem 0; padding: 0.5rem 0 0.5rem 1.4rem; border-left: 1px solid var(--ink-soft); color: var(--muted); font-size: 1.05rem; }
 .prose img { width: 100%; margin-block: 2.4rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }

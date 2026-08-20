@@ -81,22 +81,24 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   .column-header {
-    padding-bottom: 1.8rem;
+    padding-bottom: 2.25rem;
   }
 
   h2 {
     margin: 0;
-    font-size: 1.45rem;
-    font-weight: 480;
-    letter-spacing: -0.045em;
+    color: var(--ink);
+    font-size: clamp(1.75rem, 2.2vw, 2rem);
+    font-weight: 520;
+    line-height: 1;
+    letter-spacing: -0.055em;
   }
 
   .column-header p {
     max-width: 25rem;
-    margin: 0.75rem 0 0;
+    margin: 0.9rem 0 0;
     color: var(--muted);
-    font-size: 0.82rem;
-    line-height: 1.55;
+    font-size: var(--type-body);
+    line-height: 1.65;
   }
 
   ol {
@@ -113,7 +115,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     position: relative;
     display: block;
     overflow: hidden;
-    padding: 0.65rem 2rem 0.65rem 0;
+    padding: 0.7rem 2rem 0.8rem 0;
     isolation: isolate;
   }
 
@@ -137,9 +139,9 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     gap: 1rem;
     align-items: center;
     color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
@@ -149,18 +151,18 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   h3 {
     margin: 0.7rem 0 0;
-    font-weight: 510;
-    line-height: 1.25;
-    letter-spacing: -0.025em;
+    font-weight: 540;
+    line-height: 1.22;
+    letter-spacing: -0.03em;
     transition: color 180ms ease, transform 180ms ease;
   }
 
   .entry-link--lead h3 {
-    font-size: clamp(1.32rem, 1.65vw, 1.5rem);
+    font-size: clamp(1.375rem, 1.7vw, 1.7rem);
   }
 
   .entry-link--compact h3 {
-    font-size: clamp(0.95rem, 1.12vw, 1.06rem);
+    font-size: clamp(1rem, 1.2vw, 1.125rem);
   }
 
   .entry-link > p {
@@ -168,8 +170,8 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     overflow: hidden;
     margin: 0.75rem 0 0;
     color: var(--muted);
-    font-size: 0.82rem;
-    line-height: 1.55;
+    font-size: var(--type-body);
+    line-height: 1.65;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -199,8 +201,8 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     display: inline-grid;
     margin-top: 1rem;
     color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
     letter-spacing: 0.08em;
   }
 
@@ -230,7 +232,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     margin-top: 1.75rem;
     padding-bottom: 0.18rem;
     color: var(--ink-soft);
-    font-size: 0.72rem;
+    font-size: var(--type-label);
     letter-spacing: 0.04em;
     background-image: linear-gradient(var(--line-strong), var(--line-strong));
     background-position: 0 100%;
@@ -246,7 +248,9 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   @media (min-width: 901px) and (max-width: 1100px) {
     .entry-link > p {
-      -webkit-line-clamp: 3;
+      display: block;
+      overflow: visible;
+      -webkit-line-clamp: unset;
     }
   }
 

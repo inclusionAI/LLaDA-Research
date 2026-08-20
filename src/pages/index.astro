@@ -77,8 +77,8 @@ const researchUpdates = [
   .index-eyebrow {
     margin: 0 0 0.85rem;
     color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
@@ -91,10 +91,11 @@ const researchUpdates = [
   }
 
   .index-description {
+    max-width: 40rem;
     margin: 1rem 0 0;
     color: var(--muted);
-    font-size: 0.88rem;
-    line-height: 1.6;
+    font-size: var(--type-body-lg);
+    line-height: 1.7;
   }
 
   .research-grid {
