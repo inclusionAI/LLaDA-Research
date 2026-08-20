@@ -17,6 +17,22 @@ test('homepage presents the LLaDA diffusion hero before a compact research index
   await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
 });
 
+test('site chrome uses the approved white LLaDA wordmark', async ({ page }) => {
+  await page.goto('/');
+
+  const headerLogo = page.locator('.site-header [data-brand-logo]');
+  const footerLogo = page.locator('.site-footer [data-brand-logo]');
+  await expect(headerLogo).toBeVisible();
+  await expect(footerLogo).toBeVisible();
+  await expect(headerLogo).toHaveAttribute('src', /\/llada-logo-white\.svg$/);
+  await expect(footerLogo).toHaveAttribute('src', /\/llada-logo-white\.svg$/);
+  await expect(page.locator('.brand-mark')).toHaveCount(0);
+
+  const headerBox = await headerLogo.boundingBox();
+  expect(headerBox).not.toBeNull();
+  expect(headerBox!.width / headerBox!.height).toBeGreaterThan(3);
+});
+
 test('hero links reveal their rules on hover and keyboard focus', async ({ page }) => {
   await page.goto('/');
 

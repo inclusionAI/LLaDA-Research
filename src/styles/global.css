@@ -93,25 +93,13 @@ h1, h2, h3 { text-wrap: balance; }
 
 .brand {
   display: inline-flex;
-  gap: 0.72rem;
   align-items: center;
-  font-size: 0.92rem;
-  font-weight: 600;
-  letter-spacing: -0.035em;
 }
 
-.brand-mark {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, 2px);
-  gap: 2px;
-  width: 10px;
-  height: 10px;
-  transform: rotate(45deg);
+.brand-logo {
+  width: 6.15rem;
+  height: auto;
 }
-.brand-mark::before, .brand-mark::after { position: absolute; content: ""; }
-.brand-mark::before { inset: 0; border: 1px solid #777771; }
-.brand-mark::after { inset: 3px; background: var(--ink); }
 
 .desktop-nav, .footer-nav { display: flex; gap: 1.75rem; align-items: center; }
 .desktop-nav > a, .footer-nav a {
@@ -170,6 +158,7 @@ h1, h2, h3 { text-wrap: balance; }
 .site-footer { margin-top: 6rem; border-top: 1px solid var(--line); background: var(--paper); color: var(--muted); }
 .footer-inner { display: grid; grid-template-columns: 1fr auto auto; gap: 3rem; align-items: center; min-height: 8rem; }
 .site-footer .brand { color: var(--ink); }
+.site-footer .brand-logo { width: 5.5rem; }
 .footer-nav a { color: var(--muted); }
 .site-footer small { color: var(--muted); font-size: var(--type-meta); }
 
