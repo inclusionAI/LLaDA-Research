@@ -345,13 +345,21 @@ test('semantic particle type uses two readable intentional lines', async ({ page
   const field = page.locator('[data-denoise-field]');
   await expect(field).toHaveAttribute('data-semantic-lines', '2');
   await expect(field).toHaveAttribute('data-semantic-copy', 'LANGUAGE FORMS / TOKENS RESOLVE');
-  expect(Number(await field.getAttribute('data-semantic-font-size'))).toBeGreaterThanOrEqual(18);
+  await expect(field).toHaveAttribute('data-semantic-font-size', /^(18|19|20)$/);
+  const desktopFontSize = Number(await field.getAttribute('data-semantic-font-size'));
+  expect(desktopFontSize).toBeGreaterThanOrEqual(18);
+  expect(desktopFontSize).toBeLessThanOrEqual(20);
+  await expect.poll(async () => Number(await field.getAttribute('data-unchanged-layout-shifts'))).toBeGreaterThan(0);
   await expect(field.locator('canvas')).toHaveCount(1);
   await expect(field.locator('canvas')).toBeVisible();
   await expect(field.locator('[data-semantic-text]')).toHaveCount(0);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(Number(await field.getAttribute('data-semantic-font-size'))).toBeGreaterThanOrEqual(14);
+  await expect(field).toHaveAttribute('data-semantic-font-size', /^(14|15|16)$/);
+  const mobileFontSize = Number(await field.getAttribute('data-semantic-font-size'));
+  expect(mobileFontSize).toBeGreaterThanOrEqual(14);
+  expect(mobileFontSize).toBeLessThanOrEqual(16);
+  expect(Number(await field.getAttribute('data-unchanged-layout-shifts'))).toBeGreaterThan(0);
 });
 
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {

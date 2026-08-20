@@ -33,7 +33,14 @@
   } from '../lib/particle-field';
   import type { CoherencePhase, ParticleMaterial } from '../lib/particle-field';
 
-  type Point = { x: number; y: number; editGroup: number };
+  type Point = {
+    x: number;
+    y: number;
+    editGroup: number;
+    layoutGroup: number;
+    layoutIndex: number;
+    layoutSize: number;
+  };
   type Particle = {
     x: number;
     y: number;
@@ -123,6 +130,7 @@
         const baselineY = sampleSize / 2 + (row - (visibleLines.length - 1) / 2) * lineGap;
 
         tokens.forEach((token, tokenIndex) => {
+          const tokenPoints: Omit<Point, 'layoutIndex' | 'layoutSize'>[] = [];
           samplingContext.clearRect(0, 0, sampleSize, sampleSize);
           samplingContext.fillText(token, cursorX, baselineY);
           const left = Math.max(0, Math.floor(cursorX - 1));
@@ -134,14 +142,20 @@
           for (let y = 0; y < sampleHeight; y += 1) {
             for (let x = 0; x < sampleWidth; x += 1) {
               if (pixels[(y * sampleWidth + x) * 4 + 3] > 80) {
-                points.push({
+                tokenPoints.push({
                   x: centerX - side / 2 + left + x,
                   y: centerY - side / 2 + top + y,
                   editGroup: editGroups[row]?.[tokenIndex] ?? -1,
+                  layoutGroup: row * 2 + tokenIndex,
                 });
               }
             }
           }
+          tokenPoints.forEach((point, layoutIndex) => points.push({
+            ...point,
+            layoutIndex,
+            layoutSize: tokenPoints.length,
+          }));
           cursorX += widths[tokenIndex] + gap;
         });
       });
@@ -171,28 +185,35 @@
     const assignSemanticTargets = () => {
       const initialTargets = sampleLines(generatedLines, editGroups);
       const replacementTargets = sampleLines(editedLines, editGroups);
-      const replacementsByGroup = [0, 1].map((group) => replacementTargets.filter((point) => point.editGroup === group));
+      const replacementsByLayoutGroup = [0, 1, 2, 3].map((group) => (
+        replacementTargets.filter((point) => point.layoutGroup === group)
+      ));
       const { centerX, centerY } = geometry();
       const candidates = particles.filter((particle) => particle.index % 2 === 0).sort((a, b) => (
         Math.hypot(a.originX - centerX, a.originY - centerY) - Math.hypot(b.originX - centerX, b.originY - centerY)
       ));
       const targetCount = Math.min(candidates.length, width < 700 ? 520 : 900);
-      const groupOffsets = [0, 0];
+      let unchangedLayoutShifts = 0;
 
       for (let index = 0; index < targetCount; index += 1) {
         const particle = candidates[index];
         const target = initialTargets[Math.floor(index * initialTargets.length / Math.max(1, targetCount))];
         if (!target) continue;
         particle.target = target;
-        if (target.editGroup >= 0) {
-          const replacements = replacementsByGroup[target.editGroup];
-          particle.replacement = replacements[groupOffsets[target.editGroup] % Math.max(1, replacements.length)] || target;
-          groupOffsets[target.editGroup] += 1;
-        } else {
-          particle.replacement = target;
+        const replacements = replacementsByLayoutGroup[target.layoutGroup];
+        const replacementIndex = Math.floor(
+          target.layoutIndex * replacements.length / Math.max(1, target.layoutSize),
+        );
+        particle.replacement = replacements[Math.min(replacements.length - 1, replacementIndex)] || target;
+        if (target.editGroup < 0 && Math.hypot(
+          particle.replacement.x - target.x,
+          particle.replacement.y - target.y,
+        ) > 0.5) {
+          unchangedLayoutShifts += 1;
         }
       }
       field.dataset.targetParticles = String(targetCount);
+      field.dataset.unchangedLayoutShifts = String(unchangedLayoutShifts);
     };
 
     const rebuildParticles = () => {
