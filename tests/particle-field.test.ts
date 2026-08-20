@@ -6,6 +6,7 @@ import {
   decaySemanticOffset,
   densityForFps,
   materialForIndex,
+  normalizedPointerSpeed,
   resolveParticlePosition,
   semanticSkeletonLayers,
   semanticFontSize,
@@ -15,6 +16,21 @@ import {
 } from '../src/lib/particle-field';
 
 describe('semantic pointer motion', () => {
+  it('normalizes equivalent physical motion across pointer event rates', () => {
+    const sixtyHertz = normalizedPointerSpeed(12, 1000 / 60);
+    const oneTwentyHertz = normalizedPointerSpeed(6, 1000 / 120);
+
+    expect(sixtyHertz).toBeCloseTo(oneTwentyHertz, 5);
+    expect(sixtyHertz).toBeCloseTo(12, 2);
+  });
+
+  it('keeps low physical velocity below the semantic impulse threshold', () => {
+    expect(normalizedPointerSpeed(2, 1000 / 60)).toBeLessThan(4);
+    expect(normalizedPointerSpeed(1, 1000 / 120)).toBeLessThan(4);
+    expect(normalizedPointerSpeed(0, 0)).toBe(0);
+    expect(normalizedPointerSpeed(8, 0)).toBe(8);
+  });
+
   it('clamps semantic displacement by vector length', () => {
     const clamped = clampSemanticOffset({ x: 6, y: 8 }, 8);
     expect(clamped.x).toBeCloseTo(4.8, 5);

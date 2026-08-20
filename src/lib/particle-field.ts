@@ -29,6 +29,20 @@ const progress = (value: number, start: number, end: number) => (
   smoothstep((value - start) / (end - start))
 );
 
+export function normalizedPointerSpeed(
+  distancePx: number,
+  elapsedMs: number,
+  referenceFrameMs = 1000 / 60,
+): number {
+  const distance = Number.isFinite(distancePx) ? Math.max(0, distancePx) : 0;
+  if (distance === 0) return 0;
+  const reference = Number.isFinite(referenceFrameMs) && referenceFrameMs > 0
+    ? referenceFrameMs
+    : 1000 / 60;
+  const elapsed = Number.isFinite(elapsedMs) && elapsedMs > 0 ? elapsedMs : reference;
+  return distance * reference / elapsed;
+}
+
 export function clampSemanticOffset(offset: VectorOffset, maximum = 8): VectorOffset {
   const distance = Math.hypot(offset.x, offset.y);
   const limit = Math.max(0, maximum);

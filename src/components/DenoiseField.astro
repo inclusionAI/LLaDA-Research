@@ -34,6 +34,7 @@
     decaySemanticOffset,
     densityForFps,
     materialForIndex,
+    normalizedPointerSpeed,
     resolveParticlePosition,
     semanticFontSize,
     semanticSkeletonLayers,
@@ -133,6 +134,7 @@
       speed: 0,
       active: false,
       positioned: false,
+      eventTimestamp: 0,
       energy: 0,
       revision: 0,
     };
@@ -341,18 +343,24 @@
     };
 
     const updatePointer = (event: PointerEvent) => {
+      const coalescedEvents = event.getCoalescedEvents?.() || [];
+      const pointerEvent = coalescedEvents[coalescedEvents.length - 1] || event;
       const bounds = field.getBoundingClientRect();
-      const nextX = event.clientX - bounds.left;
-      const nextY = event.clientY - bounds.top;
+      const nextX = pointerEvent.clientX - bounds.left;
+      const nextY = pointerEvent.clientY - bounds.top;
       pointer.velocityX = pointer.positioned ? nextX - pointer.x : 0;
       pointer.velocityY = pointer.positioned ? nextY - pointer.y : 0;
-      pointer.speed = Math.min(42, Math.hypot(pointer.velocityX, pointer.velocityY));
+      const elapsedMs = pointerEvent.timeStamp - pointer.eventTimestamp;
+      pointer.speed = pointer.positioned
+        ? Math.min(42, normalizedPointerSpeed(Math.hypot(pointer.velocityX, pointer.velocityY), elapsedMs))
+        : 0;
       pointer.previousX = pointer.positioned ? pointer.x : nextX;
       pointer.previousY = pointer.positioned ? pointer.y : nextY;
       pointer.x = nextX;
       pointer.y = nextY;
       pointer.active = true;
       pointer.positioned = true;
+      pointer.eventTimestamp = pointerEvent.timeStamp;
       pointer.energy = Math.min(1, pointer.energy + 0.22);
       pointer.revision += 1;
       markInteraction();
@@ -478,7 +486,7 @@
       updateDataset('semanticProximityState', semanticProximity > 0 ? 'near' : 'far');
       updateDataset('semanticDisplacement', semanticDisplacement.toFixed(2));
       updateDataset('semanticMaxDisplacement', maximumSemanticDisplacement.toFixed(2));
-      updateDataset('semanticRest', !pointer.active && semanticDisplacement < 0.6 ? 'true' : 'false');
+      updateDataset('semanticRest', !pointer.active && semanticDisplacement <= 0.9 ? 'true' : 'false');
       updateDataset('semanticImpulseRevision', String(consumedPointerRevision));
     };
 
