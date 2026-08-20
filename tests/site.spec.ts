@@ -103,7 +103,7 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
 
   const researchColumns = page.locator('[data-research-column]');
   await expect(researchColumns.nth(0).getByText(
-    'Open diffusion models for text generation, editing, and agents.',
+    'A 30B-A3B model that establishes practical scaling laws for MoE diffusion language models.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(1).getByText(
@@ -313,6 +313,88 @@ test('expanded llada model detail routes are reachable', async ({ page }) => {
     expect(response?.ok(), path).toBeTruthy();
     await expect(page.locator('main h1').first()).toBeVisible();
   }
+});
+
+test('model detail pages enumerate checkpoint releases', async ({ page }) => {
+  const cases = [
+    {
+      path: '/models/llada-8b/',
+      checkpoints: [
+        'https://huggingface.co/GSAI-ML/LLaDA-8B-Base',
+        'https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct',
+      ],
+    },
+    {
+      path: '/models/llada-1-5/',
+      checkpoints: ['https://huggingface.co/GSAI-ML/LLaDA-1.5'],
+    },
+    {
+      path: '/models/llada-moe-7b-a1b/',
+      checkpoints: [
+        'https://huggingface.co/inclusionAI/LLaDA-MoE-7B-A1B-Base',
+        'https://huggingface.co/inclusionAI/LLaDA-MoE-7B-A1B-Instruct',
+      ],
+    },
+    {
+      path: '/models/llada-2-0/',
+      checkpoints: [
+        'https://huggingface.co/inclusionAI/LLaDA2.0-mini',
+        'https://huggingface.co/inclusionAI/LLaDA2.0-flash',
+        'https://huggingface.co/inclusionAI/LLaDA2.0-mini-CAP',
+        'https://huggingface.co/inclusionAI/LLaDA2.0-flash-CAP',
+      ],
+    },
+    {
+      path: '/models/llada-2-1/',
+      checkpoints: [
+        'https://huggingface.co/inclusionAI/LLaDA2.1-mini',
+        'https://huggingface.co/inclusionAI/LLaDA2.1-flash',
+      ],
+    },
+    {
+      path: '/models/illada-8b/',
+      checkpoints: [
+        'https://huggingface.co/GSAI-ML/iLLaDA-8B-Base',
+        'https://huggingface.co/GSAI-ML/iLLaDA-8B-Instruct',
+      ],
+    },
+    {
+      path: '/models/llada-2-2/',
+      checkpoints: ['https://huggingface.co/inclusionAI/LLaDA2.2-flash'],
+    },
+  ];
+
+  for (const { path, checkpoints } of cases) {
+    await page.goto(path);
+    await expect(page.locator('.prose').getByRole('heading', {
+      name: 'Checkpoints',
+      exact: true,
+      level: 2,
+    })).toBeVisible();
+    const links = page.locator('.prose h2 + ul > li > a');
+    await expect(links).toHaveCount(checkpoints.length);
+    for (let index = 0; index < checkpoints.length; index += 1) {
+      await expect(links.nth(index)).toHaveAttribute('href', checkpoints[index]);
+    }
+  }
+});
+
+test('llada 2 model resources preserve official collections', async ({ page }) => {
+  for (const [path, collection] of [
+    ['/models/llada-2-0/', 'https://huggingface.co/collections/inclusionAI/llada20'],
+    ['/models/llada-2-1/', 'https://huggingface.co/collections/inclusionAI/llada21'],
+  ]) {
+    await page.goto(path);
+    await expect(page.getByRole('navigation', { name: 'External resources' })
+      .getByRole('link', { name: 'Models' })).toHaveAttribute('href', collection);
+  }
+});
+
+test('llada moe 7b-a1b omits unverified repository links', async ({ page }) => {
+  await page.goto('/models/llada-moe-7b-a1b/');
+  const resources = page.getByRole('navigation', { name: 'External resources' });
+  await expect(resources.getByRole('link', { name: 'Project' })).toHaveCount(0);
+  await expect(resources.getByRole('link', { name: 'Code' })).toHaveCount(0);
 });
 
 test('archive filters entries by query and clears the filter', async ({ page }) => {
