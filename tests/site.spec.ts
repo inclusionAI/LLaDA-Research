@@ -281,12 +281,15 @@ test('semantic particles respond locally to a fast pointer pass and return to re
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const field = page.locator('[data-denoise-field]');
+  await expect(field).toHaveAttribute('data-coherence-state', 'resolved', { timeout: 900 });
   const box = await field.boundingBox();
   expect(box).not.toBeNull();
 
   const centerX = Number(await field.getAttribute('data-coherence-x'));
   const side = Number(await field.getAttribute('data-coherence-side'));
-  const centerY = box!.height * 0.5;
+  const semanticTop = Number(await field.getAttribute('data-semantic-top'));
+  const semanticBottom = Number(await field.getAttribute('data-semantic-bottom'));
+  const centerY = (semanticTop + semanticBottom) / 2;
   const cycleEpoch = await field.getAttribute('data-cycle-epoch');
 
   await page.mouse.move(box!.x + centerX - side * 0.28, box!.y + centerY - side * 0.09);
@@ -296,6 +299,7 @@ test('semantic particles respond locally to a fast pointer pass and return to re
   await expect.poll(async () => Number(await field.getAttribute('data-semantic-max-displacement'))).toBeGreaterThan(0);
   expect(Number(await field.getAttribute('data-semantic-max-displacement'))).toBeLessThanOrEqual(8);
   expect(Number(await field.getAttribute('data-semantic-proximity'))).toBeGreaterThan(0);
+  expect(Number(await field.getAttribute('data-semantic-tangent-alignment'))).toBeGreaterThan(0.9);
   await expect(field).toHaveAttribute('data-semantic-rest', 'false');
 
   await page.mouse.move(0, 0);
@@ -368,6 +372,32 @@ test('coherence field responds without separating from the hero', async ({ page 
   }
 });
 
+test('mobile semantic lines sit below the hero links and remain inside the field', async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const field = page.locator('[data-denoise-field]');
+    const links = page.locator('.hero-links');
+    const [fieldBox, linksBox] = await Promise.all([field.boundingBox(), links.boundingBox()]);
+    expect(fieldBox).not.toBeNull();
+    expect(linksBox).not.toBeNull();
+
+    const semanticTop = Number(await field.getAttribute('data-semantic-top'));
+    const semanticBottom = Number(await field.getAttribute('data-semantic-bottom'));
+    const semanticLeft = Number(await field.getAttribute('data-semantic-left'));
+    const semanticRight = Number(await field.getAttribute('data-semantic-right'));
+    const linksBottomInField = linksBox!.y + linksBox!.height - fieldBox!.y;
+    expect(semanticTop).toBeGreaterThan(linksBottomInField);
+    expect(semanticBottom).toBeGreaterThan(semanticTop);
+    expect(semanticBottom).toBeLessThanOrEqual(fieldBox!.height);
+    expect(semanticLeft).toBeGreaterThanOrEqual(0);
+    expect(semanticRight).toBeLessThanOrEqual(fieldBox!.width);
+  }
+});
+
 test('semantic particle type uses two readable intentional lines', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
@@ -392,6 +422,26 @@ test('semantic particle type uses two readable intentional lines', async ({ page
 });
 
 test('same-canvas semantic skeleton reconnects resolved particle strokes', async ({ page }) => {
+  await page.addInitScript(() => {
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    const draws: Array<{ text: string; state: string | null }> = [];
+    Object.defineProperty(window, '__semanticCanvasTextDraws', { value: draws });
+    CanvasRenderingContext2D.prototype.fillText = function fillText(
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) {
+      const owner = this.canvas.closest<HTMLElement>('[data-denoise-field]');
+      if (this.canvas.isConnected && owner) {
+        draws.push({ text: String(text), state: owner.dataset.coherenceState || null });
+        if (draws.length > 400) draws.splice(0, draws.length - 400);
+      }
+      return maxWidth === undefined
+        ? originalFillText.call(this, text, x, y)
+        : originalFillText.call(this, text, x, y, maxWidth);
+    };
+  });
   await page.goto('/');
   const field = page.locator('[data-denoise-field]');
 
@@ -410,6 +460,32 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
       && sourceOpacity > 0
       && sourceOpacity < compositedOpacity;
   }), { timeout: 3_500 }).toBe(true);
+  await expect.poll(async () => page.evaluate(() => {
+    const draws = (window as typeof window & {
+      __semanticCanvasTextDraws: Array<{ text: string; state: string | null }>;
+    }).__semanticCanvasTextDraws.filter((draw) => draw.state === 'resolved');
+    const text = draws
+      .map((draw) => draw.text)
+      .filter((value, index, values) => value !== values[index - 1]);
+    for (let index = 0; index <= text.length - 4; index += 1) {
+      const phrase = `${text[index]} ${text[index + 1]} / ${text[index + 2]} ${text[index + 3]}`;
+      if (phrase === 'LANGUAGE FORMS / TOKENS RESOLVE') return phrase;
+    }
+    return '';
+  }), { timeout: 3_500 }).toBe('LANGUAGE FORMS / TOKENS RESOLVE');
+  await expect.poll(async () => page.evaluate(() => {
+    const draws = (window as typeof window & {
+      __semanticCanvasTextDraws: Array<{ text: string; state: string | null }>;
+    }).__semanticCanvasTextDraws.filter((draw) => draw.state === 'resolved');
+    const text = draws
+      .map((draw) => draw.text)
+      .filter((value, index, values) => value !== values[index - 1]);
+    for (let index = 0; index <= text.length - 4; index += 1) {
+      const phrase = `${text[index]} ${text[index + 1]} / ${text[index + 2]} ${text[index + 3]}`;
+      if (phrase === 'LANGUAGE ADAPTS / TOKENS EDIT') return phrase;
+    }
+    return '';
+  }), { timeout: 3_500 }).toBe('LANGUAGE ADAPTS / TOKENS EDIT');
   await expect(field.locator('canvas')).toHaveCount(1);
 });
 

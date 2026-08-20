@@ -31,15 +31,16 @@
     clampSemanticOffset,
     coherencePhaseAt,
     coherenceWeight,
-    decaySemanticOffset,
     densityForFps,
     materialForIndex,
     normalizedPointerSpeed,
     resolveParticlePosition,
     semanticFontSize,
+    semanticOffsetDecayFactor,
     semanticSkeletonLayers,
     semanticSkeletonOpacity,
     sourceAlphaForCompositedOpacity,
+    strokeTangentAt,
     tokenStageForInfluence,
   } from '../lib/particle-field';
   import type { CoherencePhase, ParticleMaterial } from '../lib/particle-field';
@@ -51,6 +52,8 @@
     layoutGroup: number;
     layoutIndex: number;
     layoutSize: number;
+    tangentX: number;
+    tangentY: number;
   };
   type Particle = {
     x: number;
@@ -161,13 +164,29 @@
       lines: string[][],
     ) => {
       const { centerX, centerY, side } = geometry();
+      const mobile = width < 700;
       const sampleSize = Math.max(1, Math.round(side));
-      const fontSize = semanticFontSize(side, width < 700);
+      const fontSize = semanticFontSize(side, mobile);
       const gap = fontSize * 0.82;
-      const lineGap = side * 0.18;
+      const lineGap = mobile ? fontSize * 1.45 : side * 0.18;
       const visibleLines = lines.slice(0, semanticLineCount);
       const tokens: SemanticTokenLayout[] = [];
       const font = `500 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      let semanticCenterY = centerY;
+
+      if (mobile) {
+        const fieldBounds = field.getBoundingClientRect();
+        const links = field.closest('.research-hero')?.querySelector<HTMLElement>('.hero-links');
+        const linksBounds = links?.getBoundingClientRect();
+        const linksBottom = linksBounds ? linksBounds.bottom - fieldBounds.top : height * 0.76;
+        const inkHalfHeight = lineGap * (visibleLines.length - 1) / 2 + fontSize * 0.55;
+        const minimumCenter = linksBottom + 4 + inkHalfHeight;
+        const maximumCenter = height - 4 - inkHalfHeight;
+        semanticCenterY = Math.max(
+          minimumCenter,
+          Math.min(maximumCenter, (linksBottom + height) / 2),
+        );
+      }
 
       drawingContext.font = font;
       drawingContext.textBaseline = 'middle';
@@ -195,7 +214,7 @@
         font,
         fontSize,
         originX: centerX - side / 2,
-        originY: centerY - side / 2,
+        originY: semanticCenterY - side / 2,
         sampleSize,
         tokens,
       };
@@ -222,15 +241,23 @@
         const sampleWidth = Math.min(sampleSize - left, Math.ceil(token.width + 3));
         const sampleHeight = Math.min(sampleSize - top, Math.ceil(fontSize * 1.35));
         const pixels = samplingContext.getImageData(left, top, sampleWidth, sampleHeight).data;
+        const alpha = new Uint8ClampedArray(sampleWidth * sampleHeight);
+
+        for (let index = 0; index < alpha.length; index += 1) {
+          alpha[index] = pixels[index * 4 + 3];
+        }
 
         for (let y = 0; y < sampleHeight; y += 1) {
           for (let x = 0; x < sampleWidth; x += 1) {
-            if (pixels[(y * sampleWidth + x) * 4 + 3] > 80) {
+            if (alpha[y * sampleWidth + x] > 80) {
+              const tangent = strokeTangentAt(alpha, sampleWidth, sampleHeight, x, y);
               tokenPoints.push({
                 x: originX + left + x,
                 y: originY + top + y,
                 editGroup: token.editGroup,
                 layoutGroup: token.row * 2 + token.tokenIndex,
+                tangentX: tangent.x,
+                tangentY: tangent.y,
               });
             }
           }
@@ -277,6 +304,13 @@
       if (!semanticLayouts) return;
       const initialTargets = sampleLayout(semanticLayouts.initial);
       const replacementTargets = sampleLayout(semanticLayouts.replacement);
+      const semanticTargets = [...initialTargets, ...replacementTargets];
+      if (semanticTargets.length > 0) {
+        field.dataset.semanticTop = Math.min(...semanticTargets.map((point) => point.y)).toFixed(1);
+        field.dataset.semanticBottom = Math.max(...semanticTargets.map((point) => point.y)).toFixed(1);
+        field.dataset.semanticLeft = Math.min(...semanticTargets.map((point) => point.x)).toFixed(1);
+        field.dataset.semanticRight = Math.max(...semanticTargets.map((point) => point.x)).toFixed(1);
+      }
       const replacementsByLayoutGroup = [0, 1, 2, 3].map((group) => (
         replacementTargets.filter((point) => point.layoutGroup === group)
       ));
@@ -312,6 +346,7 @@
       const particleCount = Math.round((width * height) / 165 * density);
       particles = Array.from({ length: particleCount }, (_, index) => makeParticle(index));
       maximumSemanticDisplacement = 0;
+      field.dataset.semanticTangentAlignment = '0.000';
       assignSemanticTargets();
     };
 
@@ -433,17 +468,16 @@
       const movementLength = Math.hypot(pointer.velocityX, pointer.velocityY) || 1;
       const movementX = pointer.velocityX / movementLength;
       const movementY = pointer.velocityY / movementLength;
+      const decay = semanticOffsetDecayFactor(elapsedMs);
       let semanticProximity = 0;
       let semanticDisplacement = 0;
+      let tangentAlignmentTotal = 0;
+      let tangentAlignmentSamples = 0;
 
       for (const particle of particles) {
         if (!particle.target) continue;
-        const decayed = decaySemanticOffset(
-          { x: particle.semanticOffsetX, y: particle.semanticOffsetY },
-          elapsedMs,
-        );
-        particle.semanticOffsetX = decayed.x;
-        particle.semanticOffsetY = decayed.y;
+        particle.semanticOffsetX *= decay;
+        particle.semanticOffsetY *= decay;
 
         const replacement = particle.replacement || particle.target;
         const targetX = particle.target.x + (replacement.x - particle.target.x) * phase.replacement;
@@ -457,10 +491,22 @@
         semanticProximity = Math.max(semanticProximity, proximity);
 
         if (hasFreshPointerEvent && pointer.speed >= 4 && proximity > 0) {
-          const normalX = targetDistance > 0 ? targetDx / targetDistance : 0;
-          const normalY = targetDistance > 0 ? targetDy / targetDistance : 1;
-          let tangentX = -normalY;
-          let tangentY = normalX;
+          let replacementTangentX = replacement.tangentX;
+          let replacementTangentY = replacement.tangentY;
+          if (
+            particle.target.tangentX * replacementTangentX
+              + particle.target.tangentY * replacementTangentY < 0
+          ) {
+            replacementTangentX *= -1;
+            replacementTangentY *= -1;
+          }
+          let tangentX = particle.target.tangentX
+            + (replacementTangentX - particle.target.tangentX) * phase.replacement;
+          let tangentY = particle.target.tangentY
+            + (replacementTangentY - particle.target.tangentY) * phase.replacement;
+          const tangentLength = Math.hypot(tangentX, tangentY) || 1;
+          tangentX /= tangentLength;
+          tangentY /= tangentLength;
           if (tangentX * movementX + tangentY * movementY < 0) {
             tangentX *= -1;
             tangentY *= -1;
@@ -472,6 +518,13 @@
           });
           particle.semanticOffsetX = offset.x;
           particle.semanticOffsetY = offset.y;
+          const offsetLength = Math.hypot(offset.x, offset.y);
+          if (offsetLength > 0) {
+            tangentAlignmentTotal += Math.abs(
+              (offset.x * tangentX + offset.y * tangentY) / offsetLength,
+            );
+            tangentAlignmentSamples += 1;
+          }
         }
 
         semanticDisplacement = Math.max(
@@ -488,6 +541,12 @@
       updateDataset('semanticMaxDisplacement', maximumSemanticDisplacement.toFixed(2));
       updateDataset('semanticRest', !pointer.active && semanticDisplacement <= 0.9 ? 'true' : 'false');
       updateDataset('semanticImpulseRevision', String(consumedPointerRevision));
+      if (tangentAlignmentSamples > 0) {
+        updateDataset(
+          'semanticTangentAlignment',
+          (tangentAlignmentTotal / tangentAlignmentSamples).toFixed(3),
+        );
+      }
     };
 
     const semanticFalloff = (

@@ -56,8 +56,56 @@ export function decaySemanticOffset(
   elapsedMs: number,
   timeConstantMs = 180,
 ): VectorOffset {
-  const decay = Math.exp(-Math.max(0, elapsedMs) / Math.max(1, timeConstantMs));
+  const decay = semanticOffsetDecayFactor(elapsedMs, timeConstantMs);
   return { x: offset.x * decay, y: offset.y * decay };
+}
+
+export function semanticOffsetDecayFactor(elapsedMs: number, timeConstantMs = 180): number {
+  return Math.exp(-Math.max(0, elapsedMs) / Math.max(1, timeConstantMs));
+}
+
+export function strokeTangentAt(
+  alpha: ArrayLike<number>,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+): VectorOffset {
+  const sample = (sampleX: number, sampleY: number) => {
+    if (sampleX < 0 || sampleX >= width || sampleY < 0 || sampleY >= height) return 0;
+    return alpha[sampleY * width + sampleX] || 0;
+  };
+  let gradientX = 0;
+  let gradientY = 0;
+  for (let radius = 1; radius <= 2; radius += 1) {
+    gradientX += (sample(x + radius, y) - sample(x - radius, y)) / radius;
+    gradientY += (sample(x, y + radius) - sample(x, y - radius)) / radius;
+  }
+  const gradientLength = Math.hypot(gradientX, gradientY);
+  if (gradientLength > 1) {
+    return { x: -gradientY / gradientLength, y: gradientX / gradientLength };
+  }
+
+  let covarianceXX = 0;
+  let covarianceXY = 0;
+  let covarianceYY = 0;
+  let weightTotal = 0;
+  const neighborhoodRadius = 4;
+  for (let offsetY = -neighborhoodRadius; offsetY <= neighborhoodRadius; offsetY += 1) {
+    for (let offsetX = -neighborhoodRadius; offsetX <= neighborhoodRadius; offsetX += 1) {
+      const weight = sample(x + offsetX, y + offsetY) / 255;
+      if (weight <= 0) continue;
+      covarianceXX += weight * offsetX * offsetX;
+      covarianceXY += weight * offsetX * offsetY;
+      covarianceYY += weight * offsetY * offsetY;
+      weightTotal += weight;
+    }
+  }
+  if (weightTotal > 1) {
+    const angle = 0.5 * Math.atan2(2 * covarianceXY, covarianceXX - covarianceYY);
+    return { x: Math.cos(angle), y: Math.sin(angle) };
+  }
+  return { x: 1, y: 0 };
 }
 
 export function densityForFps(fps: number, current: number): number {

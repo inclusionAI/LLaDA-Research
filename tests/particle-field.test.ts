@@ -8,10 +8,12 @@ import {
   materialForIndex,
   normalizedPointerSpeed,
   resolveParticlePosition,
+  semanticOffsetDecayFactor,
   semanticSkeletonLayers,
   semanticFontSize,
   semanticSkeletonOpacity,
   sourceAlphaForCompositedOpacity,
+  strokeTangentAt,
   tokenStageForInfluence,
 } from '../src/lib/particle-field';
 
@@ -45,6 +47,30 @@ describe('semantic pointer motion', () => {
       y: expect.closeTo(-4 / Math.E, 5),
     });
     expect(Math.hypot(...Object.values(decaySemanticOffset({ x: 8, y: 0 }, 500)))).toBeLessThan(0.5);
+  });
+
+  it('provides one scalar decay factor for in-place per-frame updates', () => {
+    expect(semanticOffsetDecayFactor(180)).toBeCloseTo(1 / Math.E, 5);
+    expect(semanticOffsetDecayFactor(-10)).toBe(1);
+  });
+
+  it('estimates the stroke tangent for edge and interior mask pixels', () => {
+    const vertical = new Uint8ClampedArray(9 * 9);
+    for (let y = 1; y <= 7; y += 1) {
+      for (let x = 3; x <= 5; x += 1) vertical[y * 9 + x] = 255;
+    }
+    const horizontal = new Uint8ClampedArray(9 * 9);
+    for (let y = 3; y <= 5; y += 1) {
+      for (let x = 1; x <= 7; x += 1) horizontal[y * 9 + x] = 255;
+    }
+
+    const verticalEdge = strokeTangentAt(vertical, 9, 9, 3, 4);
+    const verticalInterior = strokeTangentAt(vertical, 9, 9, 4, 4);
+    const horizontalInterior = strokeTangentAt(horizontal, 9, 9, 4, 4);
+
+    expect(Math.abs(verticalEdge.y)).toBeGreaterThan(0.9);
+    expect(Math.abs(verticalInterior.y)).toBeGreaterThan(0.9);
+    expect(Math.abs(horizontalInterior.x)).toBeGreaterThan(0.9);
   });
 });
 
