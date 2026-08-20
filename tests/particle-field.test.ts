@@ -5,6 +5,8 @@ import {
   densityForFps,
   materialForIndex,
   resolveParticlePosition,
+  semanticFontSize,
+  semanticSkeletonOpacity,
   tokenStageForInfluence,
 } from '../src/lib/particle-field';
 
@@ -90,5 +92,23 @@ describe('coherence field material', () => {
       { x: 80, y: 64 },
       0.5,
     )).toEqual({ x: 46, y: 41 });
+  });
+});
+
+describe('semantic typography', () => {
+  it('uses readable mask sizes on desktop and mobile coherence regions', () => {
+    expect(semanticFontSize(280, false)).toBe(18);
+    expect(semanticFontSize(390, false)).toBe(20);
+    expect(semanticFontSize(200, true)).toBe(14);
+    expect(semanticFontSize(280, true)).toBe(16);
+  });
+
+  it('reveals a restrained skeleton late in decoding and dissolves it during edits', () => {
+    expect(semanticSkeletonOpacity(0.3, 0, 0, 0)).toBe(0);
+    expect(semanticSkeletonOpacity(1, 0, 0, 0)).toBe(0.24);
+    expect(semanticSkeletonOpacity(1, 0, 0, 1)).toBeCloseTo(0.2688, 4);
+    expect(semanticSkeletonOpacity(1, 1, 0, 1)).toBe(0);
+    expect(semanticSkeletonOpacity(1, 0, 1, 1)).toBe(0);
+    expect(semanticSkeletonOpacity(1, 0, 0, 1)).toBeLessThanOrEqual(0.28);
   });
 });

@@ -120,3 +120,20 @@ export function resolveParticlePosition(
     y: ambient.y + (semantic.y - ambient.y) * blend,
   };
 }
+
+export function semanticFontSize(side: number, mobile: boolean): number {
+  if (mobile) return Math.max(14, Math.min(16, Math.round(side * 0.057)));
+  return Math.max(18, Math.min(20, Math.round(side * 0.052)));
+}
+
+export function semanticSkeletonOpacity(
+  decode: number,
+  edit: number,
+  disperse: number,
+  pointerProximity: number,
+): number {
+  const reveal = smoothstep((decode - 0.45) / 0.55);
+  const stability = Math.max(0, 1 - edit) * Math.max(0, 1 - disperse);
+  const pointerBoost = 1 + Math.max(0, Math.min(1, pointerProximity)) * 0.12;
+  return Math.min(0.28, 0.24 * reveal * stability * pointerBoost);
+}
