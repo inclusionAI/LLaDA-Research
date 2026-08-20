@@ -81,14 +81,15 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   .column-header {
-    padding-bottom: 2.25rem;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--line);
   }
 
   h2 {
     margin: 0;
     color: var(--ink);
-    font-size: clamp(1.75rem, 2.2vw, 2rem);
-    font-weight: 520;
+    font-size: clamp(2.25rem, 2.7vw, 2.5rem);
+    font-weight: 500;
     line-height: 1;
     letter-spacing: -0.055em;
   }
@@ -102,7 +103,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   ol {
-    margin: 0;
+    margin: 1rem 0 0;
     padding: 0;
     list-style: none;
   }
@@ -151,14 +152,14 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   h3 {
     margin: 0.7rem 0 0;
-    font-weight: 540;
+    font-weight: 520;
     line-height: 1.22;
     letter-spacing: -0.03em;
     transition: color 180ms ease, transform 180ms ease;
   }
 
   .entry-link--lead h3 {
-    font-size: clamp(1.375rem, 1.7vw, 1.7rem);
+    font-size: clamp(1.3125rem, 1.55vw, 1.4375rem);
   }
 
   .entry-link--compact h3 {
@@ -251,6 +252,12 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
       display: block;
       overflow: visible;
       -webkit-line-clamp: unset;
+    }
+  }
+
+  @media (max-width: 900px) {
+    h2 {
+      font-size: clamp(2rem, 9vw, 2.4rem);
     }
   }
 

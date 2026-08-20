@@ -87,7 +87,16 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   expect(compactTitle).toBeGreaterThanOrEqual(16);
   expect(leadSummary).toBeGreaterThanOrEqual(14);
   expect(columnTitle).toBeGreaterThan(leadTitle);
+  expect(columnTitle / leadTitle).toBeGreaterThanOrEqual(1.5);
   expect(leadTitle).toBeGreaterThan(compactTitle);
+  const columnTitleWeight = await page.locator('.column-header h2').first().evaluate((element) => (
+    Number.parseInt(getComputedStyle(element).fontWeight, 10)
+  ));
+  const leadTitleWeight = await page.locator('[data-entry-kind="lead"] h3').first().evaluate((element) => (
+    Number.parseInt(getComputedStyle(element).fontWeight, 10)
+  ));
+  expect(columnTitleWeight).toBeLessThanOrEqual(leadTitleWeight);
+  await expect(page.locator('.column-header').first()).toHaveCSS('border-bottom-width', '1px');
   expect(await fontSize('.desktop-nav a')).toBeGreaterThanOrEqual(12);
 
   await page.goto('/models/');
