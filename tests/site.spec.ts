@@ -287,6 +287,16 @@ test('single coherence field replaces persistent background token lanes', async 
   await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
 });
 
+test('coherence field keeps one dense multi-material animation system', async ({ page }) => {
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+
+  await expect(field).toHaveAttribute('data-materials', 'micro stroke mask semantic');
+  await expect(field).toHaveAttribute('data-density-basis', '165');
+  await expect(field).toHaveAttribute('data-animation-loops', '1');
+  await expect(field.locator('canvas')).toHaveCount(1);
+});
+
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout assertion');
   await page.goto('/papers/');

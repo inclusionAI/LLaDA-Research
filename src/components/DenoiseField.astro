@@ -4,6 +4,9 @@
   data-visual-system="coherence-field"
   data-decode-window-ms="650"
   data-edit-mode="simultaneous"
+  data-materials="micro stroke mask semantic"
+  data-density-basis="165"
+  data-animation-loops="1"
   data-coherence-state="noise"
   data-motion="full"
   data-interacting="false"
@@ -17,7 +20,8 @@
 </div>
 
 <script>
-  import { densityForFps, tokenStageForInfluence } from '../lib/particle-field';
+  import { densityForFps, materialForIndex, tokenStageForInfluence } from '../lib/particle-field';
+  import type { ParticleMaterial } from '../lib/particle-field';
 
   type Particle = {
     x: number;
@@ -28,6 +32,8 @@
     seed: number;
     size: number;
     glyphIndex: number;
+    material: ParticleMaterial;
+    spectral: boolean;
   };
 
   const maskGlyphs = ['[MASK]', '[ · ]', '▧', '[  ]', '░'];
@@ -100,6 +106,8 @@
         seed: Math.random() * 1000,
         size: 0.28 + Math.random() * 1.15,
         glyphIndex: index,
+        material: materialForIndex(index),
+        spectral: index % 19 === 0,
       };
     };
 
@@ -150,7 +158,7 @@
 
     const drawGlyph = (particle: Particle, influence: number, x: number, y: number, alpha: number) => {
       const stage = tokenStageForInfluence(influence);
-      if (stage === 'noise') return false;
+      if (stage === 'noise' || (particle.material !== 'mask' && particle.material !== 'semantic')) return false;
       const glyphs = stage === 'mask' ? maskGlyphs : stage === 'partial' ? partialGlyphs : resolvedGlyphs;
       const stride = stage === 'resolved' ? 31 : stage === 'partial' ? 23 : 17;
       if (particle.glyphIndex % stride !== 0) return false;
@@ -185,7 +193,6 @@
         context.fillRect(pointer.x - radius * 1.5, pointer.y - radius * 1.5, radius * 3, radius * 3);
       }
 
-      context.globalCompositeOperation = 'lighter';
       for (const particle of particles) {
         const dx = pointer.x - particle.x;
         const dy = pointer.y - particle.y;
@@ -205,13 +212,25 @@
           particle.y += (particle.originY - particle.y) * 0.008 * delta + driftY * delta;
         }
 
-        const alpha = 0.028 + particle.depth * 0.08 + influence * 0.82;
+        const alpha = 0.038 + particle.depth * 0.1 + influence * 0.74;
         const x = particle.x;
         const y = particle.y;
         if (!drawGlyph(particle, influence, x, y, alpha)) {
           const size = particle.size * (0.65 + particle.depth + influence * 1.75);
-          context.fillStyle = `rgba(229, 231, 224, ${Math.min(0.88, alpha)})`;
-          context.fillRect(x, y, size, size);
+          const channels = particle.spectral ? '158, 173, 179' : particle.depth > 0.7 ? '232, 234, 226' : '184, 189, 182';
+          if (particle.material === 'stroke') {
+            const angle = Math.atan2(driftY, driftX);
+            const length = 3 + particle.depth * 6;
+            context.strokeStyle = `rgba(${channels}, ${Math.min(0.68, alpha * 0.86)})`;
+            context.lineWidth = 0.35 + particle.depth * 0.2;
+            context.beginPath();
+            context.moveTo(x, y);
+            context.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+            context.stroke();
+          } else {
+            context.fillStyle = `rgba(${channels}, ${Math.min(0.82, alpha)})`;
+            context.fillRect(x, y, size, size * (particle.material === 'micro' ? 0.72 : 1));
+          }
         }
 
         if (influence > 0.24 && pointer.speed > 3 && particle.glyphIndex % 7 === 0) {
@@ -226,8 +245,6 @@
           context.stroke();
         }
       }
-      context.globalCompositeOperation = 'source-over';
-
       pointer.previousX += (pointer.x - pointer.previousX) * 0.24;
       pointer.previousY += (pointer.y - pointer.previousY) * 0.24;
 
@@ -270,7 +287,7 @@
     inset: 0;
     overflow: hidden;
     background:
-      radial-gradient(ellipse at 72% 50%, rgb(255 255 248 / 0.035), transparent 30%),
+      radial-gradient(ellipse at 72% 50%, rgb(255 255 248 / 0.055), transparent 34%),
       #030303;
   }
 
