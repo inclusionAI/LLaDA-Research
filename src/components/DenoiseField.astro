@@ -7,7 +7,7 @@
   data-materials="micro stroke mask semantic"
   data-density-basis="165"
   data-animation-loops="1"
-  data-edit-count="3"
+  data-edit-count="2"
   data-pointer-glyphs="mask partial resolved"
   data-coherence-state="noise"
   data-motion="full"
@@ -28,6 +28,7 @@
     densityForFps,
     materialForIndex,
     resolveParticlePosition,
+    semanticFontSize,
     tokenStageForInfluence,
   } from '../lib/particle-field';
   import type { CoherencePhase, ParticleMaterial } from '../lib/particle-field';
@@ -51,32 +52,17 @@
   const maskGlyphs = ['[··]', '[  ]', '▧', '░'];
   const partialGlyphs = ['DIFF', 'LANG', 'TOK', '∇x'];
   const resolvedGlyphs = ['LLaDA', 'language', 'parallel', 'editing'];
-  const desktopGeneratedLines = [
-    ['DIFFUSION', 'MODELS', 'GENERATE', 'LANGUAGE'],
-    ['TOKENS', 'EMERGE', 'IN', 'PARALLEL'],
-    ['LANGUAGE', 'FORMS', 'THROUGH', 'DENOISING'],
+  const generatedLines = [
+    ['LANGUAGE', 'FORMS'],
+    ['TOKENS', 'RESOLVE'],
   ];
-  const desktopEditedLines = [
-    ['DIFFUSION', 'MODELS', 'EDIT', 'LANGUAGE'],
-    ['TOKENS', 'UPDATE', 'IN', 'PARALLEL'],
-    ['LANGUAGE', 'ADAPTS', 'THROUGH', 'DENOISING'],
+  const editedLines = [
+    ['LANGUAGE', 'ADAPTS'],
+    ['TOKENS', 'EDIT'],
   ];
-  const desktopEditGroups = [
-    [-1, -1, 0, -1],
-    [-1, 1, -1, -1],
-    [-1, 2, -1, -1],
-  ];
-  const mobileGeneratedLines = [
-    ['MASKS', 'FORM', 'TEXT'],
-    ['TOKENS', 'RESOLVE', 'PARALLEL'],
-  ];
-  const mobileEditedLines = [
-    ['TOKENS', 'FORM', 'LANGUAGE'],
-    ['TOKENS', 'EDIT', 'PARALLEL'],
-  ];
-  const mobileEditGroups = [
-    [0, -1, 1],
-    [-1, 2, -1],
+  const editGroups = [
+    [-1, 0],
+    [-1, 1],
   ];
 
   document.querySelectorAll<HTMLElement>('[data-denoise-field]').forEach((field) => {
@@ -97,7 +83,7 @@
     let cycleStarted = frameWindowStarted;
     let hiddenAt = 0;
     let interactionTimer = 0;
-    let semanticLineCount = 3;
+    let semanticLineCount = 2;
     const pointer = { x: 0, y: 0, previousX: 0, previousY: 0, speed: 0, active: false, energy: 0 };
 
     const geometry = () => {
@@ -120,7 +106,7 @@
       const sampleSize = Math.max(1, Math.round(side));
       samplingCanvas.width = sampleSize;
       samplingCanvas.height = sampleSize;
-      const fontSize = Math.max(10, Math.min(14, side * 0.038));
+      const fontSize = semanticFontSize(side, width < 700);
       const gap = fontSize * 0.82;
       const lineGap = side * (semanticLineCount === 2 ? 0.18 : 0.145);
       const visibleLines = lines.slice(0, semanticLineCount);
@@ -183,22 +169,15 @@
     };
 
     const assignSemanticTargets = () => {
-      const mobile = width < 700;
-      const initialTargets = sampleLines(
-        mobile ? mobileGeneratedLines : desktopGeneratedLines,
-        mobile ? mobileEditGroups : desktopEditGroups,
-      );
-      const replacementTargets = sampleLines(
-        mobile ? mobileEditedLines : desktopEditedLines,
-        mobile ? mobileEditGroups : desktopEditGroups,
-      );
-      const replacementsByGroup = [0, 1, 2].map((group) => replacementTargets.filter((point) => point.editGroup === group));
+      const initialTargets = sampleLines(generatedLines, editGroups);
+      const replacementTargets = sampleLines(editedLines, editGroups);
+      const replacementsByGroup = [0, 1].map((group) => replacementTargets.filter((point) => point.editGroup === group));
       const { centerX, centerY } = geometry();
       const candidates = particles.filter((particle) => particle.index % 2 === 0).sort((a, b) => (
         Math.hypot(a.originX - centerX, a.originY - centerY) - Math.hypot(b.originX - centerX, b.originY - centerY)
       ));
       const targetCount = Math.min(candidates.length, width < 700 ? 520 : 900);
-      const groupOffsets = [0, 0, 0];
+      const groupOffsets = [0, 0];
 
       for (let index = 0; index < targetCount; index += 1) {
         const particle = candidates[index];
@@ -227,11 +206,13 @@
       width = Math.max(1, bounds.width);
       height = Math.max(1, bounds.height);
       ratio = Math.min(window.devicePixelRatio || 1, 2);
-      semanticLineCount = width < 700 ? 2 : 3;
+      semanticLineCount = 2;
       field.dataset.semanticLines = String(semanticLineCount);
       const coherenceGeometry = geometry();
       field.dataset.coherenceSide = String(Math.round(coherenceGeometry.side));
       field.dataset.coherenceX = String(Math.round(coherenceGeometry.centerX));
+      field.dataset.semanticCopy = 'LANGUAGE FORMS / TOKENS RESOLVE';
+      field.dataset.semanticFontSize = String(semanticFontSize(coherenceGeometry.side, width < 700));
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
       context.setTransform(ratio, 0, 0, ratio, 0, 0);

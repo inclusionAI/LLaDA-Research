@@ -299,11 +299,11 @@ test('coherence field keeps one dense multi-material animation system', async ({
   await expect(field.locator('canvas')).toHaveCount(1);
 });
 
-test('parallel semantic convergence resolves quickly and edits three positions together', async ({ page }) => {
+test('parallel semantic convergence resolves quickly and edits two positions together', async ({ page }) => {
   await page.goto('/');
   const field = page.locator('[data-denoise-field]');
 
-  await expect(field).toHaveAttribute('data-edit-count', '3');
+  await expect(field).toHaveAttribute('data-edit-count', '2');
   await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
   await expect(field).toHaveAttribute('data-coherence-state', 'resolved', { timeout: 900 });
   expect(Number(await field.getAttribute('data-target-error'))).toBeLessThan(3);
@@ -312,8 +312,8 @@ test('parallel semantic convergence resolves quickly and edits three positions t
 
 test('coherence field responds without separating from the hero', async ({ page }) => {
   const cases = [
-    { width: 1440, height: 1000, lines: '3', maximumSide: 390 },
-    { width: 820, height: 900, lines: '3', maximumSide: 340 },
+    { width: 1440, height: 1000, lines: '2', maximumSide: 390 },
+    { width: 820, height: 900, lines: '2', maximumSide: 340 },
     { width: 390, height: 844, lines: '2', maximumSide: 280 },
   ];
 
@@ -337,6 +337,21 @@ test('coherence field responds without separating from the hero', async ({ page 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
   }
+});
+
+test('semantic particle type uses two readable intentional lines', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+  await expect(field).toHaveAttribute('data-semantic-lines', '2');
+  await expect(field).toHaveAttribute('data-semantic-copy', 'LANGUAGE FORMS / TOKENS RESOLVE');
+  expect(Number(await field.getAttribute('data-semantic-font-size'))).toBeGreaterThanOrEqual(18);
+  await expect(field.locator('canvas')).toHaveCount(1);
+  await expect(field.locator('canvas')).toBeVisible();
+  await expect(field.locator('[data-semantic-text]')).toHaveCount(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(Number(await field.getAttribute('data-semantic-font-size'))).toBeGreaterThanOrEqual(14);
 });
 
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
