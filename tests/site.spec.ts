@@ -277,6 +277,35 @@ test('denoise field responds to pointer input and lets the trail settle', async 
   await expect(field).toHaveAttribute('data-interacting', 'false', { timeout: 2_000 });
 });
 
+test('semantic particles respond locally to a fast pointer pass and return to rest', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+  const box = await field.boundingBox();
+  expect(box).not.toBeNull();
+
+  const centerX = Number(await field.getAttribute('data-coherence-x'));
+  const side = Number(await field.getAttribute('data-coherence-side'));
+  const centerY = box!.height * 0.5;
+  const cycleEpoch = await field.getAttribute('data-cycle-epoch');
+
+  await page.mouse.move(box!.x + centerX - side * 0.28, box!.y + centerY - side * 0.09);
+  await page.mouse.move(box!.x + centerX + side * 0.12, box!.y + centerY - side * 0.09);
+
+  await expect(field).toHaveAttribute('data-semantic-proximity-state', 'near');
+  await expect.poll(async () => Number(await field.getAttribute('data-semantic-max-displacement'))).toBeGreaterThan(0);
+  expect(Number(await field.getAttribute('data-semantic-max-displacement'))).toBeLessThanOrEqual(8);
+  expect(Number(await field.getAttribute('data-semantic-proximity'))).toBeGreaterThan(0);
+  await expect(field).toHaveAttribute('data-semantic-rest', 'false');
+
+  await page.mouse.move(0, 0);
+  await expect(field).toHaveAttribute('data-semantic-proximity-state', 'far', { timeout: 500 });
+  await expect(field).toHaveAttribute('data-semantic-rest', 'true', { timeout: 500 });
+  await expect(field).toHaveAttribute('data-cycle-epoch', cycleEpoch || '');
+  await expect(field.locator('canvas')).toHaveCount(1);
+  await expect(field).toHaveAttribute('data-animation-loops', '1');
+});
+
 test('single coherence field replaces persistent background token lanes', async ({ page }) => {
   await page.goto('/');
   const field = page.locator('[data-denoise-field]');

@@ -18,6 +18,7 @@ export type CoherencePhase = {
   disperse: number;
 };
 export type ParticleMaterial = 'micro' | 'stroke' | 'mask' | 'semantic';
+export type VectorOffset = { x: number; y: number };
 
 const smoothstep = (value: number) => {
   const clamped = Math.max(0, Math.min(1, value));
@@ -27,6 +28,23 @@ const smoothstep = (value: number) => {
 const progress = (value: number, start: number, end: number) => (
   smoothstep((value - start) / (end - start))
 );
+
+export function clampSemanticOffset(offset: VectorOffset, maximum = 8): VectorOffset {
+  const distance = Math.hypot(offset.x, offset.y);
+  const limit = Math.max(0, maximum);
+  if (distance <= limit || distance === 0) return offset;
+  const scale = limit / distance;
+  return { x: offset.x * scale, y: offset.y * scale };
+}
+
+export function decaySemanticOffset(
+  offset: VectorOffset,
+  elapsedMs: number,
+  timeConstantMs = 180,
+): VectorOffset {
+  const decay = Math.exp(-Math.max(0, elapsedMs) / Math.max(1, timeConstantMs));
+  return { x: offset.x * decay, y: offset.y * decay };
+}
 
 export function densityForFps(fps: number, current: number): number {
   const target = fps < 32 ? 0.55 : fps < 48 ? 0.78 : 1;

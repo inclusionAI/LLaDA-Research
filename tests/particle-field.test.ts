@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  clampSemanticOffset,
   coherenceWeight,
   coherencePhaseAt,
+  decaySemanticOffset,
   densityForFps,
   materialForIndex,
   resolveParticlePosition,
@@ -11,6 +13,24 @@ import {
   sourceAlphaForCompositedOpacity,
   tokenStageForInfluence,
 } from '../src/lib/particle-field';
+
+describe('semantic pointer motion', () => {
+  it('clamps semantic displacement by vector length', () => {
+    const clamped = clampSemanticOffset({ x: 6, y: 8 }, 8);
+    expect(clamped.x).toBeCloseTo(4.8, 5);
+    expect(clamped.y).toBeCloseTo(6.4, 5);
+    expect(Math.hypot(clamped.x, clamped.y)).toBe(8);
+    expect(clampSemanticOffset({ x: 3, y: 4 }, 8)).toEqual({ x: 3, y: 4 });
+  });
+
+  it('decays offsets exponentially with a 180ms time constant', () => {
+    expect(decaySemanticOffset({ x: 8, y: -4 }, 180)).toEqual({
+      x: expect.closeTo(8 / Math.E, 5),
+      y: expect.closeTo(-4 / Math.E, 5),
+    });
+    expect(Math.hypot(...Object.values(decaySemanticOffset({ x: 8, y: 0 }, 500)))).toBeLessThan(0.5);
+  });
+});
 
 describe('densityForFps', () => {
   it('keeps full density for smooth animation and degrades for slow devices', () => {

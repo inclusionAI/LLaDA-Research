@@ -28,8 +28,10 @@
 
 <script>
   import {
+    clampSemanticOffset,
     coherencePhaseAt,
     coherenceWeight,
+    decaySemanticOffset,
     densityForFps,
     materialForIndex,
     resolveParticlePosition,
@@ -62,6 +64,8 @@
     spectral: boolean;
     target?: Point;
     replacement?: Point;
+    semanticOffsetX: number;
+    semanticOffsetY: number;
   };
   type SemanticTokenLayout = {
     text: string;
@@ -117,7 +121,21 @@
     let interactionTimer = 0;
     let semanticLineCount = 2;
     let semanticLayouts: { initial: SemanticLayout; replacement: SemanticLayout } | undefined;
-    const pointer = { x: 0, y: 0, previousX: 0, previousY: 0, speed: 0, active: false, energy: 0 };
+    let maximumSemanticDisplacement = 0;
+    let consumedPointerRevision = 0;
+    const pointer = {
+      x: 0,
+      y: 0,
+      previousX: 0,
+      previousY: 0,
+      velocityX: 0,
+      velocityY: 0,
+      speed: 0,
+      active: false,
+      positioned: false,
+      energy: 0,
+      revision: 0,
+    };
     const canvasTrailRetention = 0.8;
 
     const updateDataset = (name: string, value: string) => {
@@ -248,6 +266,8 @@
         index,
         material: materialForIndex(index),
         spectral: index % 23 === 0,
+        semanticOffsetX: 0,
+        semanticOffsetY: 0,
       };
     };
 
@@ -289,6 +309,7 @@
     const rebuildParticles = () => {
       const particleCount = Math.round((width * height) / 165 * density);
       particles = Array.from({ length: particleCount }, (_, index) => makeParticle(index));
+      maximumSemanticDisplacement = 0;
       assignSemanticTargets();
     };
 
@@ -323,13 +344,17 @@
       const bounds = field.getBoundingClientRect();
       const nextX = event.clientX - bounds.left;
       const nextY = event.clientY - bounds.top;
-      pointer.speed = Math.min(42, Math.hypot(nextX - pointer.x, nextY - pointer.y));
-      pointer.previousX = pointer.x || nextX;
-      pointer.previousY = pointer.y || nextY;
+      pointer.velocityX = pointer.positioned ? nextX - pointer.x : 0;
+      pointer.velocityY = pointer.positioned ? nextY - pointer.y : 0;
+      pointer.speed = Math.min(42, Math.hypot(pointer.velocityX, pointer.velocityY));
+      pointer.previousX = pointer.positioned ? pointer.x : nextX;
+      pointer.previousY = pointer.positioned ? pointer.y : nextY;
       pointer.x = nextX;
       pointer.y = nextY;
       pointer.active = true;
+      pointer.positioned = true;
       pointer.energy = Math.min(1, pointer.energy + 0.22);
+      pointer.revision += 1;
       markInteraction();
     };
 
@@ -389,9 +414,73 @@
       context.stroke();
     };
 
-    const skeletonOpacityFor = (phase: CoherencePhase, editGroup: number) => (
-      semanticSkeletonOpacity(phase.decode, editGroup >= 0 ? phase.edit : 0, phase.disperse, 0)
-    );
+    const semanticPointerProximityAt = (x: number, y: number, radius: number) => {
+      if (!pointer.active) return 0;
+      return Math.max(0, 1 - Math.hypot(pointer.x - x, pointer.y - y) / Math.max(1, radius));
+    };
+
+    const updateSemanticPointerMotion = (elapsedMs: number, phase: CoherencePhase, side: number) => {
+      const proximityRadius = Math.max(36, side * 0.22);
+      const hasFreshPointerEvent = pointer.revision !== consumedPointerRevision;
+      const movementLength = Math.hypot(pointer.velocityX, pointer.velocityY) || 1;
+      const movementX = pointer.velocityX / movementLength;
+      const movementY = pointer.velocityY / movementLength;
+      let semanticProximity = 0;
+      let semanticDisplacement = 0;
+
+      for (const particle of particles) {
+        if (!particle.target) continue;
+        const decayed = decaySemanticOffset(
+          { x: particle.semanticOffsetX, y: particle.semanticOffsetY },
+          elapsedMs,
+        );
+        particle.semanticOffsetX = decayed.x;
+        particle.semanticOffsetY = decayed.y;
+
+        const replacement = particle.replacement || particle.target;
+        const targetX = particle.target.x + (replacement.x - particle.target.x) * phase.replacement;
+        const targetY = particle.target.y + (replacement.y - particle.target.y) * phase.replacement;
+        const targetDx = targetX - pointer.x;
+        const targetDy = targetY - pointer.y;
+        const targetDistance = Math.hypot(targetDx, targetDy);
+        const proximity = pointer.active
+          ? Math.max(0, 1 - targetDistance / proximityRadius)
+          : 0;
+        semanticProximity = Math.max(semanticProximity, proximity);
+
+        if (hasFreshPointerEvent && pointer.speed >= 4 && proximity > 0) {
+          const normalX = targetDistance > 0 ? targetDx / targetDistance : 0;
+          const normalY = targetDistance > 0 ? targetDy / targetDistance : 1;
+          let tangentX = -normalY;
+          let tangentY = normalX;
+          if (tangentX * movementX + tangentY * movementY < 0) {
+            tangentX *= -1;
+            tangentY *= -1;
+          }
+          const impulse = 7.2 * Math.min(1, pointer.speed / 42) * proximity * proximity;
+          const offset = clampSemanticOffset({
+            x: particle.semanticOffsetX + tangentX * impulse,
+            y: particle.semanticOffsetY + tangentY * impulse,
+          });
+          particle.semanticOffsetX = offset.x;
+          particle.semanticOffsetY = offset.y;
+        }
+
+        semanticDisplacement = Math.max(
+          semanticDisplacement,
+          Math.hypot(particle.semanticOffsetX, particle.semanticOffsetY),
+        );
+      }
+
+      if (hasFreshPointerEvent) consumedPointerRevision = pointer.revision;
+      maximumSemanticDisplacement = Math.max(maximumSemanticDisplacement, semanticDisplacement);
+      updateDataset('semanticProximity', semanticProximity.toFixed(3));
+      updateDataset('semanticProximityState', semanticProximity > 0 ? 'near' : 'far');
+      updateDataset('semanticDisplacement', semanticDisplacement.toFixed(2));
+      updateDataset('semanticMaxDisplacement', maximumSemanticDisplacement.toFixed(2));
+      updateDataset('semanticRest', !pointer.active && semanticDisplacement < 0.6 ? 'true' : 'false');
+      updateDataset('semanticImpulseRevision', String(consumedPointerRevision));
+    };
 
     const semanticFalloff = (
       x: number,
@@ -457,9 +546,7 @@
       context.textBaseline = 'middle';
       initial.tokens.forEach((initialToken, index) => {
         const replacementToken = replacement.tokens[index] || initialToken;
-        const tokenOpacity = skeletonOpacityFor(phase, initialToken.editGroup);
         const changed = initialToken.text !== replacementToken.text;
-        const layers = semanticSkeletonLayers(tokenOpacity, phase.replacement, changed);
         const position = resolveParticlePosition(
           {
             x: initial.originX + initialToken.x,
@@ -471,6 +558,19 @@
           },
           phase.replacement,
         );
+        const tokenWidth = initialToken.width + (replacementToken.width - initialToken.width) * phase.replacement;
+        const pointerProximity = semanticPointerProximityAt(
+          position.x + tokenWidth / 2,
+          position.y,
+          geometry().side * 0.28,
+        );
+        const tokenOpacity = semanticSkeletonOpacity(
+          phase.decode,
+          initialToken.editGroup >= 0 ? phase.edit : 0,
+          phase.disperse,
+          pointerProximity,
+        );
+        const layers = semanticSkeletonLayers(tokenOpacity, phase.replacement, changed);
 
         compositedOpacity = Math.max(compositedOpacity, tokenOpacity);
         sourceOpacity = Math.max(
@@ -511,6 +611,7 @@
     };
 
     const renderFrame = (now: number, fixedPhase?: CoherencePhase) => {
+      const elapsedMs = Math.max(0, now - previousFrame);
       const delta = Math.min(2, (now - previousFrame) / 16.67);
       previousFrame = now;
       frameCount += 1;
@@ -525,6 +626,7 @@
       pointer.energy += ((pointer.active ? 1 : 0) - pointer.energy) * 0.055;
       pointer.speed *= 0.9;
       const pointerRadius = Math.min(width, height) * (width < 700 ? 0.34 : 0.3);
+      updateSemanticPointerMotion(elapsedMs, phase, side);
       const ambientSkeletonStrength = semanticSkeletonOpacity(phase.decode, 0, phase.disperse, 0) / 0.24;
       if (pointer.energy > 0.01) {
         const halo = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, pointerRadius * 1.4);
@@ -558,6 +660,8 @@
             semanticX += Math.sin(particle.seed * 1.9) * phase.edit * (8 + particle.depth * 8);
             semanticY += Math.cos(particle.seed * 2.3) * phase.edit * (5 + particle.depth * 5);
           }
+          semanticX += particle.semanticOffsetX;
+          semanticY += particle.semanticOffsetY;
           const bandX = Math.max(centerX - side * 0.46, Math.min(centerX + side * 0.46, particle.originX));
           const orderedX = bandX + (semanticX - bandX) * phase.decode;
           const orderedY = semanticY;
@@ -574,7 +678,7 @@
         const pointerDy = pointer.y - particle.y;
         const pointerDistance = Math.hypot(pointerDx, pointerDy) || 1;
         const pointerInfluence = pointer.energy * Math.max(0, 1 - pointerDistance / pointerRadius);
-        if (pointerInfluence > 0) {
+        if (pointerInfluence > 0 && (!particle.target || semanticStrength <= 0)) {
           desiredX += pointerDx * pointerInfluence * 0.075;
           desiredY += pointerDy * pointerInfluence * 0.028;
         }
@@ -698,6 +802,7 @@
     });
     observer.observe(field);
     resize();
+    updateDataset('cycleEpoch', String(Math.round(cycleStarted)));
     if (motionQuery.matches) {
       drawReducedSnapshot();
     } else {
@@ -712,6 +817,7 @@
         field.dataset.motion = 'full';
         previousFrame = performance.now();
         cycleStarted = previousFrame;
+        updateDataset('cycleEpoch', String(Math.round(cycleStarted)));
         frameWindowStarted = previousFrame;
         startAnimation();
       }
