@@ -9,6 +9,8 @@
   data-animation-loops="1"
   data-edit-count="2"
   data-pointer-glyphs="mask partial resolved"
+  data-skeleton-max-opacity="0.28"
+  data-skeleton-surface="canvas"
   data-coherence-state="noise"
   data-motion="full"
   data-interacting="false"
@@ -29,6 +31,7 @@
     materialForIndex,
     resolveParticlePosition,
     semanticFontSize,
+    semanticSkeletonOpacity,
     tokenStageForInfluence,
   } from '../lib/particle-field';
   import type { CoherencePhase, ParticleMaterial } from '../lib/particle-field';
@@ -54,6 +57,15 @@
     spectral: boolean;
     target?: Point;
     replacement?: Point;
+  };
+  type SemanticTokenLayout = {
+    text: string;
+    x: number;
+    baselineY: number;
+    width: number;
+    row: number;
+    tokenIndex: number;
+    editGroup: number;
   };
 
   const maskGlyphs = ['[··]', '[  ]', '▧', '░'];
@@ -105,59 +117,87 @@
       };
     };
 
-    const sampleLines = (lines: string[][], editGroups: number[][]) => {
+    const layoutSemanticTokens = (
+      drawingContext: CanvasRenderingContext2D,
+      lines: string[][],
+    ) => {
       const { centerX, centerY, side } = geometry();
-      const samplingCanvas = document.createElement('canvas');
-      const samplingContext = samplingCanvas.getContext('2d', { willReadFrequently: true });
-      if (!samplingContext) return [] as Point[];
       const sampleSize = Math.max(1, Math.round(side));
-      samplingCanvas.width = sampleSize;
-      samplingCanvas.height = sampleSize;
       const fontSize = semanticFontSize(side, width < 700);
       const gap = fontSize * 0.82;
-      const lineGap = side * (semanticLineCount === 2 ? 0.18 : 0.145);
+      const lineGap = side * 0.18;
       const visibleLines = lines.slice(0, semanticLineCount);
-      const points: Point[] = [];
+      const tokens: SemanticTokenLayout[] = [];
 
-      samplingContext.font = `500 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-      samplingContext.textBaseline = 'middle';
-      samplingContext.fillStyle = '#fff';
-
-      visibleLines.forEach((tokens, row) => {
-        const widths = tokens.map((token) => samplingContext.measureText(token).width);
-        const lineWidth = widths.reduce((sum, tokenWidth) => sum + tokenWidth, 0) + gap * (tokens.length - 1);
+      drawingContext.font = `500 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      drawingContext.textBaseline = 'middle';
+      visibleLines.forEach((line, row) => {
+        const widths = line.map((token) => drawingContext.measureText(token).width);
+        const lineWidth = widths.reduce((sum, tokenWidth) => sum + tokenWidth, 0) + gap * (line.length - 1);
         let cursorX = (sampleSize - lineWidth) / 2;
         const baselineY = sampleSize / 2 + (row - (visibleLines.length - 1) / 2) * lineGap;
 
-        tokens.forEach((token, tokenIndex) => {
-          const tokenPoints: Omit<Point, 'layoutIndex' | 'layoutSize'>[] = [];
-          samplingContext.clearRect(0, 0, sampleSize, sampleSize);
-          samplingContext.fillText(token, cursorX, baselineY);
-          const left = Math.max(0, Math.floor(cursorX - 1));
-          const top = Math.max(0, Math.floor(baselineY - fontSize));
-          const sampleWidth = Math.min(sampleSize - left, Math.ceil(widths[tokenIndex] + 3));
-          const sampleHeight = Math.min(sampleSize - top, Math.ceil(fontSize * 1.35));
-          const pixels = samplingContext.getImageData(left, top, sampleWidth, sampleHeight).data;
-
-          for (let y = 0; y < sampleHeight; y += 1) {
-            for (let x = 0; x < sampleWidth; x += 1) {
-              if (pixels[(y * sampleWidth + x) * 4 + 3] > 80) {
-                tokenPoints.push({
-                  x: centerX - side / 2 + left + x,
-                  y: centerY - side / 2 + top + y,
-                  editGroup: editGroups[row]?.[tokenIndex] ?? -1,
-                  layoutGroup: row * 2 + tokenIndex,
-                });
-              }
-            }
-          }
-          tokenPoints.forEach((point, layoutIndex) => points.push({
-            ...point,
-            layoutIndex,
-            layoutSize: tokenPoints.length,
-          }));
+        line.forEach((text, tokenIndex) => {
+          tokens.push({
+            text,
+            x: cursorX,
+            baselineY,
+            width: widths[tokenIndex],
+            row,
+            tokenIndex,
+            editGroup: editGroups[row]?.[tokenIndex] ?? -1,
+          });
           cursorX += widths[tokenIndex] + gap;
         });
+      });
+
+      return {
+        fontSize,
+        originX: centerX - side / 2,
+        originY: centerY - side / 2,
+        sampleSize,
+        tokens,
+      };
+    };
+
+    const sampleLines = (lines: string[][]) => {
+      const samplingCanvas = document.createElement('canvas');
+      const samplingContext = samplingCanvas.getContext('2d', { willReadFrequently: true });
+      if (!samplingContext) return [] as Point[];
+      const sampleSize = Math.max(1, Math.round(geometry().side));
+      samplingCanvas.width = sampleSize;
+      samplingCanvas.height = sampleSize;
+      const { fontSize, originX, originY, tokens } = layoutSemanticTokens(samplingContext, lines);
+      const points: Point[] = [];
+
+      samplingContext.fillStyle = '#fff';
+      tokens.forEach((token) => {
+        const tokenPoints: Omit<Point, 'layoutIndex' | 'layoutSize'>[] = [];
+        samplingContext.clearRect(0, 0, sampleSize, sampleSize);
+        samplingContext.fillText(token.text, token.x, token.baselineY);
+        const left = Math.max(0, Math.floor(token.x - 1));
+        const top = Math.max(0, Math.floor(token.baselineY - fontSize));
+        const sampleWidth = Math.min(sampleSize - left, Math.ceil(token.width + 3));
+        const sampleHeight = Math.min(sampleSize - top, Math.ceil(fontSize * 1.35));
+        const pixels = samplingContext.getImageData(left, top, sampleWidth, sampleHeight).data;
+
+        for (let y = 0; y < sampleHeight; y += 1) {
+          for (let x = 0; x < sampleWidth; x += 1) {
+            if (pixels[(y * sampleWidth + x) * 4 + 3] > 80) {
+              tokenPoints.push({
+                x: originX + left + x,
+                y: originY + top + y,
+                editGroup: token.editGroup,
+                layoutGroup: token.row * 2 + token.tokenIndex,
+              });
+            }
+          }
+        }
+        tokenPoints.forEach((point, layoutIndex) => points.push({
+          ...point,
+          layoutIndex,
+          layoutSize: tokenPoints.length,
+        }));
       });
       return points;
     };
@@ -183,8 +223,8 @@
     };
 
     const assignSemanticTargets = () => {
-      const initialTargets = sampleLines(generatedLines, editGroups);
-      const replacementTargets = sampleLines(editedLines, editGroups);
+      const initialTargets = sampleLines(generatedLines);
+      const replacementTargets = sampleLines(editedLines);
       const replacementsByLayoutGroup = [0, 1, 2, 3].map((group) => (
         replacementTargets.filter((point) => point.layoutGroup === group)
       ));
@@ -318,6 +358,49 @@
       context.stroke();
     };
 
+    const skeletonOpacityFor = (phase: CoherencePhase, editGroup: number) => (
+      semanticSkeletonOpacity(phase.decode, editGroup >= 0 ? phase.edit : 0, phase.disperse, 0)
+    );
+
+    const semanticFalloff = (
+      x: number,
+      y: number,
+      centerX: number,
+      centerY: number,
+      side: number,
+      feather: number,
+      skeletonStrength: number,
+    ) => {
+      const radius = side * 0.54;
+      const radialDistance = Math.hypot(x - centerX, y - centerY) / radius;
+      const radialWeight = Math.max(0, 1 - radialDistance);
+      return coherenceWeight(x, y, centerX, centerY, side, feather)
+        * radialWeight * radialWeight
+        * skeletonStrength;
+    };
+
+    const drawSemanticSkeleton = (phase: CoherencePhase) => {
+      const lines = phase.replacement < 0.5 ? generatedLines : editedLines;
+      const { originX, originY, tokens } = layoutSemanticTokens(context, lines);
+      let visibleOpacity = 0;
+
+      tokens.forEach((token) => {
+        const opacity = skeletonOpacityFor(phase, token.editGroup);
+        visibleOpacity = Math.max(visibleOpacity, opacity);
+        if (opacity <= 0.001) return;
+        context.fillStyle = `rgba(184, 189, 182, ${opacity})`;
+        context.fillText(token.text, originX + token.x, originY + token.baselineY);
+      });
+
+      field.dataset.skeletonOpacity = visibleOpacity.toFixed(3);
+      field.dataset.skeletonState = visibleOpacity <= 0.001
+        ? 'inactive'
+        : phase.edit > 0.04
+          ? 'fragmenting'
+          : 'active';
+      field.dataset.skeletonCopy = phase.replacement < 0.5 ? 'initial' : 'replacement';
+    };
+
     const updateState = (phase: CoherencePhase) => {
       field.dataset.coherenceState = phase.name === 'hold' || phase.name === 'resolved'
         ? 'resolved'
@@ -341,6 +424,7 @@
       pointer.energy += ((pointer.active ? 1 : 0) - pointer.energy) * 0.055;
       pointer.speed *= 0.9;
       const pointerRadius = Math.min(width, height) * (width < 700 ? 0.34 : 0.3);
+      const ambientSkeletonStrength = semanticSkeletonOpacity(phase.decode, 0, phase.disperse, 0) / 0.24;
       if (pointer.energy > 0.01) {
         const halo = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, pointerRadius * 1.4);
         halo.addColorStop(0, `rgba(236, 239, 229, ${0.12 * pointer.energy})`);
@@ -409,9 +493,21 @@
           && particle.y < height * 0.76
           ? 0.25
           : 1;
+        const ambientAttenuation = semanticActive
+          ? 1
+          : 1 - semanticFalloff(
+            particle.x,
+            particle.y,
+            centerX,
+            centerY,
+            side,
+            feather,
+            ambientSkeletonStrength,
+          ) * 0.42;
         const alpha = Math.min(
           0.9,
-          (0.045 + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48) * mobileCopyOcclusion,
+          (0.045 + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48)
+            * mobileCopyOcclusion * ambientAttenuation,
         );
 
         if (semanticActive) {
@@ -444,6 +540,7 @@
         }
       }
 
+      drawSemanticSkeleton(phase);
       if (targetSamples > 0) {
         field.dataset.targetError = (targetError / targetSamples).toFixed(2);
       }

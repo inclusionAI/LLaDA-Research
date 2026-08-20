@@ -362,6 +362,20 @@ test('semantic particle type uses two readable intentional lines', async ({ page
   expect(Number(await field.getAttribute('data-unchanged-layout-shifts'))).toBeGreaterThan(0);
 });
 
+test('same-canvas semantic skeleton reconnects resolved particle strokes', async ({ page }) => {
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+
+  await expect(field).toHaveAttribute('data-skeleton-max-opacity', '0.28');
+  await expect(field).toHaveAttribute('data-skeleton-surface', 'canvas');
+  await expect.poll(async () => field.evaluate((element) => (
+    element.getAttribute('data-coherence-state') === 'resolved'
+      && element.getAttribute('data-skeleton-state') === 'active'
+      && Number(element.getAttribute('data-skeleton-opacity')) > 0
+  )), { timeout: 3_500 }).toBe(true);
+  await expect(field.locator('canvas')).toHaveCount(1);
+});
+
 test('mobile archives prioritize titles over decorative thumbnails', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile layout assertion');
   await page.goto('/papers/');
