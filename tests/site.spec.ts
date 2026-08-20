@@ -277,6 +277,44 @@ test('primary content routes are reachable', async ({ page }) => {
   }
 });
 
+test('model archive exposes the complete llada lineage', async ({ page }) => {
+  await page.goto('/models/');
+
+  const cards = page.locator('[data-filter-card]');
+  await expect(cards).toHaveCount(10);
+  for (const title of [
+    'LLaDA-8B',
+    'LLaDA 1.5',
+    'LLaDA-MoE 7B-A1B',
+    'LLaDA2.0',
+    'LLaDA2.1',
+    'iLLaDA-8B',
+    'LLaDA2.2',
+    'LLaDA MoE v2',
+    'LLaDA2.X',
+    'LLaDA2.0-Uni',
+  ]) {
+    await expect(cards.getByRole('heading', { name: title, exact: true })).toBeVisible();
+  }
+});
+
+test('expanded llada model detail routes are reachable', async ({ page }) => {
+  for (const path of [
+    '/models/llada-8b/',
+    '/models/llada-1-5/',
+    '/models/llada-moe-7b-a1b/',
+    '/models/llada-2-0/',
+    '/models/llada-2-1/',
+    '/models/illada-8b/',
+    '/models/llada-2-2/',
+    '/models/llada-moe-v2/',
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.ok(), path).toBeTruthy();
+    await expect(page.locator('main h1').first()).toBeVisible();
+  }
+});
+
 test('archive filters entries by query and clears the filter', async ({ page }) => {
   await page.goto('/papers/');
   const cards = page.locator('[data-filter-card]');
