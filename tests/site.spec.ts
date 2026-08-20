@@ -107,7 +107,7 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(1).getByText(
-    'Levenshtein editing enables agentic generation with insert, delete, and replace.',
+    'Derives scaling principles for MoE diffusion language models and trains a 30B-A3B model.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(2).getByRole('heading', { name: 'A Home for LLaDA Research' })).toBeVisible();
@@ -277,6 +277,48 @@ test('primary content routes are reachable', async ({ page }) => {
   }
 });
 
+test('paper archive exposes the complete llada publication lineage', async ({ page }) => {
+  await page.goto('/papers/');
+
+  const cards = page.locator('[data-filter-card]');
+  await expect(cards).toHaveCount(9);
+  for (const title of [
+    'Large Language Diffusion Models',
+    'LLaDA 1.5: Variance-Reduced Preference Optimization for Large Language Diffusion Models',
+    'LLaDA-MoE: A Sparse MoE Diffusion Language Model',
+    'Improved Large Language Diffusion Models',
+    'LLaDA MoE v2: Scaling Mixture-of-Experts Diffusion Language Models',
+  ]) {
+    await expect(cards.getByRole('heading', { name: title, exact: true })).toBeVisible();
+  }
+});
+
+test('expanded llada paper detail routes are reachable', async ({ page }) => {
+  for (const path of [
+    '/papers/large-language-diffusion-models/',
+    '/papers/llada-1-5/',
+    '/papers/llada-moe/',
+    '/papers/improved-large-language-diffusion-models/',
+    '/papers/llada-moe-v2/',
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.ok(), path).toBeTruthy();
+    await expect(page.locator('main h1').first()).toBeVisible();
+  }
+});
+
+test('paper archive shows corrected llada publication dates', async ({ page }) => {
+  await page.goto('/papers/');
+
+  const cards = page.locator('[data-filter-card]');
+  await expect(cards.filter({
+    has: page.getByRole('heading', { name: 'LLaDA2.0: Scaling Up Diffusion Language Models to 100B', exact: true }),
+  }).getByText('Dec 10, 2025', { exact: true })).toBeVisible();
+  await expect(cards.filter({
+    has: page.getByRole('heading', { name: 'LLaDA2.1: Speeding Up Text Diffusion via Token Editing', exact: true }),
+  }).getByText('Feb 9, 2026', { exact: true })).toBeVisible();
+});
+
 test('model archive exposes the complete llada lineage', async ({ page }) => {
   await page.goto('/models/');
 
@@ -410,11 +452,11 @@ test('llada moe 7b-a1b omits unverified repository links', async ({ page }) => {
 test('archive filters entries by query and clears the filter', async ({ page }) => {
   await page.goto('/papers/');
   const cards = page.locator('[data-filter-card]');
-  await expect(cards).toHaveCount(4);
+  await expect(cards).toHaveCount(9);
   await page.getByRole('searchbox').fill('multimodal');
   await expect(page.locator('[data-filter-card]:visible')).toHaveCount(1);
   await page.getByRole('button', { name: 'Clear filters' }).click();
-  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(4);
+  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(9);
 });
 
 test('404 page offers recovery links', async ({ page }) => {
