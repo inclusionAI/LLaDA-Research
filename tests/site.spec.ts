@@ -277,7 +277,7 @@ test('primary content routes are reachable', async ({ page }) => {
   }
 });
 
-test('paper archive exposes the complete llada publication lineage', async ({ page }) => {
+test('paper archive exposes the complete llada lineage', async ({ page }) => {
   await page.goto('/papers/');
 
   const cards = page.locator('[data-filter-card]');
@@ -293,7 +293,7 @@ test('paper archive exposes the complete llada publication lineage', async ({ pa
   }
 });
 
-test('expanded llada paper detail routes are reachable', async ({ page }) => {
+test('expanded llada detail routes are reachable for papers', async ({ page }) => {
   for (const path of [
     '/papers/large-language-diffusion-models/',
     '/papers/llada-1-5/',
@@ -307,7 +307,7 @@ test('expanded llada paper detail routes are reachable', async ({ page }) => {
   }
 });
 
-test('paper archive shows corrected llada publication dates', async ({ page }) => {
+test('complete llada lineage shows corrected publication dates', async ({ page }) => {
   await page.goto('/papers/');
 
   const cards = page.locator('[data-filter-card]');
