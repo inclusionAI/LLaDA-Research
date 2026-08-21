@@ -10,14 +10,9 @@
   --accent: #527a68;
   --accent-deep: var(--ink);
   --accent-soft: var(--surface);
-  --cyan: var(--muted);
-  --violet: var(--muted);
-  --night: var(--surface);
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;
-  --shadow-sm: none;
-  --shadow: none;
   --container: 82rem;
   --header-height: 4rem;
   --font-sans: Inter, "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
@@ -152,7 +147,7 @@ h1, h2, h3 { font-family: var(--font-serif); text-wrap: balance; }
 .footer-inner { display: grid; grid-template-columns: 1fr auto auto; gap: 3rem; align-items: center; min-height: 8rem; }
 .site-footer .brand { color: var(--ink); }
 .site-footer .brand-logo { width: 5.5rem; }
-.footer-nav a { color: var(--muted); }
+.footer-nav a { color: var(--ink); }
 .site-footer small { color: var(--ink-soft); font-size: var(--type-meta); }
 
 .surface { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }

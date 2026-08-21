@@ -543,9 +543,9 @@ test('token artwork link exposes its visible mask token in the accessible name',
   await expect(page.locator('.card-art').first()).toHaveAccessibleName(/\[MASK\]/);
 });
 
-test('footer copyright text meets WCAG AA contrast', async ({ page }) => {
+test('footer links and copyright text meet WCAG AA contrast', async ({ page }) => {
   await page.goto('/');
-  const contrast = await page.locator('.site-footer small').evaluate((element) => {
+  const contrasts = await page.locator('.footer-nav a, .site-footer small').evaluateAll((elements) => elements.map((element) => {
     const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
     const luminance = (value: string) => {
       const linear = channels(value).map((channel) => {
@@ -556,6 +556,24 @@ test('footer copyright text meets WCAG AA contrast', async ({ page }) => {
     };
     const foreground = luminance(getComputedStyle(element).color);
     const background = luminance(getComputedStyle(element.closest('.site-footer')!).backgroundColor);
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  }));
+  expect(contrasts.every((contrast) => contrast >= 4.5)).toBe(true);
+});
+
+test('citation live status meets WCAG AA contrast', async ({ page }) => {
+  await page.goto('/papers/llada-2-0/');
+  const contrast = await page.locator('.copy-status').evaluate((element) => {
+    const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (value: string) => {
+      const linear = channels(value).map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    };
+    const foreground = luminance(getComputedStyle(element).color);
+    const background = luminance(getComputedStyle(element.closest('.citation')!).backgroundColor);
     return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
   });
   expect(contrast).toBeGreaterThanOrEqual(4.5);

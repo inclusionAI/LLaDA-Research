@@ -8,7 +8,7 @@ export async function GET(context: APIContext) {
   const posts = sortPublished(await getCollection('blog'));
 
   return rss({
-    title: 'LLaDA Research Blog',
+    title: 'LLaDA Research Notes',
     description: 'Release notes and technical perspectives from LLaDA research.',
     site: new URL(withBase(import.meta.env.BASE_URL), context.site),
     items: posts.map(({ id, data }) => ({

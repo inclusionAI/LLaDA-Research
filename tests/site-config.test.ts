@@ -11,6 +11,21 @@ describe('public assets', () => {
     expect(colors.length).toBeGreaterThan(0);
     expect(colors.every((color) => approved.has(color))).toBe(true);
   });
+
+  it('wires both black logos through the project-base helper', () => {
+    const source = readFileSync(new URL('../src/layouts/BaseLayout.astro', import.meta.url), 'utf8');
+    const logoReferences = source.match(/src=\{local\('llada-logo-black\.svg'\)\}/g) ?? [];
+
+    expect(logoReferences).toHaveLength(2);
+    expect(withBase('/ant-llada', 'llada-logo-black.svg')).toBe('/ant-llada/llada-logo-black.svg');
+  });
+
+  it('uses Notes as the RSS channel title', () => {
+    const source = readFileSync(new URL('../src/pages/rss.xml.ts', import.meta.url), 'utf8');
+
+    expect(source).toContain("title: 'LLaDA Research Notes'");
+    expect(source).not.toContain('LLaDA Research Blog');
+  });
 });
 
 describe('resolveDeploymentConfig', () => {
