@@ -82,14 +82,19 @@ const titleTokens = title
   .token-art {
     position: absolute;
     inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    align-content: center;
+    justify-items: start;
     padding: var(--space-3);
     overflow: hidden;
     border-right: 1px solid var(--line);
     background: var(--surface);
     font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    letter-spacing: 0.02em;
   }
 
   .token-art::after {
@@ -107,35 +112,32 @@ const titleTokens = title
   .token-art > * { position: relative; z-index: 1; }
 
   .token-seed {
+    display: flex;
+    align-items: center;
+    min-height: 1.625rem;
     color: var(--ink-soft);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
   }
 
   .token-line {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1);
-    margin-top: var(--space-1);
   }
 
   .token-line i {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.625rem;
     padding: 0.25rem var(--space-1);
     border: 1px solid var(--line);
     color: var(--ink);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
     font-style: normal;
   }
 
   .token-index {
-    position: absolute;
-    right: var(--space-1);
-    bottom: var(--space-1);
+    position: relative;
     color: var(--ink);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
-    letter-spacing: var(--tracking-meta);
+    font-variant-numeric: tabular-nums;
   }
 
   .card-copy {
@@ -223,14 +225,13 @@ const titleTokens = title
     }
 
     .token-art {
-      justify-content: center;
       padding: var(--space-1);
       border-right: 0;
       border-bottom: 1px solid var(--line);
     }
 
     .token-seed {
-      font-size: var(--text-meta);
+      min-height: var(--leading-meta);
     }
 
     .token-line {

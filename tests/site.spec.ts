@@ -861,6 +861,63 @@ test('mobile archive artwork preserves a compact 64px notation band', async ({ p
   expect(art!.height).toBeLessThanOrEqual(96);
 });
 
+test('generated archive notation follows one grid at desktop and compact widths', async ({ page }) => {
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+    { width: 320, height: 720 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/models/');
+
+    const card = page.locator('.content-card').filter({ hasText: 'LLaDA MoE v2' }).first();
+    const metrics = await card.evaluate((element) => {
+      const rect = (selector: string) => {
+        const node = element.querySelector<HTMLElement>(selector)!;
+        const box = node.getBoundingClientRect();
+        return {
+          x: box.x,
+          y: box.y,
+          right: box.right,
+          bottom: box.bottom,
+          width: box.width,
+          height: box.height,
+          display: getComputedStyle(node).display,
+        };
+      };
+
+      return {
+        art: rect('.token-art'),
+        seed: rect('.token-seed'),
+        line: rect('.token-line'),
+        index: rect('.token-index'),
+        tokens: [...element.querySelectorAll<HTMLElement>('.token-line i')].map((node) => {
+          const box = node.getBoundingClientRect();
+          return { y: box.y, height: box.height };
+        }),
+      };
+    });
+
+    expect(Math.abs(metrics.seed.x - metrics.index.x)).toBeLessThan(1);
+    expect(metrics.seed.x).toBeGreaterThanOrEqual(metrics.art.x);
+    expect(metrics.index.right).toBeLessThanOrEqual(metrics.art.right);
+    expect(metrics.index.bottom).toBeLessThanOrEqual(metrics.art.bottom);
+
+    if (viewport.width > 650) {
+      expect(metrics.line.display).not.toBe('none');
+      expect(Math.abs(metrics.seed.x - metrics.line.x)).toBeLessThan(1);
+      expect(metrics.line.y - metrics.seed.bottom).toBeGreaterThanOrEqual(7);
+      expect(metrics.index.y - metrics.line.bottom).toBeGreaterThanOrEqual(7);
+      expect(metrics.tokens.length).toBeGreaterThan(1);
+      expect(new Set(metrics.tokens.map(({ y }) => y)).size).toBe(1);
+      expect(new Set(metrics.tokens.map(({ height }) => height)).size).toBe(1);
+    } else {
+      expect(metrics.line.display).toBe('none');
+      expect(metrics.index.y - metrics.seed.bottom).toBeGreaterThanOrEqual(7);
+    }
+  }
+});
+
 test('supporting pages share the light visual system', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/', '/404.html']) {
     await page.goto(path);
