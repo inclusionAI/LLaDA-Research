@@ -31,5 +31,5 @@ const relatedEntries = [
     <ResourceLinks links={entry.data.links} />
   </div>
   <Content />
-  <RelatedContent currentId={entry.id} currentKind="model" entries={relatedEntries} tags={entry.data.tags} />
+  <RelatedContent slot="related" currentId={entry.id} currentKind="model" entries={relatedEntries} tags={entry.data.tags} />
 </ContentLayout>

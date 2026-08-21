@@ -560,6 +560,68 @@ test('mobile archives prioritize titles over decorative thumbnails', async ({ pa
   expect(box!.height).toBeLessThanOrEqual(96);
 });
 
+test('mobile archive topics wrap without clipping or page overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/papers/');
+
+  const topicLayout = await page.locator('.filter-tags').evaluate((rail) => {
+    const buttons = [...rail.querySelectorAll('button')];
+    return {
+      clientWidth: rail.clientWidth,
+      scrollWidth: rail.scrollWidth,
+      rows: new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size,
+      minimumButtonHeight: Math.min(...buttons.map((button) => button.getBoundingClientRect().height)),
+    };
+  });
+  expect(topicLayout.scrollWidth).toBeLessThanOrEqual(topicLayout.clientWidth + 1);
+  expect(topicLayout.rows).toBeGreaterThan(1);
+  expect(topicLayout.minimumButtonHeight).toBeGreaterThanOrEqual(38);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth + 1),
+  );
+});
+
+test('mobile archive cards reserve the full row for readable copy', async ({ page }) => {
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const path of ['/papers/', '/models/']) {
+      await page.goto(path);
+      const card = page.locator('.content-card').first();
+      const copy = card.locator('.card-copy');
+      const [cardBox, copyBox] = await Promise.all([card.boundingBox(), copy.boundingBox()]);
+      expect(cardBox, `${path} card at ${width}px`).not.toBeNull();
+      expect(copyBox, `${path} copy at ${width}px`).not.toBeNull();
+      expect(copyBox!.width / cardBox!.width, `${path} copy measure at ${width}px`).toBeGreaterThanOrEqual(0.85);
+      expect(copyBox!.y, `${path} copy should follow its compact art band at ${width}px`).toBeGreaterThan(cardBox!.y);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        await page.evaluate(() => document.documentElement.clientWidth + 1),
+      );
+    }
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/papers/');
+  const title = page.locator('.content-card h2').first();
+  const titleLines = await title.evaluate((element) => {
+    const lineHeight = Number.parseFloat(getComputedStyle(element).lineHeight);
+    return element.getBoundingClientRect().height / lineHeight;
+  });
+  expect(titleLines).toBeLessThanOrEqual(4.1);
+});
+
+test('related research spans the full desktop detail grid', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/papers/llada-2-0/');
+
+  const [proseBox, relatedBox] = await Promise.all([
+    page.locator('.prose').boundingBox(),
+    page.locator('.related').boundingBox(),
+  ]);
+  expect(proseBox).not.toBeNull();
+  expect(relatedBox).not.toBeNull();
+  expect(relatedBox!.width).toBeGreaterThan(proseBox!.width * 1.4);
+});
+
 test('token artwork link exposes its visible mask token in the accessible name', async ({ page }) => {
   await page.goto('/papers/');
   await expect(page.locator('.card-art').first()).toHaveAccessibleName(/\[MASK\]/);

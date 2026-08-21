@@ -25,6 +25,14 @@ describe('DenoiseField light-surface renderer', () => {
     expect(source).not.toContain('createRadialGradient');
   });
 
+  it('keeps the ambient particle base visible but subordinate on ivory', () => {
+    const ambientBaseAlpha = source.match(/const ambientBaseAlpha = ([\d.]+);/);
+
+    expect(ambientBaseAlpha).not.toBeNull();
+    expect(Number(ambientBaseAlpha![1])).toBeGreaterThanOrEqual(0.055);
+    expect(Number(ambientBaseAlpha![1])).toBeLessThanOrEqual(0.07);
+  });
+
   it('keeps one guarded requestAnimationFrame chain', () => {
     const schedulingSites = source.match(/requestAnimationFrame\(draw\)/g) ?? [];
 

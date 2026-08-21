@@ -145,6 +145,7 @@
       revision: 0,
     };
     const canvasTrailRetention = 0.8;
+    const ambientBaseAlpha = 0.06;
 
     const updateDataset = (name: string, value: string) => {
       if (field.dataset[name] !== value) field.dataset[name] = value;
@@ -772,7 +773,7 @@
           ) * 0.42;
         const alpha = Math.min(
           0.9,
-          (0.045 + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48)
+          (ambientBaseAlpha + particle.depth * 0.12 + pointerInfluence * 0.34 + semanticStrength * 0.48)
             * mobileCopyOcclusion * ambientAttenuation,
         );
 

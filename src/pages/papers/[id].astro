@@ -33,5 +33,5 @@ const relatedEntries = [
     <CitationCopy citation={entry.data.citation} />
   </div>
   <Content />
-  <RelatedContent currentId={entry.id} currentKind="paper" entries={relatedEntries} tags={entry.data.tags} />
+  <RelatedContent slot="related" currentId={entry.id} currentKind="paper" entries={relatedEntries} tags={entry.data.tags} />
 </ContentLayout>

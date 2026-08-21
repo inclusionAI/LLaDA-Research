@@ -171,4 +171,11 @@ const { tags, total } = Astro.props;
       justify-items: start;
     }
   }
+
+  @media (max-width: 650px) {
+    .filter-tags {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+  }
 </style>
