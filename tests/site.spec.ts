@@ -706,7 +706,7 @@ test('archive token index meets WCAG AA contrast on generated artwork', async ({
 
 test('archive token fragments meet WCAG AA contrast on generated artwork', async ({ page }) => {
   await page.goto('/models/');
-  const contrast = await page.locator('.token-line i').first().evaluate((element) => {
+  const contrast = await page.locator('.token-output').first().evaluate((element) => {
     const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
     const luminance = (value: string) => {
       const linear = channels(value).map((channel) => {
@@ -861,59 +861,65 @@ test('mobile archive artwork preserves a compact 64px notation band', async ({ p
   expect(art!.height).toBeLessThanOrEqual(96);
 });
 
-test('generated archive notation follows one grid at desktop and compact widths', async ({ page }) => {
+test('generated archive notation uses an aligned prompt, output, and date grid', async ({ page }) => {
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 390, height: 844 },
     { width: 320, height: 720 },
   ]) {
     await page.setViewportSize(viewport);
-    await page.goto('/models/');
+    for (const path of ['/models/', '/papers/', '/blog/']) {
+      await page.goto(path);
 
-    const card = page.locator('.content-card').filter({ hasText: 'LLaDA MoE v2' }).first();
-    const metrics = await card.evaluate((element) => {
-      const rect = (selector: string) => {
-        const node = element.querySelector<HTMLElement>(selector)!;
-        const box = node.getBoundingClientRect();
-        return {
-          x: box.x,
-          y: box.y,
-          right: box.right,
-          bottom: box.bottom,
-          width: box.width,
-          height: box.height,
-          display: getComputedStyle(node).display,
-        };
-      };
-
-      return {
-        art: rect('.token-art'),
-        seed: rect('.token-seed'),
-        line: rect('.token-line'),
-        index: rect('.token-index'),
-        tokens: [...element.querySelectorAll<HTMLElement>('.token-line i')].map((node) => {
+      const metrics = await page.locator('.content-card').evaluateAll((cards) => cards.map((element) => {
+        const rect = (selector: string) => {
+          const node = element.querySelector<HTMLElement>(selector)!;
           const box = node.getBoundingClientRect();
-          return { y: box.y, height: box.height };
-        }),
-      };
-    });
+          const style = getComputedStyle(node);
+          return {
+            x: box.x,
+            y: box.y,
+            right: box.right,
+            bottom: box.bottom,
+            width: box.width,
+            height: box.height,
+            fontSize: style.fontSize,
+            lineHeight: style.lineHeight,
+            letterSpacing: style.letterSpacing,
+          };
+        };
 
-    expect(Math.abs(metrics.seed.x - metrics.index.x)).toBeLessThan(1);
-    expect(metrics.seed.x).toBeGreaterThanOrEqual(metrics.art.x);
-    expect(metrics.index.right).toBeLessThanOrEqual(metrics.art.right);
-    expect(metrics.index.bottom).toBeLessThanOrEqual(metrics.art.bottom);
+        return {
+          art: rect('.token-art'),
+          prompt: rect('.token-prompt'),
+          output: rect('.token-output'),
+          index: rect('.token-index'),
+          outputText: element.querySelector<HTMLElement>('.token-output')!.textContent!.trim(),
+          tokenChips: element.querySelectorAll('.token-line i').length,
+        };
+      }));
 
-    if (viewport.width > 650) {
-      expect(metrics.line.display).not.toBe('none');
-      expect(Math.abs(metrics.seed.x - metrics.line.x)).toBeLessThan(1);
-      expect(metrics.line.y - metrics.seed.bottom).toBeGreaterThanOrEqual(7);
-      expect(metrics.index.y - metrics.line.bottom).toBeGreaterThanOrEqual(7);
-      expect(metrics.tokens.length).toBeGreaterThan(1);
-      expect(new Set(metrics.tokens.map(({ y }) => y)).size).toBe(1);
-      expect(new Set(metrics.tokens.map(({ height }) => height)).size).toBe(1);
-    } else {
-      expect(metrics.line.display).toBe('none');
-      expect(metrics.index.y - metrics.seed.bottom).toBeGreaterThanOrEqual(7);
+      expect(metrics.length).toBeGreaterThan(0);
+      for (const item of metrics) {
+        expect(item.tokenChips).toBe(0);
+        expect(Math.abs(item.prompt.y - item.output.y)).toBeLessThan(1);
+        expect(Math.abs(item.output.x - item.index.x)).toBeLessThan(1);
+        expect(item.prompt.x).toBeGreaterThanOrEqual(item.art.x);
+        expect(item.output.right).toBeLessThanOrEqual(item.art.right);
+        expect(item.index.right).toBeLessThanOrEqual(item.art.right);
+        expect(item.index.bottom).toBeLessThanOrEqual(item.art.bottom);
+        expect(item.index.y - item.output.bottom).toBeGreaterThanOrEqual(7);
+        expect(item.prompt.fontSize).toBe(item.output.fontSize);
+        expect(item.output.fontSize).toBe(item.index.fontSize);
+        expect(item.prompt.lineHeight).toBe(item.output.lineHeight);
+        expect(item.output.lineHeight).toBe(item.index.lineHeight);
+        expect(item.prompt.letterSpacing).toBe(item.output.letterSpacing);
+        expect(item.output.letterSpacing).toBe(item.index.letterSpacing);
+      }
+
+      if (path === '/models/') {
+        expect(metrics[0]!.outputText).toBe('LLaDA MoE v2');
+      }
     }
   }
 });

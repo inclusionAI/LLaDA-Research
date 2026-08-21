@@ -29,8 +29,8 @@ const titleTokens = title
       <img src={resolvedCover} alt="" width="420" height="300" loading="lazy" />
     ) : (
       <span class="token-art" aria-hidden="true">
-        <span class="token-seed">[MASK] → {titleTokens[0] ?? 'LLaDA'}</span>
-        <span class="token-line">{titleTokens.slice(1).map((token) => <i>{token}</i>)}</span>
+        <span class="token-seed token-prompt">[MASK] →</span>
+        <span class="token-output">{titleTokens.join(' ') || 'LLaDA'}</span>
         <span class="token-index">{date.getFullYear()} / {String(date.getMonth() + 1).padStart(2, '0')}</span>
       </span>
     )}
@@ -83,10 +83,12 @@ const titleTokens = title
     position: absolute;
     inset: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-1);
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: var(--space-1);
+    row-gap: var(--space-1);
     align-content: center;
-    justify-items: start;
+    align-items: baseline;
     padding: var(--space-3);
     overflow: hidden;
     border-right: 1px solid var(--line);
@@ -111,31 +113,23 @@ const titleTokens = title
 
   .token-art > * { position: relative; z-index: 1; }
 
-  .token-seed {
-    display: flex;
-    align-items: center;
-    min-height: 1.625rem;
+  .token-prompt {
+    grid-column: 1;
+    grid-row: 1;
     color: var(--ink-soft);
+    white-space: nowrap;
   }
 
-  .token-line {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-  }
-
-  .token-line i {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.625rem;
-    padding: 0.25rem var(--space-1);
-    border: 1px solid var(--line);
+  .token-output {
+    grid-column: 2;
+    grid-row: 1;
     color: var(--ink);
-    font-style: normal;
+    overflow-wrap: anywhere;
   }
 
   .token-index {
-    position: relative;
+    grid-column: 2;
+    grid-row: 2;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
@@ -219,8 +213,8 @@ const titleTokens = title
     }
 
     .card-art {
-      min-height: 4rem;
-      height: 4rem;
+      min-height: 5rem;
+      height: 5rem;
       margin-top: var(--space-2);
     }
 
@@ -228,14 +222,6 @@ const titleTokens = title
       padding: var(--space-1);
       border-right: 0;
       border-bottom: 1px solid var(--line);
-    }
-
-    .token-seed {
-      min-height: var(--leading-meta);
-    }
-
-    .token-line {
-      display: none;
     }
 
     .card-copy {
