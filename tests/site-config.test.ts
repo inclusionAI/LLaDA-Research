@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { resolveAssetUrl, resolveDeploymentConfig, withBase } from '../src/lib/site-config';
+
+describe('public assets', () => {
+  it('keeps the favicon within the approved journal palette', () => {
+    const source = readFileSync(new URL('../public/favicon.svg', import.meta.url), 'utf8');
+    const approved = new Set(['#f7f8f3', '#24312b', '#68756e', '#527a68', '#d8e0d8', '#eef3ed']);
+    const colors = [...source.matchAll(/#[0-9a-f]{6}/gi)].map(([color]) => color.toLowerCase());
+
+    expect(colors.length).toBeGreaterThan(0);
+    expect(colors.every((color) => approved.has(color))).toBe(true);
+  });
+});
 
 describe('resolveDeploymentConfig', () => {
   it('uses a repository base path for a project Pages site', () => {
