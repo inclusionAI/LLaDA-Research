@@ -1,0 +1,125 @@
+---
+import { withBase } from '../lib/site-config';
+
+const base = import.meta.env.BASE_URL;
+const programs = [
+  {
+    title: 'Models',
+    description: 'Open checkpoints and release details.',
+    href: 'models/',
+  },
+  {
+    title: 'Publications',
+    description: 'Methods, results, and technical reports.',
+    href: 'papers/',
+  },
+  {
+    title: 'Notes',
+    description: 'Research updates and implementation perspectives.',
+    href: 'blog/',
+  },
+];
+---
+
+<section class="program-nav shell" aria-labelledby="program-nav-title">
+  <p class="program-label">Research program</p>
+  <h2 id="program-nav-title">Explore the program</h2>
+  <nav aria-label="Research program">
+    {programs.map((program) => (
+      <a href={withBase(base, program.href)} data-program-link>
+        <span class="program-title">{program.title}</span>
+        <span class="program-description">{program.description}</span>
+        <span class="program-arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </nav>
+</section>
+
+<style>
+  .program-nav {
+    padding-block: clamp(2rem, 5vw, 4rem) 1rem;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .program-label {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.65rem, 3vw, 2.5rem);
+    font-weight: 470;
+    letter-spacing: -0.045em;
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.8rem 1rem;
+    padding: 1.4rem clamp(1rem, 2.5vw, 2rem) 1.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  a + a {
+    padding-left: clamp(1rem, 2.5vw, 2rem);
+    border-left: 1px solid var(--line);
+  }
+
+  .program-title {
+    color: var(--ink);
+    font-size: 1.1rem;
+    font-weight: 520;
+  }
+
+  .program-description {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: var(--type-small);
+    line-height: 1.55;
+  }
+
+  .program-arrow {
+    color: var(--muted);
+    transition: color 180ms ease, transform 180ms ease;
+  }
+
+  a:hover .program-arrow,
+  a:focus-visible .program-arrow {
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 700px) {
+    nav {
+      grid-template-columns: 1fr;
+    }
+
+    a,
+    a + a {
+      padding: 1.25rem 0;
+      border-left: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .program-arrow {
+      transition: none;
+    }
+
+    a:hover .program-arrow,
+    a:focus-visible .program-arrow {
+      transform: none;
+    }
+  }
+</style>

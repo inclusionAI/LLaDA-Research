@@ -1,0 +1,169 @@
+---
+import { getCollection } from 'astro:content';
+import { withBase } from '../lib/site-config';
+
+const base = import.meta.env.BASE_URL;
+const selectedIds = ['llada-2-2', 'llada-2-0-uni'];
+const papers = await getCollection('papers', ({ data }) => !data.draft);
+const entries = selectedIds.map((id) => papers.find((entry) => entry.id === id));
+
+if (entries.some((entry) => entry === undefined)) {
+  throw new Error('Selected work must reference published paper entries.');
+}
+
+const selectedWork = entries.filter((entry) => entry !== undefined);
+const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+});
+---
+
+<section class="selected-work shell" aria-labelledby="selected-work-title">
+  <header class="section-header">
+    <p>Selected work</p>
+    <h2 id="selected-work-title">Recent publications</h2>
+  </header>
+  <ol>
+    {selectedWork.map((entry) => (
+      <li>
+        <a href={withBase(base, `papers/${entry.id}/`)} data-selected-work>
+          <div class="work-meta">
+            <span>{entry.data.venue ?? 'Publication'}</span>
+            <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time>
+          </div>
+          <div class="work-copy">
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.summary}</p>
+          </div>
+          <span class="work-arrow" aria-hidden="true">↗</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .selected-work {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .section-header {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.35fr) 1fr;
+    gap: 2rem;
+    align-items: baseline;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .section-header p {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.65rem, 3vw, 2.5rem);
+    font-weight: 470;
+    letter-spacing: -0.045em;
+  }
+
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr) auto;
+    gap: 2rem;
+    padding-block: clamp(1.6rem, 3vw, 2.4rem);
+  }
+
+  .work-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(1.25rem, 2.1vw, 1.8rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+  }
+
+  .work-copy p {
+    max-width: 48rem;
+    margin: 0.7rem 0 0;
+    color: var(--muted);
+    font-size: var(--type-body);
+    line-height: 1.65;
+  }
+
+  .work-arrow {
+    color: var(--muted);
+    transition: color 180ms ease, transform 180ms ease;
+  }
+
+  a:hover .work-arrow,
+  a:focus-visible .work-arrow {
+    color: var(--ink);
+    transform: translate(2px, -2px);
+  }
+
+  @media (max-width: 700px) {
+    .section-header,
+    a {
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+    }
+
+    .section-header h2,
+    .work-copy {
+      grid-column: 1 / -1;
+    }
+
+    .work-meta {
+      grid-column: 1;
+      flex-direction: row;
+      gap: 1rem;
+    }
+
+    .work-copy {
+      grid-row: 2;
+    }
+
+    .work-arrow {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work-arrow {
+      transition: none;
+    }
+
+    a:hover .work-arrow,
+    a:focus-visible .work-arrow {
+      transform: none;
+    }
+  }
+</style>

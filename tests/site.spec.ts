@@ -1,20 +1,42 @@
 import { expect, test } from '@playwright/test';
 
-test('homepage presents the LLaDA diffusion hero before a compact research index', async ({ page, isMobile }) => {
+test('homepage presents a focused research proposition and three-layer index', async ({ page, isMobile }) => {
   await page.goto('/');
   if (isMobile) {
     await expect(page.getByLabel('Open navigation')).toBeVisible();
   } else {
     await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
   }
-  await expect(page.getByRole('heading', { name: 'Language, diffused.' })).toBeVisible();
+
+  await expect(page.getByRole('heading', { name: 'Language takes shape.', exact: true })).toBeVisible();
   await expect(page.locator('[data-denoise-field]')).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Research updates' })).toBeVisible();
-  await expect(page.locator('[data-update-entry]')).toHaveCount(4);
-  await expect(page.locator('[data-research-index]')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Models', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Papers', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
+  expect(await page.locator('[data-research-updates]').count()).toBe(0);
+  expect(await page.locator('[data-update-entry]').count()).toBe(0);
+  expect(await page.locator('[data-research-column]').count()).toBe(0);
+
+  const heroCta = page.locator('[data-hero-cta]');
+  expect(await heroCta.count()).toBe(1);
+  expect(await heroCta.evaluateAll((links) => links.map((link) => link.getAttribute('href')))).toEqual(['/papers/']);
+
+  const selectedWork = page.locator('[data-selected-work]');
+  expect(await selectedWork.count()).toBe(2);
+  expect(await selectedWork.evaluateAll((links) => links.map((link) => link.getAttribute('href')))).toEqual([
+    '/papers/llada-2-2/',
+    '/papers/llada-2-0-uni/',
+  ]);
+  expect(await selectedWork.allTextContents()).toEqual([
+    expect.stringContaining('LLaDA2.2'),
+    expect.stringContaining('LLaDA2.0-Uni'),
+  ]);
+
+  const programLinks = page.locator('[data-program-link]');
+  expect(await programLinks.count()).toBe(3);
+  expect(await programLinks.evaluateAll((links) => links.map((link) => link.getAttribute('href')))).toEqual([
+    '/models/',
+    '/papers/',
+    '/blog/',
+  ]);
+  expect(await programLinks.locator('.program-title').allTextContents()).toEqual(['Models', 'Publications', 'Notes']);
 });
 
 test('site chrome uses the approved white LLaDA wordmark', async ({ page }) => {
@@ -33,7 +55,7 @@ test('site chrome uses the approved white LLaDA wordmark', async ({ page }) => {
   expect(headerBox!.width / headerBox!.height).toBeGreaterThan(3);
 });
 
-test('hero links reveal their rules on hover and keyboard focus', async ({ page }) => {
+test('hero CTA reveals its rule on hover and keyboard focus', async ({ page }) => {
   await page.goto('/');
 
   const heroLink = page.locator('.hero-links a').first();
@@ -63,23 +85,18 @@ test('homepage supporting type is readable at desktop and mobile sizes', async (
   await expectFontSizeAtLeast('.hero-kicker', 10.8);
   await expectFontSizeAtLeast('.hero-summary', 15);
   await expectFontSizeAtLeast('.hero-links a', 12);
-  await expectFontSizeAtLeast('.update-kind', 10.8);
-  await expectFontSizeAtLeast('.update-title', 12.8);
-  await expectFontSizeAtLeast('.index-eyebrow', 10.8);
-  await expectFontSizeAtLeast('.index-description', 14);
-  await expectFontSizeAtLeast('.column-header h2', 22);
-  await expectFontSizeAtLeast('.column-header p', 13);
-  await expectFontSizeAtLeast('.entry-meta', 10.8);
-  await expectFontSizeAtLeast('.entry-link--lead h3', 21);
-  await expectFontSizeAtLeast('.entry-link--compact h3', 15);
-  await expectFontSizeAtLeast('.entry-link--lead > p', 13);
-  await expectFontSizeAtLeast('.entry-token', 10.8);
-  await expectFontSizeAtLeast('.view-all', 11);
+  await expectFontSizeAtLeast('.selected-work .section-header p', 10.8);
+  await expectFontSizeAtLeast('.selected-work h2', 22);
+  await expectFontSizeAtLeast('.work-meta', 10.8);
+  await expectFontSizeAtLeast('.work-copy h3', 20);
+  await expectFontSizeAtLeast('.work-copy p', 14);
+  await expectFontSizeAtLeast('.program-title', 16);
+  await expectFontSizeAtLeast('.program-description', 13);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await expectFontSizeAtLeast('.column-header p', 13);
-  await expectFontSizeAtLeast('.entry-link--lead > p', 13);
-  await expect(page.locator('[data-update-entry]')).toHaveCount(4);
+  await expectFontSizeAtLeast('.work-copy p', 14);
+  await expectFontSizeAtLeast('.program-description', 13);
+  await expect(page.locator('[data-selected-work]')).toHaveCount(2);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
 });
@@ -92,27 +109,25 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
 
-  const columnTitle = await fontSize('.column-header h2');
-  const columnDescription = await fontSize('.column-header p');
-  const leadTitle = await fontSize('[data-entry-kind="lead"] h3');
-  const compactTitle = await fontSize('[data-entry-kind="compact"] h3');
-  const leadSummary = await fontSize('[data-entry-kind="lead"] > .entry-link > p');
-  expect(columnTitle).toBeGreaterThanOrEqual(28);
-  expect(columnDescription).toBeGreaterThanOrEqual(15);
-  expect(leadTitle).toBeGreaterThanOrEqual(21);
-  expect(compactTitle).toBeGreaterThanOrEqual(16);
-  expect(leadSummary).toBeGreaterThanOrEqual(14);
-  expect(columnTitle).toBeGreaterThan(leadTitle);
-  expect(columnTitle / leadTitle).toBeGreaterThanOrEqual(1.5);
-  expect(leadTitle).toBeGreaterThan(compactTitle);
-  const columnTitleWeight = await page.locator('.column-header h2').first().evaluate((element) => (
+  const sectionTitle = await fontSize('.selected-work h2');
+  const workTitle = await fontSize('.work-copy h3');
+  const workSummary = await fontSize('.work-copy p');
+  const programTitle = await fontSize('.program-title');
+  const programDescription = await fontSize('.program-description');
+  expect(sectionTitle).toBeGreaterThanOrEqual(26);
+  expect(workTitle).toBeGreaterThanOrEqual(20);
+  expect(workSummary).toBeGreaterThanOrEqual(14);
+  expect(programTitle).toBeGreaterThanOrEqual(16);
+  expect(programDescription).toBeGreaterThanOrEqual(13);
+  expect(sectionTitle).toBeGreaterThan(workTitle);
+  const sectionTitleWeight = await page.locator('.selected-work h2').first().evaluate((element) => (
     Number.parseInt(getComputedStyle(element).fontWeight, 10)
   ));
-  const leadTitleWeight = await page.locator('[data-entry-kind="lead"] h3').first().evaluate((element) => (
+  const workTitleWeight = await page.locator('.work-copy h3').first().evaluate((element) => (
     Number.parseInt(getComputedStyle(element).fontWeight, 10)
   ));
-  expect(columnTitleWeight).toBeLessThanOrEqual(leadTitleWeight);
-  await expect(page.locator('.column-header').first()).toHaveCSS('border-bottom-width', '1px');
+  expect(sectionTitleWeight).toBeLessThanOrEqual(workTitleWeight);
+  await expect(page.locator('.selected-work .section-header')).toHaveCSS('border-bottom-width', '1px');
   expect(await fontSize('.desktop-nav a')).toBeGreaterThanOrEqual(12);
 
   await page.goto('/models/');
@@ -131,60 +146,35 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   expect(await fontSize('.about-copy > p:not(.eyebrow)')).toBeGreaterThanOrEqual(16);
 });
 
-test('homepage presents an editorial research shelf', async ({ page }) => {
+test('homepage presents restrained selected work and program navigation', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByText(
-    'LLaDA turns masked noise into language through iterative, parallel denoising—an open alternative to left-to-right generation.',
+    'We study how language and multimodal systems emerge through iterative diffusion and editing.',
     { exact: true },
   )).toBeVisible();
-  const updates = page.getByRole('region', { name: 'Research updates' });
-  await expect(updates.locator('[data-update-entry]')).toHaveCount(4);
-  await expect(updates.getByText('Paper', { exact: true })).toHaveCount(2);
-  await expect(updates.getByText('Model', { exact: true })).toHaveCount(1);
-  await expect(updates.getByText('Note', { exact: true })).toHaveCount(1);
-  await expect(updates.getByRole('link', { name: /^Model .* LLaDA2\.2$/ })).toContainText('Model');
-  await expect(updates.getByRole('link', { name: /A Home for LLaDA Research/ })).toContainText('Note');
-  await expect(page.getByText('Latest', { exact: true })).toHaveCount(0);
+  const selectedWork = page.getByRole('region', { name: 'Recent publications' });
+  await expect(selectedWork.locator('[data-selected-work]')).toHaveCount(2);
+  await expect(selectedWork.getByText('Technical Report', { exact: true })).toBeVisible();
+  await expect(selectedWork.getByText('arXiv', { exact: true })).toBeVisible();
   await expect(page.getByText('Research program', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', {
-    name: 'Diffusion language models, from foundations to scale.',
-    exact: true,
-  })).toBeVisible();
-  await expect(page.getByText(
-    'Models, papers, and technical notes across the LLaDA research program.',
-    { exact: true },
-  )).toBeVisible();
-  await expect(page.getByText('Open checkpoints for language and multimodal generation.', { exact: true })).toBeVisible();
-  await expect(page.getByText(
-    'Methods for scaling, accelerating, and extending diffusion language models.',
-    { exact: true },
-  )).toBeVisible();
-  await expect(page.getByText(
-    'Release notes, implementation details, and research perspectives.',
-    { exact: true },
-  )).toBeVisible();
-  const researchColumns = page.locator('[data-research-column]');
-  await expect(researchColumns).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) {
-    await expect(researchColumns.nth(index).locator('[data-entry-kind="lead"]')).toHaveCount(1);
-  }
-  expect(await page.locator('[data-entry-kind="compact"]').count()).toBeGreaterThan(0);
+  await expect(page.getByText('Open checkpoints and release details.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Methods, results, and technical reports.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Research updates and implementation perspectives.', { exact: true })).toBeVisible();
 });
 
 test('homepage content uses contribution-first copy', async ({ page }) => {
   await page.goto('/');
 
-  const researchColumns = page.locator('[data-research-column]');
-  await expect(researchColumns.nth(0).getByText(
-    'A flash checkpoint for agentic diffusion generation through Levenshtein editing.',
+  const selectedWork = page.locator('[data-selected-work]');
+  await expect(selectedWork.nth(0).getByText(
+    'Levenshtein editing enables agentic generation with insert, delete, and replace.',
     { exact: true },
   )).toBeVisible();
-  await expect(researchColumns.nth(1).getByText(
-    'Derives scaling principles for MoE diffusion language models and trains a 30B-A3B model.',
+  await expect(selectedWork.nth(1).getByText(
+    'A unified multimodal diffusion model for understanding, generation, editing, and interleaved reasoning.',
     { exact: true },
   )).toBeVisible();
-  await expect(researchColumns.nth(2).getByRole('heading', { name: 'A Home for LLaDA Research' })).toBeVisible();
 
   await page.goto('/papers/');
   await expect(page.getByText(
@@ -197,13 +187,13 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
   )).toBeVisible();
 });
 
-test('homepage lead summaries remain intact at narrow desktop widths', async ({ page }) => {
+test('homepage selected-work summaries remain intact at narrow desktop widths', async ({ page }) => {
   await page.setViewportSize({ width: 901, height: 900 });
   await page.goto('/');
 
-  const summaries = page.locator('[data-entry-kind="lead"] p');
-  await expect(summaries).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) {
+  const summaries = page.locator('[data-selected-work] .work-copy p');
+  await expect(summaries).toHaveCount(2);
+  for (let index = 0; index < 2; index += 1) {
     const summary = summaries.nth(index);
     const fullyVisible = await summary.evaluate((element) => (
       element.scrollHeight <= element.clientHeight + 1
@@ -214,37 +204,30 @@ test('homepage lead summaries remain intact at narrow desktop widths', async ({ 
     }));
     expect.soft(
       fullyVisible,
-      `lead summary ${index + 1} is not fully visible (${dimensions.scrollHeight}px > ${dimensions.clientHeight}px)`,
+      `selected-work summary ${index + 1} is not fully visible (${dimensions.scrollHeight}px > ${dimensions.clientHeight}px)`,
     ).toBe(true);
   }
 });
 
-test('research shelf lead links reveal their token state on keyboard focus', async ({ page }) => {
+test('selected-work links reveal their directional cue on keyboard focus', async ({ page }) => {
   await page.goto('/');
 
-  const leadLink = page.locator('[data-research-column]').first().locator('[data-entry-kind="lead"] .entry-link');
-  await leadLink.focus();
-  await expect(leadLink.locator('.token-kind')).toHaveCSS('opacity', '1');
-  await expect(leadLink.locator('.token-mask')).toHaveCSS('opacity', '0');
+  const selectedLink = page.locator('[data-selected-work]').first();
+  const ink = await page.locator('#hero-title').evaluate((element) => getComputedStyle(element).color);
+  await selectedLink.focus();
+  await expect(selectedLink.locator('.work-arrow')).toHaveCSS('color', ink);
 });
 
-test('research shelf uses whitespace instead of a desktop table', async ({ page }) => {
+test('selected work uses flat ruled rows', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
 
-  const columns = page.locator('[data-research-column]');
-  await expect(columns.nth(1)).toHaveCSS('border-left-width', '0px');
-  await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
-
-  await page.setViewportSize({ width: 1024, height: 900 });
-  const columnGap = await page.locator('.research-grid').evaluate((element) => (
-    Number.parseFloat(getComputedStyle(element).columnGap)
-  ));
-  expect(columnGap).toBeGreaterThanOrEqual(48);
+  const rows = page.locator('.selected-work li');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toHaveCSS('border-bottom-width', '1px');
+  await expect(page.locator('[data-selected-work]').first()).toHaveCSS('border-radius', '0px');
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(columns.nth(1)).toHaveCSS('border-top-width', '1px');
-  await expect(columns.first().locator('li').first()).toHaveCSS('border-top-width', '0px');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
 });
@@ -252,7 +235,7 @@ test('research shelf uses whitespace instead of a desktop table', async ({ page 
 test('homepage uses the dark research theme', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(3, 3, 3)');
-  await expect(page.locator('[data-research-updates]')).toHaveCSS('border-radius', '0px');
+  await expect(page.locator('[data-selected-work]').first()).toHaveCSS('border-radius', '0px');
 });
 
 test('desktop hero stays close to 55vh on a short landscape viewport', async ({ page }) => {
@@ -263,7 +246,7 @@ test('desktop hero stays close to 55vh on a short landscape viewport', async ({ 
   expect(hero!.height).toBeLessThanOrEqual(432);
 });
 
-test('mobile hero leaves the research index within reach on a short phone', async ({ page }) => {
+test('mobile hero leaves the selected work within reach on a short phone', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
   const hero = await page.locator('.research-hero').boundingBox();
@@ -537,22 +520,22 @@ test('footer copyright text meets WCAG AA contrast', async ({ page }) => {
   expect(contrast).toBeGreaterThanOrEqual(4.5);
 });
 
-test('research updates form a two-column desktop grid and four mobile rows', async ({ page, isMobile }) => {
+test('program navigation uses three desktop columns and three mobile rows', async ({ page, isMobile }) => {
   await page.goto('/');
-  const entries = page.locator('[data-update-entry]');
-  await expect(entries).toHaveCount(4);
-  const boxes = await Promise.all(Array.from({ length: 4 }, (_, index) => entries.nth(index).boundingBox()));
+  const entries = page.locator('[data-program-link]');
+  await expect(entries).toHaveCount(3);
+  const boxes = await Promise.all(Array.from({ length: 3 }, (_, index) => entries.nth(index).boundingBox()));
   expect(boxes.every(Boolean)).toBe(true);
 
   if (isMobile) {
     expect(boxes[0]!.y).toBeLessThan(boxes[1]!.y);
     expect(boxes[1]!.y).toBeLessThan(boxes[2]!.y);
-    expect(boxes[2]!.y).toBeLessThan(boxes[3]!.y);
     expect(Math.abs(boxes[0]!.x - boxes[1]!.x)).toBeLessThan(2);
   } else {
     expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(2);
     expect(boxes[0]!.x).toBeLessThan(boxes[1]!.x);
-    expect(boxes[2]!.y).toBeGreaterThan(boxes[0]!.y);
+    expect(Math.abs(boxes[1]!.y - boxes[2]!.y)).toBeLessThan(2);
+    expect(boxes[1]!.x).toBeLessThan(boxes[2]!.x);
   }
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
