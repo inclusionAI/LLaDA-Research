@@ -11,10 +11,10 @@ const tags = [...new Set(entries.flatMap(({ data }) => data.tags))].toSorted();
 const base = import.meta.env.BASE_URL;
 ---
 
-<BaseLayout title="Blog" description="Release notes and technical perspectives from LLaDA research.">
+<BaseLayout title="Notes" description="Release notes and technical perspectives from LLaDA research.">
   <div class="archive-page shell">
     <header class="page-intro">
-      <div><p class="eyebrow">Field notes</p><h1>Blog</h1></div>
+      <div><p class="eyebrow">Field notes</p><h1>Notes</h1></div>
       <p>Release notes, engineering details, and perspectives on diffusion language and multimodal modeling.</p>
     </header>
     <ArchiveFilter tags={tags} total={entries.length} />

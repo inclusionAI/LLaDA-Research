@@ -39,15 +39,15 @@ test('homepage presents a focused research proposition and three-layer index', a
   expect(await programLinks.locator('.program-title').allTextContents()).toEqual(['Models', 'Publications', 'Notes']);
 });
 
-test('site chrome uses the approved white LLaDA wordmark', async ({ page }) => {
+test('site chrome uses the approved black LLaDA wordmark through base-safe paths', async ({ page }) => {
   await page.goto('/');
 
   const headerLogo = page.locator('.site-header [data-brand-logo]');
   const footerLogo = page.locator('.site-footer [data-brand-logo]');
   await expect(headerLogo).toBeVisible();
   await expect(footerLogo).toBeVisible();
-  await expect(headerLogo).toHaveAttribute('src', /\/llada-logo-white\.svg$/);
-  await expect(footerLogo).toHaveAttribute('src', /\/llada-logo-white\.svg$/);
+  await expect(headerLogo).toHaveAttribute('src', /\/llada-logo-black\.svg$/);
+  await expect(footerLogo).toHaveAttribute('src', /\/llada-logo-black\.svg$/);
   await expect(page.locator('.brand-mark')).toHaveCount(0);
 
   const headerBox = await headerLogo.boundingBox();
@@ -213,7 +213,7 @@ test('selected-work links reveal their directional cue on keyboard focus', async
   await page.goto('/');
 
   const selectedLink = page.locator('[data-selected-work]').first();
-  const ink = await page.locator('#hero-title').evaluate((element) => getComputedStyle(element).color);
+  const ink = await page.locator('body').evaluate((element) => getComputedStyle(element).color);
   await selectedLink.focus();
   await expect(selectedLink.locator('.work-arrow')).toHaveCSS('color', ink);
 });
@@ -232,10 +232,51 @@ test('selected work uses flat ruled rows', async ({ page }) => {
   expect(overflow).toBe(false);
 });
 
-test('homepage uses the dark research theme', async ({ page }) => {
+test('homepage uses the light contemporary journal theme', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(3, 3, 3)');
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 248, 243)');
+  await expect(page.locator('body')).toHaveCSS('color', 'rgb(36, 49, 43)');
+  await expect(page.locator('#hero-title')).toHaveCSS('color', 'rgb(247, 248, 243)');
   await expect(page.locator('[data-selected-work]').first()).toHaveCSS('border-radius', '0px');
+});
+
+test('primary navigation uses journal labels without changing route paths', async ({ page, isMobile }) => {
+  await page.goto('/');
+  if (isMobile) {
+    await page.getByLabel('Open navigation').click();
+  }
+
+  const navigation = page.getByRole('navigation', {
+    name: isMobile ? 'Mobile navigation' : 'Primary navigation',
+  });
+  await expect(navigation.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
+  await expect(navigation.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
+  await expect(navigation.getByRole('link', { name: 'Papers', exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole('link', { name: 'Blog', exact: true })).toHaveCount(0);
+});
+
+test('publication and notes labels are consistent across archive and recovery pages', async ({ page }) => {
+  await page.goto('/papers/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Publications', exact: true })).toBeVisible();
+
+  await page.goto('/blog/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Notes', exact: true })).toBeVisible();
+
+  await page.goto('/404.html');
+  const recovery = page.getByRole('navigation', { name: 'Page recovery' });
+  await expect(recovery.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
+  await expect(recovery.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
+});
+
+test('mobile menu is a flat light surface', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'mobile layout assertion');
+  await page.goto('/');
+  await page.getByLabel('Open navigation').click();
+
+  const menu = page.locator('.mobile-menu');
+  await expect(menu).toHaveCSS('background-color', 'rgb(247, 248, 243)');
+  await expect(menu).toHaveCSS('box-shadow', 'none');
 });
 
 test('desktop hero stays close to 55vh on a short landscape viewport', async ({ page }) => {
@@ -542,11 +583,20 @@ test('program navigation uses three desktop columns and three mobile rows', asyn
   expect(overflow).toBe(false);
 });
 
-test('supporting pages share the dark visual system', async ({ page }) => {
+test('supporting pages share the light visual system', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/', '/404.html']) {
     await page.goto(path);
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(3, 3, 3)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 248, 243)');
+    await expect(page.locator('body')).toHaveCSS('color', 'rgb(36, 49, 43)');
   }
+});
+
+test('archive entries are flat ruled rows on the page surface', async ({ page }) => {
+  await page.goto('/papers/');
+  const row = page.locator('.content-card').first();
+  await expect(row).toHaveCSS('box-shadow', 'none');
+  await expect(row).toHaveCSS('border-radius', '0px');
+  await expect(row).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
 
 test('primary content routes are reachable', async ({ page }) => {

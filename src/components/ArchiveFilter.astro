@@ -99,7 +99,7 @@ const { tags, total } = Astro.props;
     padding: 0.7rem 0.85rem;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
-    background: var(--surface);
+    background: var(--paper);
     color: var(--ink);
   }
 
@@ -125,9 +125,15 @@ const { tags, total } = Astro.props;
   }
 
   .filter-tags button.active {
-    border-color: var(--ink-soft);
-    background: var(--ink);
+    border-color: var(--accent);
+    background: var(--accent);
     color: var(--paper);
+  }
+
+  .filter-tags button:hover,
+  [data-filter-clear]:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep);
   }
 
   .filter-summary {
