@@ -136,6 +136,13 @@ const { tags, total } = Astro.props;
     color: var(--accent-deep);
   }
 
+  .filter-tags button.active:hover,
+  .filter-tags button.active:focus-visible {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--paper);
+  }
+
   .filter-summary {
     display: grid;
     gap: 0.25rem;

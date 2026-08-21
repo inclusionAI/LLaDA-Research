@@ -1,18 +1,18 @@
 :root {
   --ink: #24312b;
-  --ink-soft: #405148;
+  --ink-soft: var(--ink);
   --muted: #68756e;
   --paper: #f7f8f3;
   --surface: #eef3ed;
-  --surface-soft: #e7eee8;
+  --surface-soft: var(--surface);
   --line: #d8e0d8;
-  --line-strong: #b9c7be;
+  --line-strong: var(--muted);
   --accent: #527a68;
-  --accent-deep: #365e4d;
-  --accent-soft: #e0e9e1;
-  --cyan: #6f8580;
-  --violet: #7a847b;
-  --night: #eef3ed;
+  --accent-deep: var(--ink);
+  --accent-soft: var(--surface);
+  --cyan: var(--muted);
+  --violet: var(--muted);
+  --night: var(--surface);
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;

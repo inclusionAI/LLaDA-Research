@@ -599,6 +599,42 @@ test('archive entries are flat ruled rows on the page surface', async ({ page })
   await expect(row).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
 
+test('active archive filter keeps accessible contrast on hover and keyboard focus', async ({ page }) => {
+  await page.goto('/papers/');
+  const activeFilter = page.getByRole('button', { name: 'All', exact: true });
+  const colors = async () => activeFilter.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (value: string) => {
+      const linear = channels(value).map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    };
+    const foreground = luminance(style.color);
+    const background = luminance(style.backgroundColor);
+    return {
+      background: style.backgroundColor,
+      color: style.color,
+      contrast: (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
+    };
+  });
+
+  await activeFilter.hover();
+  const hovered = await colors();
+  expect(hovered.background).toBe('rgb(82, 122, 104)');
+  expect(hovered.color).toBe('rgb(247, 248, 243)');
+  expect(hovered.contrast).toBeGreaterThanOrEqual(4.5);
+
+  await page.mouse.move(0, 0);
+  await activeFilter.focus();
+  const focused = await colors();
+  expect(focused.background).toBe('rgb(82, 122, 104)');
+  expect(focused.color).toBe('rgb(247, 248, 243)');
+  expect(focused.contrast).toBeGreaterThanOrEqual(4.5);
+});
+
 test('primary content routes are reachable', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/']) {
     const response = await page.goto(path);
