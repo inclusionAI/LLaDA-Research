@@ -50,9 +50,9 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
   .section-header {
     display: grid;
     grid-template-columns: minmax(8rem, 0.35fr) 1fr;
-    gap: 2rem;
+    gap: var(--space-4);
     align-items: baseline;
-    padding-bottom: 1.35rem;
+    padding-bottom: var(--space-2);
     border-bottom: 1px solid var(--line-strong);
   }
 
@@ -61,15 +61,17 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.14em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   h2 {
     margin: 0;
-    font-size: clamp(1.65rem, 3vw, 2.5rem);
-    font-weight: 470;
-    letter-spacing: -0.045em;
+    font-size: var(--text-section);
+    font-weight: 500;
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-title);
   }
 
   ol {
@@ -85,36 +87,38 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
   a {
     display: grid;
     grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr) auto;
-    gap: 2rem;
-    padding-block: clamp(1.6rem, 3vw, 2.4rem);
+    gap: var(--space-4);
+    min-height: 7rem;
+    padding-block: clamp(var(--space-3), 3vw, var(--space-4));
   }
 
   .work-meta {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: var(--space-1);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.06em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   h3 {
     margin: 0;
     color: var(--ink);
-    font-size: clamp(1.25rem, 2.1vw, 1.8rem);
+    font-size: var(--text-title-md);
     font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: -0.035em;
+    line-height: var(--leading-title-md);
+    letter-spacing: var(--tracking-title);
   }
 
   .work-copy p {
     max-width: 48rem;
-    margin: 0.7rem 0 0;
+    margin: var(--space-1) 0 0;
     color: var(--muted);
     font-size: var(--type-body);
-    line-height: 1.65;
+    line-height: var(--leading-body);
   }
 
   .work-arrow {

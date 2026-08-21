@@ -42,19 +42,21 @@ const programs = [
   }
 
   .program-label {
-    margin: 0 0 0.75rem;
+    margin: 0 0 var(--space-1);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.14em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   h2 {
-    margin: 0 0 clamp(2rem, 4vw, 3rem);
-    font-size: clamp(1.65rem, 3vw, 2.5rem);
-    font-weight: 470;
-    letter-spacing: -0.045em;
+    margin: 0 0 clamp(var(--space-4), 4vw, var(--space-6));
+    font-size: var(--text-section);
+    font-weight: 500;
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-title);
   }
 
   nav {
@@ -66,8 +68,9 @@ const programs = [
   a {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 0.8rem 1rem;
-    padding: 1.4rem clamp(1rem, 2.5vw, 2rem) 1.6rem 0;
+    gap: var(--space-1) var(--space-2);
+    min-height: 7rem;
+    padding: var(--space-3) clamp(var(--space-2), 2.5vw, var(--space-4)) var(--space-3) 0;
     border-bottom: 1px solid var(--line);
   }
 
@@ -78,15 +81,18 @@ const programs = [
 
   .program-title {
     color: var(--ink);
-    font-size: 1.1rem;
-    font-weight: 520;
+    font-family: var(--font-serif);
+    font-size: var(--text-title-sm);
+    font-weight: 500;
+    line-height: var(--leading-title-sm);
+    letter-spacing: var(--tracking-title);
   }
 
   .program-description {
     grid-column: 1 / -1;
     color: var(--muted);
     font-size: var(--type-small);
-    line-height: 1.55;
+    line-height: var(--leading-small);
   }
 
   .program-arrow {

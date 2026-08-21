@@ -56,12 +56,13 @@ const labelByKind: Record<Kind, string> = { model: 'Model', paper: 'Paper', blog
   }
 
   h2 {
-    margin: 0 0 1rem;
+    margin: 0 0 var(--space-2);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
     font-weight: 500;
-    letter-spacing: 0.14em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
@@ -74,10 +75,10 @@ const labelByKind: Record<Kind, string> = { model: 'Model', paper: 'Paper', blog
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.75rem 1.5rem;
+    gap: var(--space-1) var(--space-3);
     min-width: 0;
     min-height: 7.25rem;
-    padding: 1.15rem 2.25rem 1.3rem 0;
+    padding: var(--space-2) var(--space-4) var(--space-2) 0;
     border-top: 1px solid var(--line);
   }
 
@@ -91,28 +92,30 @@ const labelByKind: Record<Kind, string> = { model: 'Model', paper: 'Paper', blog
     display: flex;
     grid-column: 1 / -1;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-2);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.1em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   .update-title {
     min-width: 0;
     color: var(--ink-soft);
-    font-size: clamp(1rem, 1.45vw, 1.2rem);
-    font-weight: 540;
-    line-height: 1.3;
-    letter-spacing: -0.025em;
+    font-family: var(--font-serif);
+    font-size: var(--text-title-sm);
+    font-weight: 500;
+    line-height: var(--leading-title-sm);
+    letter-spacing: var(--tracking-title);
     text-wrap: balance;
   }
 
   .update-arrow {
     align-self: end;
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: var(--text-small);
     transition: color 180ms ease, transform 180ms ease;
   }
 
@@ -144,7 +147,7 @@ const labelByKind: Record<Kind, string> = { model: 'Model', paper: 'Paper', blog
     }
 
     .update-title {
-      font-size: 1rem;
+      font-size: var(--text-body);
       text-wrap: pretty;
     }
   }

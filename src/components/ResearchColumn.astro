@@ -81,29 +81,29 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   .column-header {
-    padding-bottom: 1.6rem;
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--line);
   }
 
   h2 {
     margin: 0;
     color: var(--ink);
-    font-size: clamp(2.25rem, 2.7vw, 2.5rem);
+    font-size: var(--text-section);
     font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.055em;
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-title);
   }
 
   .column-header p {
     max-width: 25rem;
-    margin: 0.9rem 0 0;
+    margin: var(--space-1) 0 0;
     color: var(--muted);
     font-size: var(--type-body);
-    line-height: 1.65;
+    line-height: var(--leading-body);
   }
 
   ol {
-    margin: 1rem 0 0;
+    margin: var(--space-2) 0 0;
     padding: 0;
     list-style: none;
   }
@@ -116,7 +116,8 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
     position: relative;
     display: block;
     overflow: hidden;
-    padding: 0.7rem 2rem 0.8rem 0;
+    min-height: var(--control-size);
+    padding: var(--space-1) var(--space-4) var(--space-1) 0;
     isolation: isolate;
   }
 
@@ -137,12 +138,13 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   .entry-meta {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-2);
     align-items: center;
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.06em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
@@ -151,28 +153,28 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   }
 
   h3 {
-    margin: 0.7rem 0 0;
-    font-weight: 520;
-    line-height: 1.22;
-    letter-spacing: -0.03em;
+    margin: var(--space-1) 0 0;
+    font-weight: 500;
+    line-height: var(--leading-title-sm);
+    letter-spacing: var(--tracking-title);
     transition: color 180ms ease, transform 180ms ease;
   }
 
   .entry-link--lead h3 {
-    font-size: clamp(1.3125rem, 1.55vw, 1.4375rem);
+    font-size: var(--text-title-sm);
   }
 
   .entry-link--compact h3 {
-    font-size: clamp(1rem, 1.2vw, 1.125rem);
+    font-size: var(--text-body);
   }
 
   .entry-link > p {
     display: -webkit-box;
     overflow: hidden;
-    margin: 0.75rem 0 0;
+    margin: var(--space-1) 0 0;
     color: var(--muted);
     font-size: var(--type-body);
-    line-height: 1.65;
+    line-height: var(--leading-body);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -200,11 +202,12 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
   .entry-token {
     position: relative;
     display: inline-grid;
-    margin-top: 1rem;
+    margin-top: var(--space-2);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--type-meta);
-    letter-spacing: 0.08em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
   }
 
   .entry-token > span {
@@ -229,12 +232,14 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   .view-all {
     display: inline-flex;
-    gap: 0.55rem;
+    gap: var(--space-1);
     margin-top: 1.75rem;
     padding-bottom: 0.18rem;
     color: var(--ink-soft);
     font-size: var(--type-label);
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    line-height: var(--leading-label);
+    letter-spacing: 0;
     background-image: linear-gradient(var(--line-strong), var(--line-strong));
     background-position: 0 100%;
     background-repeat: no-repeat;
@@ -257,7 +262,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { year: 'num
 
   @media (max-width: 900px) {
     h2 {
-      font-size: clamp(2rem, 9vw, 2.4rem);
+      font-size: var(--text-section);
     }
   }
 

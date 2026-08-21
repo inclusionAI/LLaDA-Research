@@ -920,14 +920,15 @@
   .field-readout {
     position: absolute;
     right: 0;
-    bottom: 1rem;
+    bottom: var(--space-2);
     left: 0;
     display: flex;
     justify-content: space-between;
     color: rgb(104 117 110 / 0.72);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.14em;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
   }
 
   @media (max-width: 700px) {

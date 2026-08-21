@@ -581,6 +581,23 @@ test('mobile archive topics wrap without clipping or page overflow', async ({ pa
   );
 });
 
+test('desktop archive topics wrap instead of clipping long taxonomies', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/models/');
+
+  const topicLayout = await page.locator('.filter-tags').evaluate((rail) => {
+    const buttons = [...rail.querySelectorAll('button')];
+    return {
+      clientWidth: rail.clientWidth,
+      scrollWidth: rail.scrollWidth,
+      rows: new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size,
+    };
+  });
+
+  expect(topicLayout.scrollWidth).toBeLessThanOrEqual(topicLayout.clientWidth + 1);
+  expect(topicLayout.rows).toBeGreaterThan(1);
+});
+
 test('mobile archive cards reserve the full row for readable copy', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
@@ -620,6 +637,40 @@ test('related research spans the full desktop detail grid', async ({ page }) => 
   expect(proseBox).not.toBeNull();
   expect(relatedBox).not.toBeNull();
   expect(relatedBox!.width).toBeGreaterThan(proseBox!.width * 1.4);
+});
+
+test('detail editorial hierarchy keeps long-form reading roles distinct', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/papers/llada-2-0/');
+
+  const metrics = await page.evaluate(() => {
+    const style = (selector: string) => getComputedStyle(document.querySelector<HTMLElement>(selector)!);
+    const size = (selector: string) => Number.parseFloat(style(selector).fontSize);
+    const lineRatio = (selector: string) => (
+      Number.parseFloat(style(selector).lineHeight) / Number.parseFloat(style(selector).fontSize)
+    );
+    const title = style('.content-header h1');
+
+    return {
+      title: size('.content-header h1'),
+      summary: size('.content-summary'),
+      prose: size('.prose'),
+      metadata: size('.content-meta'),
+      titleTracking: Math.abs(Number.parseFloat(title.letterSpacing) / Number.parseFloat(title.fontSize)),
+      summaryLineRatio: lineRatio('.content-summary'),
+      proseMeasure: document.querySelector<HTMLElement>('.prose')!.getBoundingClientRect().width,
+      resourceHeight: document.querySelector<HTMLElement>('.resource-link')!.getBoundingClientRect().height,
+    };
+  });
+
+  expect(metrics.title).toBeGreaterThan(metrics.summary);
+  expect(metrics.summary).toBeGreaterThan(metrics.prose);
+  expect(metrics.prose).toBeGreaterThanOrEqual(16);
+  expect(metrics.metadata).toBeGreaterThanOrEqual(12);
+  expect(metrics.titleTracking).toBeLessThanOrEqual(0.04);
+  expect(metrics.summaryLineRatio).toBeGreaterThanOrEqual(1.7);
+  expect(metrics.proseMeasure).toBeLessThanOrEqual(704);
+  expect(metrics.resourceHeight).toBeGreaterThanOrEqual(44);
 });
 
 test('token artwork link exposes its visible mask token in the accessible name', async ({ page }) => {
@@ -701,6 +752,76 @@ test('program navigation uses three desktop columns and three mobile rows', asyn
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
+});
+
+test('homepage editorial hierarchy separates labels, sections, entries, and supporting copy', async ({ page }) => {
+  await page.goto('/');
+
+  const metrics = await page.evaluate(() => {
+    const size = (selector: string) => Number.parseFloat(
+      getComputedStyle(document.querySelector<HTMLElement>(selector)!).fontSize,
+    );
+    const tracking = (selector: string) => {
+      const style = getComputedStyle(document.querySelector<HTMLElement>(selector)!);
+      return Number.parseFloat(style.letterSpacing) / Number.parseFloat(style.fontSize);
+    };
+
+    return {
+      hero: size('.hero-copy h1'),
+      heroSummary: size('.hero-summary'),
+      heroKicker: size('.hero-kicker'),
+      heroKickerTracking: tracking('.hero-kicker'),
+      section: size('.selected-work h2'),
+      item: size('.selected-work h3'),
+      summary: size('.selected-work .work-copy p'),
+      metadata: size('.selected-work .work-meta'),
+      programTitle: size('.program-title'),
+      programDescription: size('.program-description'),
+    };
+  });
+
+  expect(metrics.hero).toBeGreaterThan(metrics.section);
+  expect(metrics.section).toBeGreaterThan(metrics.item);
+  expect(metrics.item).toBeGreaterThan(metrics.summary);
+  expect(metrics.summary).toBeGreaterThan(metrics.metadata);
+  expect(metrics.heroSummary).toBeGreaterThan(metrics.heroKicker);
+  expect(metrics.heroKicker).toBeGreaterThanOrEqual(12);
+  expect(metrics.heroKickerTracking).toBeLessThanOrEqual(0.1);
+  expect(metrics.programTitle).toBeGreaterThan(metrics.programDescription);
+});
+
+test('archive editorial hierarchy keeps generated notation legible', async ({ page }) => {
+  await page.goto('/models/');
+
+  const metrics = await page.evaluate(() => {
+    const size = (selector: string) => Number.parseFloat(
+      getComputedStyle(document.querySelector<HTMLElement>(selector)!).fontSize,
+    );
+    return {
+      page: size('.page-intro h1'),
+      title: size('.content-card h2'),
+      summary: size('.content-card .card-copy > p'),
+      metadata: size('.card-meta'),
+      tokenSeed: size('.token-seed'),
+      tokenIndex: size('.token-index'),
+    };
+  });
+
+  expect(metrics.page).toBeGreaterThan(metrics.title);
+  expect(metrics.title).toBeGreaterThan(metrics.summary);
+  expect(metrics.summary).toBeGreaterThan(metrics.metadata);
+  expect(metrics.tokenSeed).toBeGreaterThanOrEqual(12);
+  expect(metrics.tokenIndex).toBeGreaterThanOrEqual(12);
+});
+
+test('mobile archive artwork preserves a compact 64px notation band', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/models/');
+
+  const art = await page.locator('.card-art').first().boundingBox();
+  expect(art).not.toBeNull();
+  expect(art!.height).toBeGreaterThanOrEqual(64);
+  expect(art!.height).toBeLessThanOrEqual(96);
 });
 
 test('supporting pages share the light visual system', async ({ page }) => {

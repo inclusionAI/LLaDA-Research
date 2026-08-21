@@ -40,8 +40,8 @@ const { citation } = Astro.props;
 
 <style>
   .citation {
-    margin-top: 2rem;
-    padding: 1rem;
+    margin-top: var(--space-4);
+    padding: var(--space-2);
     border: 1px solid var(--line);
     border-radius: 0;
     background: var(--surface);
@@ -55,37 +55,43 @@ const { citation } = Astro.props;
 
   h2 {
     margin: 0;
+    font-family: var(--font-mono);
     font-size: var(--type-label);
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    line-height: var(--leading-label);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   button {
-    padding: 0;
+    min-height: var(--control-size);
+    padding: 0 var(--space-1);
     border: 0;
     background: transparent;
     color: var(--ink-soft);
     cursor: pointer;
     font-size: var(--type-label);
-    font-weight: 520;
+    font-weight: 600;
+    line-height: var(--leading-label);
   }
 
   pre {
     overflow-x: auto;
-    margin: 0.85rem 0 0;
-    padding: 0.8rem;
+    margin: var(--space-1) 0 0;
+    padding: var(--space-1);
     border: 1px solid var(--line);
     border-radius: 0;
     background: var(--surface-soft);
     color: var(--ink-soft);
-    font-size: 0.8125rem;
-    line-height: 1.5;
+    font-size: var(--text-label);
+    line-height: var(--leading-small);
     white-space: pre-wrap;
   }
 
   .copy-status {
-    margin: 0.5rem 0 0;
+    margin: var(--space-1) 0 0;
     color: var(--ink);
     font-size: var(--type-meta);
+    line-height: var(--leading-meta);
   }
 </style>

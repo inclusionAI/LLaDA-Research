@@ -35,6 +35,7 @@ Legacy aliases remain during migration, but new component rules must use semanti
   - `--text-label: 0.8125rem / 1.25rem`, sans 600.
   - `--text-small: 0.875rem / 1.375rem`, sans 400.
   - `--text-body: 1rem / 1.625rem`, sans 400.
+  - `--text-reading: clamp(1.0625rem, 1.15vw, 1.125rem) / 1.75`, sans 400 for long-form prose.
   - `--text-lead: clamp(1.0625rem, 1.4vw, 1.25rem) / 1.75`, sans 400.
   - `--text-title-sm: clamp(1.125rem, 1.5vw, 1.25rem) / 1.3`, serif 500.
   - `--text-title-md: clamp(1.5rem, 2.4vw, 2rem) / 1.15`, serif 500.
@@ -140,4 +141,3 @@ Legacy aliases remain during migration, but new component rules must use semanti
 - [ ] Filters, navigation controls, and card actions meet 44px touch targets.
 - [ ] Desktop and mobile screenshots show aligned rules, baselines, and gutters without overflow.
 - [ ] Keyboard focus, reduced motion, contrast, Astro checks, unit tests, Playwright tests, root build, and GitHub project-base build pass.
-

@@ -55,7 +55,7 @@ const titleTokens = title
 <style>
   .content-card {
     display: grid;
-    grid-template-columns: minmax(10rem, 0.3fr) minmax(0, 1fr);
+    grid-template-columns: minmax(11rem, 28%) minmax(0, 1fr);
     overflow: hidden;
     border-top: 1px solid var(--line);
     border-radius: 0;
@@ -85,7 +85,7 @@ const titleTokens = title
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 1.25rem;
+    padding: var(--space-3);
     overflow: hidden;
     border-right: 1px solid var(--line);
     background: var(--surface);
@@ -108,38 +108,41 @@ const titleTokens = title
 
   .token-seed {
     color: var(--ink-soft);
-    font-size: 0.66rem;
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
   }
 
   .token-line {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.75rem;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
   }
 
   .token-line i {
-    padding: 0.18rem 0.3rem;
+    padding: 0.25rem var(--space-1);
     border: 1px solid var(--line);
     color: var(--muted);
-    font-size: 0.53rem;
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
     font-style: normal;
   }
 
   .token-index {
     position: absolute;
-    right: 0.8rem;
-    bottom: 0.7rem;
+    right: var(--space-1);
+    bottom: var(--space-1);
     color: var(--ink);
-    font-size: 0.48rem;
-    letter-spacing: 0.12em;
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
   }
 
   .card-copy {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: clamp(1.4rem, 3vw, 2.2rem);
+    padding: clamp(var(--space-3), 3vw, var(--space-4));
   }
 
   .card-meta {
@@ -150,7 +153,8 @@ const titleTokens = title
     font-size: var(--type-meta);
     font-family: var(--font-mono);
     font-weight: 500;
-    letter-spacing: 0.08em;
+    line-height: var(--leading-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
@@ -160,11 +164,12 @@ const titleTokens = title
 
   h2 {
     max-width: 28ch;
-    margin: 0.85rem 0 0.65rem;
-    font-size: clamp(1.5rem, 2.8vw, 2.25rem);
-    font-weight: 400;
-    line-height: 1.12;
-    letter-spacing: -0.045em;
+    margin: var(--space-1) 0 var(--space-1);
+    font-size: var(--text-title-md);
+    font-weight: 500;
+    line-height: var(--leading-title-md);
+    letter-spacing: var(--tracking-title);
+    overflow-wrap: break-word;
   }
 
   h2 a:hover {
@@ -173,24 +178,27 @@ const titleTokens = title
 
   p {
     max-width: 42rem;
-    margin: 0 0 1.2rem;
+    margin: 0 0 var(--space-2);
     color: var(--muted);
     font-size: var(--type-body);
-    line-height: 1.7;
+    line-height: var(--leading-body);
   }
 
   .card-footer {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem 1.5rem;
+    gap: var(--space-2) var(--space-3);
     align-items: center;
     justify-content: space-between;
     margin-top: auto;
-    padding-top: 1.25rem;
+    padding-top: var(--space-2);
     border-top: 1px solid var(--line);
   }
 
   .read-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-size);
     color: var(--ink-soft);
     font-size: var(--type-label);
     font-weight: 600;
@@ -202,20 +210,20 @@ const titleTokens = title
     }
 
     .card-art {
-      min-height: 3rem;
-      height: 3rem;
-      margin-top: 1rem;
+      min-height: 4rem;
+      height: 4rem;
+      margin-top: var(--space-2);
     }
 
     .token-art {
       justify-content: center;
-      padding: 0.65rem 0.8rem;
+      padding: var(--space-1);
       border-right: 0;
       border-bottom: 1px solid var(--line);
     }
 
     .token-seed {
-      font-size: 0.55rem;
+      font-size: var(--text-meta);
     }
 
     .token-line {
@@ -223,7 +231,7 @@ const titleTokens = title
     }
 
     .card-copy {
-      padding: 1.2rem 0 1.5rem;
+      padding: var(--space-2) 0 var(--space-3);
     }
   }
 </style>
