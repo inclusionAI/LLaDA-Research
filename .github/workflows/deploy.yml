@@ -29,7 +29,11 @@ jobs:
         run: npm ci
       - name: Run unit tests
         run: npm run test:run
-      - name: Build static site
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run desktop browser tests
+        run: npm run test:e2e -- --project=desktop
+      - name: Build static site for GitHub Pages
         run: npm run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
