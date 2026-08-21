@@ -35,6 +35,7 @@
   --text-section: clamp(2rem, 3.2vw, 2.75rem);
   --text-page: clamp(3rem, 7vw, 6rem);
   --text-hero: clamp(3.75rem, 7.5vw, 7.25rem);
+  --text-hero-mobile: clamp(3.75rem, 17vw, 6rem);
   --leading-meta: 1rem;
   --leading-label: 1.25rem;
   --leading-small: 1.375rem;
@@ -126,6 +127,8 @@ h1, h2, h3, time { font-variant-numeric: lining-nums tabular-nums; }
 .brand {
   display: inline-flex;
   align-items: center;
+  min-height: var(--control-size);
+  min-width: var(--control-size);
 }
 
 .brand-logo {
@@ -139,6 +142,7 @@ h1, h2, h3, time { font-variant-numeric: lining-nums tabular-nums; }
   display: inline-flex;
   align-items: center;
   min-height: var(--control-size);
+  min-width: var(--control-size);
   color: var(--muted);
   font-size: var(--type-label);
   font-weight: 600;

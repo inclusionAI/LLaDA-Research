@@ -9,16 +9,22 @@ const { tags, total } = Astro.props;
 
 <section class="archive-filter" data-archive-filter aria-label="Filter research archive">
   <div class="search-field">
-    <label for="archive-search">Search the archive</label>
+    <label class="filter-label" for="archive-search">Search the archive</label>
     <input id="archive-search" type="search" placeholder="Search titles or topics" autocomplete="off" data-filter-query />
   </div>
-  <div class="filter-tags" aria-label="Filter by topic">
-    <button class="active" type="button" data-filter-tag="" aria-pressed="true">All</button>
-    {tags.map((tag) => <button type="button" data-filter-tag={tag.toLowerCase()} aria-pressed="false">{tag}</button>)}
+  <div class="topic-field">
+    <span class="filter-label" id="archive-topics-label">Topics</span>
+    <div class="filter-tags" aria-labelledby="archive-topics-label">
+      <button class="active" type="button" data-filter-tag="" aria-pressed="true">All</button>
+      {tags.map((tag) => <button type="button" data-filter-tag={tag.toLowerCase()} aria-pressed="false">{tag}</button>)}
+    </div>
   </div>
   <div class="filter-summary">
-    <span aria-live="polite" data-filter-status>{total} {total === 1 ? 'entry' : 'entries'}</span>
-    <button type="button" data-filter-clear>Clear filters</button>
+    <span class="filter-label">Results</span>
+    <div class="filter-result-row">
+      <span aria-live="polite" data-filter-status>{total} {total === 1 ? 'entry' : 'entries'}</span>
+      <button type="button" data-filter-clear disabled>Clear filters</button>
+    </div>
   </div>
 </section>
 
@@ -46,6 +52,7 @@ const { tags, total } = Astro.props;
       });
 
       if (status) status.textContent = `${visible} ${visible === 1 ? 'entry' : 'entries'}`;
+      if (clear) clear.disabled = value.length === 0 && activeTag.length === 0;
     };
 
     query?.addEventListener('input', apply);
@@ -73,19 +80,22 @@ const { tags, total } = Astro.props;
     display: grid;
     grid-template-columns: minmax(15rem, 0.8fr) minmax(0, 1.4fr) auto;
     gap: var(--space-3);
-    align-items: end;
+    align-items: start;
     margin-block: var(--space-4);
     padding-block: var(--space-2);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
 
-  .search-field {
+  .search-field,
+  .topic-field,
+  .filter-summary {
     display: grid;
     gap: var(--space-1);
   }
 
-  label {
+  .filter-label {
+    margin: 0;
     color: var(--muted);
     font-size: var(--type-label);
     font-family: var(--font-mono);
@@ -150,12 +160,16 @@ const { tags, total } = Astro.props;
   }
 
   .filter-summary {
-    display: grid;
-    gap: var(--space-1);
     justify-items: end;
     color: var(--muted);
     font-size: var(--type-label);
     line-height: var(--leading-label);
+  }
+
+  .filter-result-row {
+    display: grid;
+    gap: var(--space-1);
+    justify-items: end;
   }
 
   [data-filter-clear] {
@@ -166,6 +180,12 @@ const { tags, total } = Astro.props;
     color: var(--accent-deep);
   }
 
+  [data-filter-clear]:disabled {
+    color: var(--muted);
+    cursor: default;
+    opacity: 0.45;
+  }
+
   @media (max-width: 900px) {
     .archive-filter {
       grid-template-columns: 1fr;
@@ -173,9 +193,13 @@ const { tags, total } = Astro.props;
     }
 
     .filter-summary {
-      grid-auto-flow: column;
-      justify-content: space-between;
       justify-items: start;
+    }
+
+    .filter-result-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
     }
   }
 

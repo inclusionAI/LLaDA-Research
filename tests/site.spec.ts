@@ -596,6 +596,10 @@ test('desktop archive topics wrap instead of clipping long taxonomies', async ({
 
   expect(topicLayout.scrollWidth).toBeLessThanOrEqual(topicLayout.clientWidth + 1);
   expect(topicLayout.rows).toBeGreaterThan(1);
+  const labels = page.locator('.archive-filter .filter-label');
+  await expect(labels).toHaveCount(3);
+  const labelBoxes = await Promise.all([0, 1, 2].map((index) => labels.nth(index).boundingBox()));
+  expect(Math.max(...labelBoxes.map((box) => box!.y)) - Math.min(...labelBoxes.map((box) => box!.y))).toBeLessThan(2);
 });
 
 test('mobile archive cards reserve the full row for readable copy', async ({ page }) => {
@@ -673,9 +677,13 @@ test('detail editorial hierarchy keeps long-form reading roles distinct', async 
   expect(metrics.resourceHeight).toBeGreaterThanOrEqual(44);
 });
 
-test('token artwork link exposes its visible mask token in the accessible name', async ({ page }) => {
+test('token artwork is decorative and leaves one named research link', async ({ page }) => {
   await page.goto('/papers/');
-  await expect(page.locator('.card-art').first()).toHaveAccessibleName(/\[MASK\]/);
+  const firstCard = page.locator('.content-card').first();
+  const title = (await firstCard.locator('h2').textContent())!.trim();
+  await expect(firstCard.locator('.card-art')).toHaveAttribute('aria-hidden', 'true');
+  await expect(firstCard.locator('.card-art')).not.toHaveAttribute('href');
+  await expect(firstCard.locator('h2 a')).toHaveAccessibleName(title);
 });
 
 test('archive token index meets WCAG AA contrast on generated artwork', async ({ page }) => {
@@ -694,6 +702,35 @@ test('archive token index meets WCAG AA contrast on generated artwork', async ({
     return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
   });
   expect(contrast).toBeGreaterThanOrEqual(4.5);
+});
+
+test('archive token fragments meet WCAG AA contrast on generated artwork', async ({ page }) => {
+  await page.goto('/models/');
+  const contrast = await page.locator('.token-line i').first().evaluate((element) => {
+    const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (value: string) => {
+      const linear = channels(value).map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    };
+    const foreground = luminance(getComputedStyle(element).color);
+    const background = luminance(getComputedStyle(element.closest('.token-art')!).backgroundColor);
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  });
+  expect(contrast).toBeGreaterThanOrEqual(4.5);
+});
+
+test('brand links meet the global touch-target minimum', async ({ page }) => {
+  await page.goto('/models/');
+  const targets = await page.locator(
+    '.brand:visible, .desktop-nav > a:visible, .content-card h2 a:visible, .compact .resource-link:visible',
+  ).evaluateAll((elements) => elements.map((element) => {
+    const box = element.getBoundingClientRect();
+    return { width: box.width, height: box.height };
+  }));
+  expect(targets.every(({ width, height }) => width >= 44 && height >= 44)).toBe(true);
 });
 
 test('footer links and copyright text meet WCAG AA contrast', async ({ page }) => {
@@ -896,6 +933,7 @@ test('editorial type roles and touch targets follow the shared system', async ({
       filterHeight: filter.height,
       textBodyToken: root.getPropertyValue('--text-body').trim(),
       spaceSixToken: root.getPropertyValue('--space-6').trim(),
+      mobileHeroToken: root.getPropertyValue('--text-hero-mobile').trim(),
     };
   });
 
@@ -906,6 +944,7 @@ test('editorial type roles and touch targets follow the shared system', async ({
   expect(metrics.filterHeight).toBeGreaterThanOrEqual(44);
   expect(metrics.textBodyToken).toBe('1rem');
   expect(metrics.spaceSixToken).toBe('3rem');
+  expect(metrics.mobileHeroToken).toBe('clamp(3.75rem, 17vw, 6rem)');
 });
 
 test('primary content routes are reachable', async ({ page }) => {
@@ -916,7 +955,7 @@ test('primary content routes are reachable', async ({ page }) => {
   }
 });
 
-test('paper archive exposes exactly the official InclusionAI publications', async ({ page }) => {
+test('paper archive exposes exactly the publications with InclusionAI participation', async ({ page }) => {
   await page.goto('/papers/');
 
   const cards = page.locator('[data-filter-card]');
@@ -933,7 +972,7 @@ test('paper archive exposes exactly the official InclusionAI publications', asyn
   expect(titles.toSorted()).toEqual(expectedTitles.toSorted());
 });
 
-test('official InclusionAI paper detail routes are reachable', async ({ page }) => {
+test('paper detail routes with InclusionAI participation are reachable', async ({ page }) => {
   for (const path of [
     '/papers/llada-2-0/',
     '/papers/llada-2-1/',
@@ -945,6 +984,13 @@ test('official InclusionAI paper detail routes are reachable', async ({ page }) 
     const response = await page.goto(path);
     expect(response?.ok(), path).toBeTruthy();
     await expect(page.locator('main h1').first()).toBeVisible();
+  }
+});
+
+test('research detail metadata states participating organizations', async ({ page }) => {
+  for (const path of ['/models/llada-moe-v2/', '/papers/llada-moe-v2/']) {
+    await page.goto(path);
+    await expect(page.locator('.content-meta')).toContainText('Research with InclusionAI');
   }
 });
 
@@ -1069,10 +1115,14 @@ test('llada moe 7b-a1b omits unverified repository links', async ({ page }) => {
 test('archive filters entries by query and clears the filter', async ({ page }) => {
   await page.goto('/papers/');
   const cards = page.locator('[data-filter-card]');
+  const clear = page.getByRole('button', { name: 'Clear filters' });
   await expect(cards).toHaveCount(6);
+  await expect(clear).toBeDisabled();
   await page.getByRole('searchbox').fill('multimodal');
+  await expect(clear).toBeEnabled();
   await expect(page.locator('[data-filter-card]:visible')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await clear.click();
+  await expect(clear).toBeDisabled();
   await expect(page.locator('[data-filter-card]:visible')).toHaveCount(6);
 });
 

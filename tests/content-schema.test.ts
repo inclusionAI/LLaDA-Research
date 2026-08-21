@@ -53,5 +53,15 @@ describe('official research schemas', () => {
   it('does not accept the legacy sole-publisher field', () => {
     expect(modelSchema.safeParse({ ...officialModel, publisher: 'InclusionAI' }).success).toBe(false);
     expect(paperSchema.safeParse({ ...officialPaper, publisher: 'InclusionAI' }).success).toBe(false);
+    expect(modelSchema.safeParse({
+      ...officialModel,
+      participants: ['InclusionAI'],
+      publisher: 'InclusionAI',
+    }).success).toBe(false);
+    expect(paperSchema.safeParse({
+      ...officialPaper,
+      participants: ['InclusionAI'],
+      publisher: 'InclusionAI',
+    }).success).toBe(false);
   });
 });

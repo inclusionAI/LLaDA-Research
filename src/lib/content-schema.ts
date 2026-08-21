@@ -29,6 +29,7 @@ const participantsSchema = z.array(z.string().min(1)).min(1).refine(
 
 export const modelSchema = commonSchema.extend({
   participants: participantsSchema,
+  publisher: z.never().optional(),
   family: z.string(),
   modality: z.string(),
   status: z.enum(['released', 'preview', 'archived']).default('released'),
@@ -38,6 +39,7 @@ export const modelSchema = commonSchema.extend({
 
 export const paperSchema = commonSchema.extend({
   participants: participantsSchema,
+  publisher: z.never().optional(),
   venue: z.string().optional(),
   citation: z.string().optional(),
   links: resourceLinksSchema,

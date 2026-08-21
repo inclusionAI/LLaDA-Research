@@ -42,6 +42,7 @@ Legacy aliases remain during migration, but new component rules must use semanti
   - `--text-section: clamp(2rem, 3.2vw, 2.75rem) / 1.05`, serif 500.
   - `--text-page: clamp(3rem, 7vw, 6rem) / 0.96`, serif 400.
   - `--text-hero: clamp(3.75rem, 7.5vw, 7.25rem) / 0.88`, serif 400.
+  - `--text-hero-mobile: clamp(3.75rem, 17vw, 6rem) / 0.88`, serif 400 on narrow viewports.
 - Body copy has normal letter spacing. Editorial titles use `-0.035em`; the hero may use `-0.055em`. Uppercase metadata never exceeds `0.1em`.
 - Model and paper names use lining numerals and no artificial case conversion. Names may wrap only at natural spaces or punctuation; no per-character styling is allowed.
 
@@ -87,7 +88,7 @@ Legacy aliases remain during migration, but new component rules must use semanti
 ### Archive rows
 
 - Archive title uses title-medium styling and is always larger than metadata, tags, summaries, and resource actions.
-- Generated token artwork uses metadata sizing no smaller than 12px. Decorative output is hidden from assistive technology; the link retains a useful accessible name.
+- Generated token artwork uses metadata sizing no smaller than 12px. Decorative output is hidden from assistive technology; the adjacent title is the single named link for the entry.
 - Desktop uses a 28% artwork / 72% copy split. At 650px the artwork becomes a compact 64px band and copy takes the full row.
 - Hover/focus may strengthen rules and color; no shadow, scale, or raised-card effect.
 
