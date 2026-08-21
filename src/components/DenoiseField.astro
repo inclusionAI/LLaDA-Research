@@ -1,6 +1,9 @@
 <div
   class="denoise-field"
   data-denoise-field
+  data-field-theme="sage-light"
+  data-canvas-surface="ivory-trail"
+  data-pointer-spotlight="none"
   data-visual-system="coherence-field"
   data-decode-window-ms="650"
   data-edit-mode="simultaneous"
@@ -409,7 +412,7 @@
     });
 
     const drawAmbientMaterial = (particle: Particle, x: number, y: number, alpha: number, driftX: number, driftY: number) => {
-      const channels = particle.spectral ? '158, 173, 179' : particle.depth > 0.7 ? '232, 234, 226' : '184, 189, 182';
+      const channels = particle.spectral ? '82, 122, 104' : particle.depth > 0.7 ? '104, 117, 110' : '126, 145, 134';
       const size = particle.size * (0.72 + particle.depth);
       if (particle.material === 'stroke') {
         const angle = Math.atan2(driftY, driftX);
@@ -438,7 +441,7 @@
       if (stage === 'noise') return false;
       const glyphs = stage === 'mask' ? maskGlyphs : stage === 'partial' ? partialGlyphs : resolvedGlyphs;
       context.font = `${stage === 'resolved' ? 9 : 7}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-      context.fillStyle = `rgba(232, 234, 226, ${Math.min(0.72, 0.18 + influence * 0.58)})`;
+      context.fillStyle = `rgba(82, 122, 104, ${Math.min(0.42, 0.1 + influence * 0.32)})`;
       context.fillText(glyphs[particle.index % glyphs.length], particle.x, particle.y);
       return true;
     };
@@ -447,7 +450,7 @@
       if ((phase.name !== 'align' && phase.name !== 'fragment') || phase.coherence < 0.08) return;
       const { centerX, centerY, side } = geometry();
       const alpha = Math.min(0.16, phase.coherence * 0.16);
-      context.strokeStyle = `rgba(158, 173, 179, ${alpha})`;
+      context.strokeStyle = `rgba(82, 122, 104, ${alpha})`;
       context.lineWidth = 0.55;
       context.beginPath();
       context.moveTo(centerX - side / 2, centerY - side / 2 + 10);
@@ -576,7 +579,7 @@
       if (compositedOpacity <= 0.001) return 0;
       const drawAtOpacity = (opacity: number) => {
         const sourceOpacity = sourceAlphaForCompositedOpacity(opacity, trailRetention);
-        context.fillStyle = `rgba(184, 189, 182, ${sourceOpacity})`;
+        context.fillStyle = `rgba(82, 122, 104, ${sourceOpacity})`;
         context.fillText(text, x, y);
         return sourceOpacity;
       };
@@ -687,7 +690,7 @@
       const { centerX, centerY, side, feather } = geometry();
 
       context.globalCompositeOperation = 'source-over';
-      context.fillStyle = fixedPhase ? '#030303' : `rgba(3, 3, 3, ${1 - canvasTrailRetention})`;
+      context.fillStyle = fixedPhase ? '#f7f8f3' : `rgba(247, 248, 243, ${1 - canvasTrailRetention})`;
       context.fillRect(0, 0, width, height);
 
       pointer.energy += ((pointer.active ? 1 : 0) - pointer.energy) * 0.055;
@@ -695,15 +698,6 @@
       const pointerRadius = Math.min(width, height) * (width < 700 ? 0.34 : 0.3);
       updateSemanticPointerMotion(elapsedMs, phase, side);
       const ambientSkeletonStrength = semanticSkeletonOpacity(phase.decode, 0, phase.disperse, 0) / 0.24;
-      if (pointer.energy > 0.01) {
-        const halo = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, pointerRadius * 1.4);
-        halo.addColorStop(0, `rgba(236, 239, 229, ${0.12 * pointer.energy})`);
-        halo.addColorStop(0.35, `rgba(158, 173, 179, ${0.035 * pointer.energy})`);
-        halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        context.fillStyle = halo;
-        context.fillRect(pointer.x - pointerRadius * 1.5, pointer.y - pointerRadius * 1.5, pointerRadius * 3, pointerRadius * 3);
-      }
-
       let targetError = 0;
       let targetSamples = 0;
       for (const particle of particles) {
@@ -785,8 +779,8 @@
         if (semanticActive) {
           const mineral = editing && particle.index % 4 === 0;
           context.fillStyle = mineral
-            ? `rgba(197, 207, 162, ${Math.min(0.82, alpha)})`
-            : `rgba(232, 234, 226, ${Math.min(0.86, alpha)})`;
+            ? `rgba(63, 104, 87, ${Math.min(0.46, alpha)})`
+            : `rgba(82, 122, 104, ${Math.min(0.52, alpha)})`;
           const semanticSize = 0.68 + particle.depth * 0.76;
           context.fillRect(particle.x, particle.y, semanticSize, semanticSize * 0.78);
         } else if (!drawPointerGlyph(particle, pointerInfluence) && (particle.material !== 'semantic' || phase.coherence > 0.08)) {
@@ -800,7 +794,7 @@
         }
 
         if (pointerInfluence > 0.24 && pointer.speed > 3 && particle.index % 7 === 0) {
-          context.strokeStyle = `rgba(225, 229, 221, ${pointerInfluence * Math.min(pointer.speed / 42, 1) * 0.07})`;
+          context.strokeStyle = `rgba(82, 122, 104, ${pointerInfluence * Math.min(pointer.speed / 42, 1) * 0.07})`;
           context.lineWidth = 0.45;
           context.beginPath();
           context.moveTo(particle.x, particle.y);
@@ -912,14 +906,14 @@
     z-index: 0;
     inset: 0;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse at 72% 50%, rgb(255 255 248 / 0.055), transparent 34%),
-      #030303;
+    background: transparent;
   }
 
   canvas {
+    display: block;
     width: 100%;
     height: 100%;
+    background: transparent;
   }
 
   .field-readout {
@@ -929,7 +923,7 @@
     left: 0;
     display: flex;
     justify-content: space-between;
-    color: #4c4c48;
+    color: rgb(104 117 110 / 0.72);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.55rem;
     letter-spacing: 0.14em;

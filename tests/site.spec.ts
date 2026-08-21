@@ -362,6 +362,28 @@ test('single coherence field replaces persistent background token lanes', async 
   await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
 });
 
+test('coherence field merges into the light journal hero without a pointer spotlight', async ({ page }) => {
+  await page.goto('/');
+  const field = page.locator('[data-denoise-field]');
+  const canvas = field.locator('canvas');
+
+  await expect(field).toHaveAttribute('data-field-theme', 'sage-light');
+  await expect(field).toHaveAttribute('data-canvas-surface', 'ivory-trail');
+  await expect(field).toHaveAttribute('data-pointer-spotlight', 'none');
+  await expect(field).toHaveAttribute('data-visual-system', 'coherence-field');
+  await expect(field).toHaveAttribute('data-decode-window-ms', '650');
+  await expect(field).toHaveAttribute('data-edit-mode', 'simultaneous');
+  await expect(canvas).toHaveCount(1);
+  await expect(field).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(field).toHaveCSS('background-image', 'none');
+  await expect(canvas).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+
+  await expect(page.locator('#hero-title')).toHaveCSS('color', 'rgb(36, 49, 43)');
+  await expect(page.locator('.hero-kicker')).toHaveCSS('color', 'rgb(104, 117, 110)');
+  await expect(page.locator('.hero-summary')).toHaveCSS('color', 'rgb(104, 117, 110)');
+  await expect(page.locator('[data-hero-cta]')).toHaveCSS('color', 'rgb(36, 49, 43)');
+});
+
 test('coherence field keeps one dense multi-material animation system', async ({ page }) => {
   await page.goto('/');
   const field = page.locator('[data-denoise-field]');
