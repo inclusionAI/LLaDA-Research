@@ -23,6 +23,7 @@ export const commonSchema = z.object({
 });
 
 export const modelSchema = commonSchema.extend({
+  publisher: z.literal('InclusionAI'),
   family: z.string(),
   modality: z.string(),
   status: z.enum(['released', 'preview', 'archived']).default('released'),
@@ -31,6 +32,7 @@ export const modelSchema = commonSchema.extend({
 });
 
 export const paperSchema = commonSchema.extend({
+  publisher: z.literal('InclusionAI'),
   venue: z.string().optional(),
   citation: z.string().optional(),
   links: resourceLinksSchema,

@@ -177,7 +177,7 @@ test('homepage content uses contribution-first copy', async ({ page }) => {
 
   const researchColumns = page.locator('[data-research-column]');
   await expect(researchColumns.nth(0).getByText(
-    'A 30B-A3B model that establishes practical scaling laws for MoE diffusion language models.',
+    'A flash checkpoint for agentic diffusion generation through Levenshtein editing.',
     { exact: true },
   )).toBeVisible();
   await expect(researchColumns.nth(1).getByText(
@@ -574,29 +574,31 @@ test('primary content routes are reachable', async ({ page }) => {
   }
 });
 
-test('paper archive exposes the complete llada lineage', async ({ page }) => {
+test('paper archive exposes exactly the official InclusionAI publications', async ({ page }) => {
   await page.goto('/papers/');
 
   const cards = page.locator('[data-filter-card]');
-  await expect(cards).toHaveCount(9);
-  for (const title of [
-    'Large Language Diffusion Models',
-    'LLaDA 1.5: Variance-Reduced Preference Optimization for Large Language Diffusion Models',
+  await expect(cards).toHaveCount(6);
+  const expectedTitles = [
+    'LLaDA2.0: Scaling Up Diffusion Language Models to 100B',
+    'LLaDA2.1: Speeding Up Text Diffusion via Token Editing',
+    'LLaDA2.2: Enabling Agentic Diffusion Language Models via Levenshtein Editing',
+    'LLaDA2.0-Uni: Unifying Multimodal Understanding and Generation with Diffusion Large Language Model',
     'LLaDA-MoE: A Sparse MoE Diffusion Language Model',
-    'Improved Large Language Diffusion Models',
     'LLaDA MoE v2: Scaling Mixture-of-Experts Diffusion Language Models',
-  ]) {
-    await expect(cards.getByRole('heading', { name: title, exact: true })).toBeVisible();
-  }
+  ];
+  const titles = await cards.locator('h2').allTextContents();
+  expect(titles.toSorted()).toEqual(expectedTitles.toSorted());
 });
 
-test('expanded llada detail routes are reachable for papers', async ({ page }) => {
+test('official InclusionAI paper detail routes are reachable', async ({ page }) => {
   for (const path of [
-    '/papers/large-language-diffusion-models/',
-    '/papers/llada-1-5/',
-    '/papers/llada-moe/',
-    '/papers/improved-large-language-diffusion-models/',
+    '/papers/llada-2-0/',
+    '/papers/llada-2-1/',
+    '/papers/llada-2-2/',
+    '/papers/llada-2-0-uni/',
     '/papers/llada-moe-v2/',
+    '/papers/llada-moe/',
   ]) {
     const response = await page.goto(path);
     expect(response?.ok(), path).toBeTruthy();
@@ -616,37 +618,31 @@ test('complete llada lineage shows corrected publication dates', async ({ page }
   }).getByText('Feb 9, 2026', { exact: true })).toBeVisible();
 });
 
-test('model archive exposes the complete llada lineage', async ({ page }) => {
+test('model archive exposes exactly the official InclusionAI releases', async ({ page }) => {
   await page.goto('/models/');
 
   const cards = page.locator('[data-filter-card]');
-  await expect(cards).toHaveCount(10);
-  for (const title of [
-    'LLaDA-8B',
-    'LLaDA 1.5',
-    'LLaDA-MoE 7B-A1B',
+  await expect(cards).toHaveCount(6);
+  const expectedTitles = [
     'LLaDA2.0',
     'LLaDA2.1',
-    'iLLaDA-8B',
     'LLaDA2.2',
-    'LLaDA MoE v2',
     'LLaDA2.X',
     'LLaDA2.0-Uni',
-  ]) {
-    await expect(cards.getByRole('heading', { name: title, exact: true })).toBeVisible();
-  }
+    'LLaDA-MoE 7B-A1B',
+  ];
+  const titles = await cards.locator('h2').allTextContents();
+  expect(titles.toSorted()).toEqual(expectedTitles.toSorted());
 });
 
-test('expanded llada model detail routes are reachable', async ({ page }) => {
+test('official InclusionAI model detail routes are reachable', async ({ page }) => {
   for (const path of [
-    '/models/llada-8b/',
-    '/models/llada-1-5/',
     '/models/llada-moe-7b-a1b/',
     '/models/llada-2-0/',
     '/models/llada-2-1/',
-    '/models/illada-8b/',
     '/models/llada-2-2/',
-    '/models/llada-moe-v2/',
+    '/models/llada-2-x/',
+    '/models/llada-2-0-uni/',
   ]) {
     const response = await page.goto(path);
     expect(response?.ok(), path).toBeTruthy();
@@ -656,17 +652,6 @@ test('expanded llada model detail routes are reachable', async ({ page }) => {
 
 test('model detail pages enumerate checkpoint releases', async ({ page }) => {
   const cases = [
-    {
-      path: '/models/llada-8b/',
-      checkpoints: [
-        'https://huggingface.co/GSAI-ML/LLaDA-8B-Base',
-        'https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct',
-      ],
-    },
-    {
-      path: '/models/llada-1-5/',
-      checkpoints: ['https://huggingface.co/GSAI-ML/LLaDA-1.5'],
-    },
     {
       path: '/models/llada-moe-7b-a1b/',
       checkpoints: [
@@ -688,13 +673,6 @@ test('model detail pages enumerate checkpoint releases', async ({ page }) => {
       checkpoints: [
         'https://huggingface.co/inclusionAI/LLaDA2.1-mini',
         'https://huggingface.co/inclusionAI/LLaDA2.1-flash',
-      ],
-    },
-    {
-      path: '/models/illada-8b/',
-      checkpoints: [
-        'https://huggingface.co/GSAI-ML/iLLaDA-8B-Base',
-        'https://huggingface.co/GSAI-ML/iLLaDA-8B-Instruct',
       ],
     },
     {
@@ -749,11 +727,27 @@ test('llada moe 7b-a1b omits unverified repository links', async ({ page }) => {
 test('archive filters entries by query and clears the filter', async ({ page }) => {
   await page.goto('/papers/');
   const cards = page.locator('[data-filter-card]');
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(6);
   await page.getByRole('searchbox').fill('multimodal');
   await expect(page.locator('[data-filter-card]:visible')).toHaveCount(1);
   await page.getByRole('button', { name: 'Clear filters' }).click();
-  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(9);
+  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(6);
+});
+
+test('excluded research routes return 404', async ({ page }) => {
+  for (const path of [
+    '/models/illada-8b/',
+    '/models/llada-8b/',
+    '/models/llada-1-5/',
+    '/models/llada-moe-v2/',
+    '/papers/improved-large-language-diffusion-models/',
+    '/papers/large-language-diffusion-models/',
+    '/papers/llada-1-5/',
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+    await expect(page.getByRole('heading', { name: 'Page not found.' })).toBeVisible();
+  }
 });
 
 test('404 page offers recovery links', async ({ page }) => {
