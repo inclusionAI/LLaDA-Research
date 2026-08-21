@@ -807,7 +807,7 @@ test('complete llada lineage shows corrected publication dates', async ({ page }
   }).getByText('Feb 9, 2026', { exact: true })).toBeVisible();
 });
 
-test('model archive exposes exactly the official InclusionAI releases', async ({ page }) => {
+test('model archive exposes six concrete models with InclusionAI participation', async ({ page }) => {
   await page.goto('/models/');
 
   const cards = page.locator('[data-filter-card]');
@@ -816,7 +816,7 @@ test('model archive exposes exactly the official InclusionAI releases', async ({
     'LLaDA2.0',
     'LLaDA2.1',
     'LLaDA2.2',
-    'LLaDA2.X',
+    'LLaDA MoE v2',
     'LLaDA2.0-Uni',
     'LLaDA-MoE 7B-A1B',
   ];
@@ -824,13 +824,13 @@ test('model archive exposes exactly the official InclusionAI releases', async ({
   expect(titles.toSorted()).toEqual(expectedTitles.toSorted());
 });
 
-test('official InclusionAI model detail routes are reachable', async ({ page }) => {
+test('model detail routes with InclusionAI participation are reachable', async ({ page }) => {
   for (const path of [
     '/models/llada-moe-7b-a1b/',
     '/models/llada-2-0/',
     '/models/llada-2-1/',
     '/models/llada-2-2/',
-    '/models/llada-2-x/',
+    '/models/llada-moe-v2/',
     '/models/llada-2-0-uni/',
   ]) {
     const response = await page.goto(path);
@@ -928,7 +928,7 @@ test('excluded research routes return 404', async ({ page }) => {
     '/models/illada-8b/',
     '/models/llada-8b/',
     '/models/llada-1-5/',
-    '/models/llada-moe-v2/',
+    '/models/llada-2-x/',
     '/papers/improved-large-language-diffusion-models/',
     '/papers/large-language-diffusion-models/',
     '/papers/llada-1-5/',

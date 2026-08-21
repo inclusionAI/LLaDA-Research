@@ -71,7 +71,7 @@ expect(filterHeight).toBeGreaterThanOrEqual(44);
 
 - [ ] **Step 2: Run the targeted browser test and verify failure**
 
-Run: `npx playwright test tests/site.spec.ts --grep "editorial type roles|touch targets" --project=chromium-desktop`
+Run: `npx playwright test tests/site.spec.ts --grep "editorial type roles|touch targets" --project=desktop`
 
 Expected: failure on the current small metadata and control sizes.
 
@@ -81,7 +81,7 @@ Define the roles specified in `docs/superpowers/specs/2026-08-21-llada-editorial
 
 - [ ] **Step 4: Run the focused browser test and commit**
 
-Run: `npx playwright test tests/site.spec.ts --grep "editorial type roles|touch targets" --project=chromium-desktop`
+Run: `npx playwright test tests/site.spec.ts --grep "editorial type roles|touch targets" --project=desktop`
 
 Expected: all selected tests pass.
 
@@ -103,7 +103,7 @@ Measure section, item, and supporting-copy computed styles and assert descending
 
 - [ ] **Step 2: Run the homepage tests and verify failure**
 
-Run: `npx playwright test tests/site.spec.ts --grep "homepage editorial hierarchy" --project=chromium-desktop`
+Run: `npx playwright test tests/site.spec.ts --grep "homepage editorial hierarchy" --project=desktop`
 
 Expected: failure because current local values do not resolve to the new roles.
 
@@ -170,7 +170,7 @@ Assert page title, summary, prose, metadata, related content, and controls map t
 
 - [ ] **Step 2: Run the detail tests and verify failure**
 
-Run: `npx playwright test tests/site.spec.ts --grep "detail editorial hierarchy" --project=chromium-desktop`
+Run: `npx playwright test tests/site.spec.ts --grep "detail editorial hierarchy" --project=desktop`
 
 Expected: failure because detail components still use arbitrary local values.
 

@@ -22,8 +22,13 @@ export const commonSchema = z.object({
   authors: z.array(z.string()).default([]),
 });
 
+const participantsSchema = z.array(z.string().min(1)).min(1).refine(
+  (participants) => participants.includes('InclusionAI'),
+  { message: 'Research entries must include InclusionAI participation.' },
+);
+
 export const modelSchema = commonSchema.extend({
-  publisher: z.literal('InclusionAI'),
+  participants: participantsSchema,
   family: z.string(),
   modality: z.string(),
   status: z.enum(['released', 'preview', 'archived']).default('released'),
@@ -32,7 +37,7 @@ export const modelSchema = commonSchema.extend({
 });
 
 export const paperSchema = commonSchema.extend({
-  publisher: z.literal('InclusionAI'),
+  participants: participantsSchema,
   venue: z.string().optional(),
   citation: z.string().optional(),
   links: resourceLinksSchema,

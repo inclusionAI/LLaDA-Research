@@ -38,13 +38,20 @@ describe('common content schema', () => {
 });
 
 describe('official research schemas', () => {
-  it('accepts only InclusionAI models', () => {
-    expect(modelSchema.safeParse({ ...officialModel, publisher: 'Other Lab' }).success).toBe(false);
-    expect(modelSchema.safeParse({ ...officialModel, publisher: 'InclusionAI' }).success).toBe(true);
+  it('requires InclusionAI participation for models', () => {
+    expect(modelSchema.safeParse({ ...officialModel, participants: ['Other Lab'] }).success).toBe(false);
+    expect(modelSchema.safeParse({ ...officialModel, participants: [] }).success).toBe(false);
+    expect(modelSchema.safeParse({ ...officialModel, participants: ['InclusionAI', 'Partner Lab'] }).success).toBe(true);
   });
 
-  it('accepts only InclusionAI papers', () => {
-    expect(paperSchema.safeParse({ ...officialPaper, publisher: 'Other Lab' }).success).toBe(false);
-    expect(paperSchema.safeParse({ ...officialPaper, publisher: 'InclusionAI' }).success).toBe(true);
+  it('requires InclusionAI participation for papers', () => {
+    expect(paperSchema.safeParse({ ...officialPaper, participants: ['Other Lab'] }).success).toBe(false);
+    expect(paperSchema.safeParse({ ...officialPaper, participants: [] }).success).toBe(false);
+    expect(paperSchema.safeParse({ ...officialPaper, participants: ['Partner Lab', 'InclusionAI'] }).success).toBe(true);
+  });
+
+  it('does not accept the legacy sole-publisher field', () => {
+    expect(modelSchema.safeParse({ ...officialModel, publisher: 'InclusionAI' }).success).toBe(false);
+    expect(paperSchema.safeParse({ ...officialPaper, publisher: 'InclusionAI' }).success).toBe(false);
   });
 });
