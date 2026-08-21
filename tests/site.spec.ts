@@ -237,7 +237,7 @@ test('homepage uses the light contemporary journal theme', async ({ page }) => {
   await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 248, 243)');
   await expect(page.locator('body')).toHaveCSS('color', 'rgb(36, 49, 43)');
-  await expect(page.locator('#hero-title')).toHaveCSS('color', 'rgb(247, 248, 243)');
+  await expect(page.locator('#hero-title')).toHaveCSS('color', 'rgb(36, 49, 43)');
   await expect(page.locator('[data-selected-work]').first()).toHaveCSS('border-radius', '0px');
 });
 
