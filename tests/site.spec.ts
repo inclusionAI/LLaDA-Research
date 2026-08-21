@@ -755,6 +755,38 @@ test('active archive filter keeps accessible contrast on hover and keyboard focu
   expect(focused.contrast).toBeGreaterThanOrEqual(4.5);
 });
 
+test('editorial type roles and touch targets follow the shared system', async ({ page }) => {
+  await page.goto('/models/');
+
+  const metrics = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    const body = getComputedStyle(document.body);
+    const title = getComputedStyle(document.querySelector<HTMLElement>('.content-card h2')!);
+    const summary = getComputedStyle(document.querySelector<HTMLElement>('.content-card .card-copy > p')!);
+    const metadata = getComputedStyle(document.querySelector<HTMLElement>('.card-meta')!);
+    const filter = document.querySelector<HTMLButtonElement>('[data-filter-tag]')!.getBoundingClientRect();
+
+    return {
+      bodySize: Number.parseFloat(body.fontSize),
+      titleSize: Number.parseFloat(title.fontSize),
+      summarySize: Number.parseFloat(summary.fontSize),
+      metadataSize: Number.parseFloat(metadata.fontSize),
+      metadataTracking: Number.parseFloat(metadata.letterSpacing) / Number.parseFloat(metadata.fontSize),
+      filterHeight: filter.height,
+      textBodyToken: root.getPropertyValue('--text-body').trim(),
+      spaceSixToken: root.getPropertyValue('--space-6').trim(),
+    };
+  });
+
+  expect(metrics.bodySize).toBeGreaterThanOrEqual(16);
+  expect(metrics.titleSize).toBeGreaterThan(metrics.summarySize);
+  expect(metrics.metadataSize).toBeGreaterThanOrEqual(12);
+  expect(metrics.metadataTracking).toBeLessThanOrEqual(0.1);
+  expect(metrics.filterHeight).toBeGreaterThanOrEqual(44);
+  expect(metrics.textBodyToken).toBe('1rem');
+  expect(metrics.spaceSixToken).toBe('3rem');
+});
+
 test('primary content routes are reachable', async ({ page }) => {
   for (const path of ['/models/', '/papers/', '/blog/', '/about/']) {
     const response = await page.goto(path);
