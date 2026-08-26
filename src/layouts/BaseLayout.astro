@@ -22,6 +22,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 const base = import.meta.env.BASE_URL;
 const pageTitle = title === 'LLaDA' || title.includes('LLaDA —') ? title : `${title} — LLaDA`;
 const local = (path = '') => withBase(base, path);
+const favicon = 'https://www.inclusion-ai.org/img/favicon.png';
 const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site).toString() : undefined;
 ---
 
@@ -33,7 +34,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
     <meta name="description" content={description} />
     <meta name="theme-color" content="#F7F8F3" />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href={local('favicon.svg')} />
+    <link rel="icon" type="image/png" href={favicon} />
     <link rel="alternate" type="application/rss+xml" title="LLaDA Notes" href={local('rss.xml')} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />

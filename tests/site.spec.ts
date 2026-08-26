@@ -55,6 +55,14 @@ test('site chrome uses the approved black LLaDA wordmark through base-safe paths
   expect(headerBox!.width / headerBox!.height).toBeGreaterThan(3);
 });
 
+test('site uses the official InclusionAI browser icon', async ({ page }) => {
+  await page.goto('/');
+
+  const favicon = page.locator('link[rel="icon"]');
+  await expect(favicon).toHaveAttribute('type', 'image/png');
+  await expect(favicon).toHaveAttribute('href', 'https://www.inclusion-ai.org/img/favicon.png');
+});
+
 test('hero CTA uses an arrow cue without any underline decoration', async ({ page }) => {
   await page.goto('/');
 

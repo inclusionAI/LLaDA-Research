@@ -3,13 +3,12 @@ import { readFileSync } from 'node:fs';
 import { resolveAssetUrl, resolveDeploymentConfig, withBase } from '../src/lib/site-config';
 
 describe('public assets', () => {
-  it('keeps the favicon within the approved journal palette', () => {
-    const source = readFileSync(new URL('../public/favicon.svg', import.meta.url), 'utf8');
-    const approved = new Set(['#f7f8f3', '#24312b', '#68756e', '#527a68', '#d8e0d8', '#eef3ed']);
-    const colors = [...source.matchAll(/#[0-9a-f]{6}/gi)].map(([color]) => color.toLowerCase());
+  it('uses the official InclusionAI browser icon', () => {
+    const source = readFileSync(new URL('../src/layouts/BaseLayout.astro', import.meta.url), 'utf8');
 
-    expect(colors.length).toBeGreaterThan(0);
-    expect(colors.every((color) => approved.has(color))).toBe(true);
+    expect(source).toContain("const favicon = 'https://www.inclusion-ai.org/img/favicon.png';");
+    expect(source).toContain('<link rel="icon" type="image/png" href={favicon} />');
+    expect(source).not.toContain("local('favicon.svg')");
   });
 
   it('wires both black logos through the project-base helper', () => {
