@@ -290,22 +290,24 @@ test('homepage presents restrained selected work and program navigation', async 
   await expect(page.getByText('Research updates and implementation perspectives.', { exact: true })).toBeVisible();
 });
 
-test('selected work heading does not duplicate the publication row dividers', async ({ page }) => {
+test('selected work keeps its heading rule and omits the trailing list rule', async ({ page }) => {
   await page.goto('/');
 
   const rules = await page.locator('.selected-work').evaluate((section) => {
     const header = section.querySelector('.section-header');
-    const firstRow = section.querySelector('li');
-    if (!header || !firstRow) throw new Error('Selected work structure is incomplete.');
+    const rows = [...section.querySelectorAll('li')];
+    if (!header || rows.length < 2) throw new Error('Selected work structure is incomplete.');
 
     return {
       headerRule: getComputedStyle(header).borderBottomWidth,
-      rowRule: getComputedStyle(firstRow).borderBottomWidth,
+      internalRule: getComputedStyle(rows[0]).borderBottomWidth,
+      trailingRule: getComputedStyle(rows.at(-1)!).borderBottomWidth,
     };
   });
 
-  expect(rules.headerRule).toBe('0px');
-  expect(rules.rowRule).toBe('1px');
+  expect(rules.headerRule).toBe('1px');
+  expect(rules.internalRule).toBe('1px');
+  expect(rules.trailingRule).toBe('0px');
 });
 
 test('homepage content uses contribution-first copy', async ({ page }) => {
