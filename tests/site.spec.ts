@@ -290,24 +290,35 @@ test('homepage presents restrained selected work and program navigation', async 
   await expect(page.getByText('Research updates and implementation perspectives.', { exact: true })).toBeVisible();
 });
 
-test('selected work keeps its heading rule and omits the trailing list rule', async ({ page }) => {
+test('selected work keeps its internal rules without a second heavy section rule', async ({ page }) => {
   await page.goto('/');
 
-  const rules = await page.locator('.selected-work').evaluate((section) => {
-    const header = section.querySelector('.section-header');
-    const rows = [...section.querySelectorAll('li')];
-    if (!header || rows.length < 2) throw new Error('Selected work structure is incomplete.');
+  const rules = await page.evaluate(() => {
+    const section = document.querySelector('.selected-work');
+    const header = section?.querySelector('.section-header');
+    const rows = [...(section?.querySelectorAll('li') ?? [])];
+    const links = [...(section?.querySelectorAll<HTMLElement>('[data-selected-work]') ?? [])];
+    const program = document.querySelector('.program-nav');
+    const programLabel = program?.querySelector('.program-label');
+    if (!header || rows.length < 2 || links.length < 2 || !program || !programLabel) {
+      throw new Error('Homepage section structure is incomplete.');
+    }
 
     return {
       headerRule: getComputedStyle(header).borderBottomWidth,
       internalRule: getComputedStyle(rows[0]).borderBottomWidth,
       trailingRule: getComputedStyle(rows.at(-1)!).borderBottomWidth,
+      programRule: getComputedStyle(program).borderTopWidth,
+      sectionGap: programLabel.getBoundingClientRect().top - links.at(-1)!.getBoundingClientRect().bottom,
     };
   });
 
   expect(rules.headerRule).toBe('1px');
   expect(rules.internalRule).toBe('1px');
   expect(rules.trailingRule).toBe('0px');
+  expect(rules.programRule).toBe('0px');
+  expect(rules.sectionGap).toBeGreaterThanOrEqual(64);
+  expect(rules.sectionGap).toBeLessThanOrEqual(128);
 });
 
 test('homepage content uses contribution-first copy', async ({ page }) => {
