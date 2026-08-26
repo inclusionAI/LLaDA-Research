@@ -59,16 +59,35 @@ test('hero CTA reveals its rule on hover and keyboard focus', async ({ page }) =
   await page.goto('/');
 
   const heroLink = page.locator('.hero-links a').first();
-  const ink = await page.locator('#hero-title').evaluate((element) => getComputedStyle(element).color);
-  await expect(heroLink).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+  const ruleMetrics = async () => heroLink.evaluate((element) => {
+    const linkBox = element.getBoundingClientRect();
+    const textRange = document.createRange();
+    textRange.selectNodeContents(element);
+    const textBox = textRange.getBoundingClientRect();
+    const rule = getComputedStyle(element, '::after');
+    const ruleTop = linkBox.bottom - Number.parseFloat(rule.bottom) - Number.parseFloat(rule.height);
+    return {
+      borderWidth: getComputedStyle(element).borderBottomWidth,
+      content: rule.content,
+      clearance: ruleTop - textBox.bottom,
+      transform: rule.transform,
+    };
+  });
+
+  expect(await ruleMetrics()).toMatchObject({
+    borderWidth: '0px',
+    content: '""',
+    transform: 'matrix(0, 0, 0, 1, 0, 0)',
+  });
+  expect((await ruleMetrics()).clearance).toBeGreaterThanOrEqual(10);
 
   await heroLink.hover();
-  await expect(heroLink).toHaveCSS('border-bottom-color', ink);
+  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(1, 0, 0, 1, 0, 0)');
 
   await page.mouse.move(0, 0);
-  await expect(heroLink).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(0, 0, 0, 1, 0, 0)');
   await heroLink.focus();
-  await expect(heroLink).toHaveCSS('border-bottom-color', ink);
+  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(1, 0, 0, 1, 0, 0)');
 });
 
 test('hero CTA rule stays clear of the denoise field readout', async ({ page }) => {
