@@ -210,7 +210,6 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
     Number.parseInt(getComputedStyle(element).fontWeight, 10)
   ));
   expect(sectionTitleWeight).toBeLessThanOrEqual(workTitleWeight);
-  await expect(page.locator('.selected-work .section-header')).toHaveCSS('border-bottom-width', '1px');
   expect(await fontSize('.desktop-nav a')).toBeGreaterThanOrEqual(12);
 
   await page.goto('/models/');
@@ -289,6 +288,24 @@ test('homepage presents restrained selected work and program navigation', async 
   await expect(page.getByText('Open checkpoints and release details.', { exact: true })).toBeVisible();
   await expect(page.getByText('Methods, results, and technical reports.', { exact: true })).toBeVisible();
   await expect(page.getByText('Research updates and implementation perspectives.', { exact: true })).toBeVisible();
+});
+
+test('selected work heading does not duplicate the publication row dividers', async ({ page }) => {
+  await page.goto('/');
+
+  const rules = await page.locator('.selected-work').evaluate((section) => {
+    const header = section.querySelector('.section-header');
+    const firstRow = section.querySelector('li');
+    if (!header || !firstRow) throw new Error('Selected work structure is incomplete.');
+
+    return {
+      headerRule: getComputedStyle(header).borderBottomWidth,
+      rowRule: getComputedStyle(firstRow).borderBottomWidth,
+    };
+  });
+
+  expect(rules.headerRule).toBe('0px');
+  expect(rules.rowRule).toBe('1px');
 });
 
 test('homepage content uses contribution-first copy', async ({ page }) => {
