@@ -71,6 +71,25 @@ test('hero CTA reveals its rule on hover and keyboard focus', async ({ page }) =
   await expect(heroLink).toHaveCSS('border-bottom-color', ink);
 });
 
+test('hero CTA rule stays clear of the denoise field readout', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/');
+
+  const cta = page.locator('[data-hero-cta]');
+  const firstReadout = page.locator('.field-readout span').first();
+  const [ctaBox, readoutBox] = await Promise.all([cta.boundingBox(), firstReadout.boundingBox()]);
+  expect(ctaBox).not.toBeNull();
+  expect(readoutBox).not.toBeNull();
+
+  const overlaps = !(
+    ctaBox!.x + ctaBox!.width <= readoutBox!.x
+    || readoutBox!.x + readoutBox!.width <= ctaBox!.x
+    || ctaBox!.y + ctaBox!.height <= readoutBox!.y
+    || readoutBox!.y + readoutBox!.height <= ctaBox!.y
+  );
+  expect(overlaps).toBe(false);
+});
+
 test('homepage supporting type is readable at desktop and mobile sizes', async ({ page }) => {
   const expectFontSizeAtLeast = async (selector: string, minimum: number) => {
     const size = await page.locator(selector).first().evaluate((element) => (
