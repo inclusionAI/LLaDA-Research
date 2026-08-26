@@ -59,7 +59,21 @@ test('hero CTA uses an arrow cue without any underline decoration', async ({ pag
   await page.goto('/');
 
   const heroLink = page.locator('.hero-links a').first();
-  const arrow = heroLink.locator('span');
+  const label = heroLink.locator('.hero-link-label');
+  const arrow = heroLink.locator('.hero-link-arrow');
+  await expect(label).toBeVisible();
+  const labelMetrics = await label.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      fontSize: Number.parseFloat(style.fontSize),
+      height: element.getBoundingClientRect().height,
+      overflow: style.overflow,
+      position: style.position,
+      zIndex: style.zIndex,
+    };
+  });
+  expect(labelMetrics.height - labelMetrics.fontSize).toBeGreaterThanOrEqual(8);
+  expect(labelMetrics).toMatchObject({ overflow: 'visible', position: 'relative', zIndex: '1' });
   const decoration = await heroLink.evaluate((element) => ({
     borderWidth: getComputedStyle(element).borderBottomWidth,
     pseudoContent: getComputedStyle(element, '::after').content,
