@@ -72,22 +72,34 @@ test('hero CTA reveals its rule on hover and keyboard focus', async ({ page }) =
 });
 
 test('hero CTA rule stays clear of the denoise field readout', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
-
-  const cta = page.locator('[data-hero-cta]');
-  const firstReadout = page.locator('.field-readout span').first();
-  const [ctaBox, readoutBox] = await Promise.all([cta.boundingBox(), firstReadout.boundingBox()]);
-  expect(ctaBox).not.toBeNull();
-  expect(readoutBox).not.toBeNull();
-
-  const overlaps = !(
-    ctaBox!.x + ctaBox!.width <= readoutBox!.x
-    || readoutBox!.x + readoutBox!.width <= ctaBox!.x
-    || ctaBox!.y + ctaBox!.height <= readoutBox!.y
-    || readoutBox!.y + readoutBox!.height <= ctaBox!.y
+  const intersects = (first: { x: number; y: number; width: number; height: number }, second: typeof first) => !(
+    first.x + first.width <= second.x
+    || second.x + second.width <= first.x
+    || first.y + first.height <= second.y
+    || second.y + second.height <= first.y
   );
-  expect(overlaps).toBe(false);
+
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 900, height: 900 },
+    { width: 820, height: 900 },
+    { width: 701, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+
+    const ctaBox = await page.locator('[data-hero-cta]').boundingBox();
+    const readoutBoxes = await page.locator('.field-readout span').evaluateAll((elements) => (
+      elements.map((element) => {
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return { x, y, width, height };
+      })
+    ));
+    expect(ctaBox).not.toBeNull();
+    expect(readoutBoxes).toHaveLength(2);
+    expect(readoutBoxes.every((box) => !intersects(ctaBox!, box))).toBe(true);
+    expect(intersects(readoutBoxes[0]!, readoutBoxes[1]!)).toBe(false);
+  }
 });
 
 test('homepage supporting type is readable at desktop and mobile sizes', async ({ page }) => {
