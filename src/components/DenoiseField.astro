@@ -146,6 +146,7 @@
     };
     const canvasTrailRetention = 0.8;
     const ambientBaseAlpha = 0.06;
+    const canvasMono = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
 
     const updateDataset = (name: string, value: string) => {
       if (field.dataset[name] !== value) field.dataset[name] = value;
@@ -175,7 +176,7 @@
       const lineGap = mobile ? fontSize * 1.45 : side * 0.18;
       const visibleLines = lines.slice(0, semanticLineCount);
       const tokens: SemanticTokenLayout[] = [];
-      const font = `500 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      const font = `500 ${fontSize}px ${canvasMono}`;
       let semanticCenterY = centerY;
 
       if (mobile) {
@@ -427,7 +428,7 @@
         return;
       }
       if (particle.material === 'mask') {
-        context.font = `${5.5 + particle.depth * 1.5}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+        context.font = `${5.5 + particle.depth * 1.5}px ${canvasMono}`;
         context.fillStyle = `rgba(${channels}, ${alpha * 0.26})`;
         context.fillText(maskGlyphs[particle.index % maskGlyphs.length], x, y);
         return;
@@ -441,7 +442,7 @@
       const stage = tokenStageForInfluence(influence);
       if (stage === 'noise') return false;
       const glyphs = stage === 'mask' ? maskGlyphs : stage === 'partial' ? partialGlyphs : resolvedGlyphs;
-      context.font = `${stage === 'resolved' ? 9 : 7}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      context.font = `${stage === 'resolved' ? 9 : 7}px ${canvasMono}`;
       context.fillStyle = `rgba(82, 122, 104, ${Math.min(0.42, 0.1 + influence * 0.32)})`;
       context.fillText(glyphs[particle.index % glyphs.length], particle.x, particle.y);
       return true;

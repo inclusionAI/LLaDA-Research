@@ -146,6 +146,51 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   expect(await fontSize('.about-copy > p:not(.eyebrow)')).toBeGreaterThanOrEqual(16);
 });
 
+test('editorial type roles use loaded self-hosted fonts and restrained spacing', async ({ page }) => {
+  await page.goto('/');
+
+  const metrics = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const style = (selector: string) => getComputedStyle(document.querySelector<HTMLElement>(selector)!);
+    const ratio = (value: string, fontSize: string) => Number.parseFloat(value) / Number.parseFloat(fontSize);
+    const firstFamily = (value: string) => value.split(',')[0]!.trim().replaceAll('"', '');
+    const families = [...document.fonts].map((face) => face.family.replaceAll('"', ''));
+    const body = style('body');
+    const heading = style('.hero-copy h1');
+    const metadata = style('.hero-kicker');
+    const fontResources = performance.getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .filter((name) => /\.(?:woff2?|ttf)(?:\?|$)/.test(name));
+
+    return {
+      families,
+      bodyFamily: firstFamily(body.fontFamily),
+      headingFamily: firstFamily(heading.fontFamily),
+      metadataFamily: firstFamily(metadata.fontFamily),
+      bodyLeading: ratio(body.lineHeight, body.fontSize),
+      metadataTracking: ratio(metadata.letterSpacing, metadata.fontSize),
+      heroTracking: ratio(heading.letterSpacing, heading.fontSize),
+      fontSynthesis: body.fontSynthesis,
+      fontResources,
+      origin: location.origin,
+    };
+  });
+
+  expect(metrics.families).toContain('Inter Variable');
+  expect(metrics.families).toContain('Source Serif 4 Variable');
+  expect(metrics.families).toContain('IBM Plex Mono');
+  expect(metrics.bodyFamily).toBe('Inter Variable');
+  expect(metrics.headingFamily).toBe('Source Serif 4 Variable');
+  expect(metrics.metadataFamily).toBe('IBM Plex Mono');
+  expect(metrics.bodyLeading).toBeGreaterThanOrEqual(1.55);
+  expect(metrics.bodyLeading).toBeLessThanOrEqual(1.7);
+  expect(metrics.metadataTracking).toBeLessThanOrEqual(0.065);
+  expect(metrics.heroTracking).toBeGreaterThanOrEqual(-0.045);
+  expect(metrics.fontSynthesis).toBe('none');
+  expect(metrics.fontResources.length).toBeGreaterThanOrEqual(3);
+  expect(metrics.fontResources.every((url) => new URL(url).origin === metrics.origin)).toBe(true);
+});
+
 test('homepage presents restrained selected work and program navigation', async ({ page }) => {
   await page.goto('/');
 
@@ -486,7 +531,7 @@ test('semantic particle type uses two readable intentional lines', async ({ page
 test('same-canvas semantic skeleton reconnects resolved particle strokes', async ({ page }) => {
   await page.addInitScript(() => {
     const originalFillText = CanvasRenderingContext2D.prototype.fillText;
-    const draws: Array<{ text: string; state: string | null }> = [];
+    const draws: Array<{ text: string; state: string | null; font: string }> = [];
     Object.defineProperty(window, '__semanticCanvasTextDraws', { value: draws });
     CanvasRenderingContext2D.prototype.fillText = function fillText(
       text: string,
@@ -496,7 +541,7 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
     ) {
       const owner = this.canvas.closest<HTMLElement>('[data-denoise-field]');
       if (this.canvas.isConnected && owner) {
-        draws.push({ text: String(text), state: owner.dataset.coherenceState || null });
+        draws.push({ text: String(text), state: owner.dataset.coherenceState || null, font: this.font });
         if (draws.length > 400) draws.splice(0, draws.length - 400);
       }
       return maxWidth === undefined
@@ -524,7 +569,7 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
   }), { timeout: 3_500 }).toBe(true);
   await expect.poll(async () => page.evaluate(() => {
     const draws = (window as typeof window & {
-      __semanticCanvasTextDraws: Array<{ text: string; state: string | null }>;
+      __semanticCanvasTextDraws: Array<{ text: string; state: string | null; font: string }>;
     }).__semanticCanvasTextDraws.filter((draw) => draw.state === 'resolved');
     const text = draws
       .map((draw) => draw.text)
@@ -537,7 +582,7 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
   }), { timeout: 3_500 }).toBe('LANGUAGE FORMS / TOKENS RESOLVE');
   await expect.poll(async () => page.evaluate(() => {
     const draws = (window as typeof window & {
-      __semanticCanvasTextDraws: Array<{ text: string; state: string | null }>;
+      __semanticCanvasTextDraws: Array<{ text: string; state: string | null; font: string }>;
     }).__semanticCanvasTextDraws.filter((draw) => draw.state === 'resolved');
     const text = draws
       .map((draw) => draw.text)
@@ -548,6 +593,12 @@ test('same-canvas semantic skeleton reconnects resolved particle strokes', async
     }
     return '';
   }), { timeout: 3_500 }).toBe('LANGUAGE ADAPTS / TOKENS EDIT');
+  await expect.poll(async () => page.evaluate(() => {
+    const draws = (window as typeof window & {
+      __semanticCanvasTextDraws: Array<{ text: string; state: string | null; font: string }>;
+    }).__semanticCanvasTextDraws;
+    return draws.some((draw) => draw.font.includes('IBM Plex Mono'));
+  })).toBe(true);
   await expect(field.locator('canvas')).toHaveCount(1);
 });
 
@@ -675,6 +726,24 @@ test('detail editorial hierarchy keeps long-form reading roles distinct', async 
   expect(metrics.summaryLineRatio).toBeGreaterThanOrEqual(1.7);
   expect(metrics.proseMeasure).toBeLessThanOrEqual(704);
   expect(metrics.resourceHeight).toBeGreaterThanOrEqual(44);
+});
+
+test('long detail titles keep an editorial measure on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/papers/llada-2-2/');
+
+  const title = await page.locator('.content-header h1').evaluate((element) => {
+    const style = getComputedStyle(element);
+    const box = element.getBoundingClientRect();
+    const lineHeight = Number.parseFloat(style.lineHeight);
+    return {
+      fontSize: Number.parseFloat(style.fontSize),
+      lineCount: box.height / lineHeight,
+    };
+  });
+
+  expect(title.fontSize).toBeGreaterThanOrEqual(40);
+  expect(title.lineCount).toBeLessThanOrEqual(6);
 });
 
 test('token artwork is decorative and leaves one named research link', async ({ page }) => {

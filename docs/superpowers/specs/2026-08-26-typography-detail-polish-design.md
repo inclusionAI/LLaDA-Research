@@ -6,7 +6,7 @@ Refine the existing light academic editorial system without changing navigation,
 
 ## Design tokens and foundations
 
-- Self-host three Latin font roles: Inter Variable for interface and body copy, Source Serif 4 Variable for editorial headings, and IBM Plex Mono Variable for metadata and scientific notation.
+- Self-host three Latin font roles: Inter Variable for interface and body copy, Source Serif 4 Variable for editorial headings, and IBM Plex Mono for metadata and scientific notation.
 - Keep metadata at 12px minimum and interface labels at 13px minimum.
 - Reduce uppercase metadata tracking from `0.08em` to `0.055em`; use `0.02em` for technical readouts.
 - Use `-0.022em` for editorial titles and `-0.042em` only for hero display type.

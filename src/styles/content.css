@@ -1,10 +1,10 @@
 .content-header { padding-block: clamp(var(--space-8), 8vw, var(--space-12)) var(--space-6); border-bottom: 1px solid var(--line); }
 .content-header h1 {
   max-width: 19ch; margin: var(--space-1) 0 var(--space-3);
-  font-size: var(--text-page); font-weight: 400; line-height: var(--leading-page); letter-spacing: var(--tracking-title);
+  font-size: var(--text-detail); font-weight: 400; line-height: var(--leading-detail); letter-spacing: var(--tracking-title);
 }
 .content-summary { max-width: 48rem; margin: 0; color: var(--muted); font-size: var(--text-lead); line-height: var(--leading-lead); }
-.content-meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: center; margin-top: var(--space-4); color: var(--muted); font-family: var(--font-mono); font-size: var(--text-meta); line-height: var(--leading-meta); letter-spacing: 0.04em; }
+.content-meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: center; margin-top: var(--space-4); color: var(--muted); font-family: var(--font-mono); font-size: var(--text-meta); line-height: var(--leading-meta); letter-spacing: var(--tracking-technical); }
 .content-body { display: grid; grid-template-columns: minmax(0, 44rem) minmax(12rem, 1fr); column-gap: clamp(var(--space-5), 7vw, 7rem); row-gap: 0; align-items: start; padding-block: var(--space-8) var(--space-12); }
 .prose { min-width: 0; max-width: 44rem; color: var(--ink-soft); font-size: var(--text-reading); line-height: var(--leading-reading); }
 .prose > :first-child { margin-top: 0; }
@@ -15,7 +15,7 @@
 .prose pre { overflow-x: auto; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font-size: var(--text-label); line-height: var(--leading-small); }
 .prose code:not(pre code) { padding: 0.14rem 0.35rem; border: 1px solid var(--line); border-radius: 0.2rem; background: var(--surface-soft); font-size: 0.88em; }
 .prose blockquote { margin: var(--space-4) 0; padding: var(--space-1) 0 var(--space-1) var(--space-3); border-left: 1px solid var(--ink-soft); color: var(--muted); font-size: var(--text-body); }
-.prose img { width: 100%; margin-block: 2.4rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.prose img { width: 100%; margin-block: var(--space-5); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .content-aside { position: sticky; top: calc(var(--header-height) + 2rem); }
 .content-related { grid-column: 1 / -1; min-width: 0; }
 @media (max-width: 850px) {
