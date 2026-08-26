@@ -9,7 +9,7 @@ const base = import.meta.env.BASE_URL;
   <DenoiseField />
   <div class="hero-copy">
     <p class="hero-kicker">LLaDA / Diffusion Language Models</p>
-    <h1 id="hero-title">Language takes shape.</h1>
+    <h1 id="hero-title">Beyond next-token prediction.</h1>
     <p class="hero-summary">We study how language and multimodal systems emerge through iterative diffusion and editing.</p>
     <div class="hero-links">
       <a href={withBase(base, 'papers/')} data-hero-cta>
@@ -27,7 +27,7 @@ const base = import.meta.env.BASE_URL;
     position: relative;
     display: flex;
     align-items: center;
-    height: clamp(24rem, 55vh, 42rem);
+    height: clamp(24rem, 60vh, 42rem);
     overflow: hidden;
   }
 
@@ -116,20 +116,31 @@ const base = import.meta.env.BASE_URL;
   @media (max-width: 800px) {
     .research-hero {
       align-items: flex-end;
-      height: clamp(22.5rem, 62svh, 32rem);
-      padding-bottom: 3.2rem;
+      height: clamp(23.5rem, 70svh, 34rem);
+      padding-bottom: var(--space-5);
     }
 
     .hero-copy {
       width: 84%;
     }
 
+    .hero-kicker {
+      margin-bottom: var(--space-1);
+    }
+
     h1 {
       font-size: var(--text-hero-mobile);
+      line-height: 0.94;
     }
 
     .hero-summary {
       max-width: 18rem;
+      margin-top: var(--space-2);
+      line-height: 1.55;
+    }
+
+    .hero-links {
+      margin-top: var(--space-2);
     }
   }
 </style>

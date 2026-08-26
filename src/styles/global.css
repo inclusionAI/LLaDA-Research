@@ -35,8 +35,8 @@
   --text-section: clamp(2rem, 3.2vw, 2.75rem);
   --text-detail: clamp(2.75rem, 6vw, 5.25rem);
   --text-page: clamp(3rem, 7vw, 6rem);
-  --text-hero: clamp(3.75rem, 7.5vw, 7.25rem);
-  --text-hero-mobile: clamp(3.75rem, 17vw, 6rem);
+  --text-hero: clamp(3.5rem, 6.25vw, 6.5rem);
+  --text-hero-mobile: clamp(2.5rem, 12vw, 4.75rem);
   --leading-meta: 1.125rem;
   --leading-label: 1.25rem;
   --leading-small: 1.375rem;

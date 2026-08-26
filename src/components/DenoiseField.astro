@@ -186,7 +186,7 @@
         const linksBottom = linksBounds ? linksBounds.bottom - fieldBounds.top : height * 0.76;
         const inkHalfHeight = lineGap * (visibleLines.length - 1) / 2 + fontSize * 0.55;
         const minimumCenter = linksBottom + 4 + inkHalfHeight;
-        const maximumCenter = height - 4 - inkHalfHeight;
+        const maximumCenter = height - 12 - inkHalfHeight;
         semanticCenterY = Math.max(
           minimumCenter,
           Math.min(maximumCenter, (linksBottom + height) / 2),

@@ -8,7 +8,7 @@ test('homepage presents a focused research proposition and three-layer index', a
     await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
   }
 
-  await expect(page.getByRole('heading', { name: 'Language takes shape.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Beyond next-token prediction.', exact: true })).toBeVisible();
   await expect(page.locator('[data-denoise-field]')).toBeVisible();
   expect(await page.locator('[data-research-updates]').count()).toBe(0);
   expect(await page.locator('[data-update-entry]').count()).toBe(0);
@@ -123,6 +123,34 @@ test('hero CTA stays clear of the denoise field readout', async ({ page }) => {
     expect(readoutBoxes).toHaveLength(2);
     expect(readoutBoxes.every((box) => !intersects(ctaBox!, box))).toBe(true);
     expect(intersects(readoutBoxes[0]!, readoutBoxes[1]!)).toBe(false);
+  }
+});
+
+test('hero CTA remains fully inside the clipped hero at every layout breakpoint', async ({ page }) => {
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 900, height: 900 },
+    { width: 820, height: 900 },
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const [heroBox, copyBox, titleBox, labelBox] = await Promise.all([
+      page.locator('.research-hero').boundingBox(),
+      page.locator('.hero-copy').boundingBox(),
+      page.locator('#hero-title').boundingBox(),
+      page.locator('.hero-link-label').boundingBox(),
+    ]);
+    expect(heroBox).not.toBeNull();
+    expect(copyBox).not.toBeNull();
+    expect(titleBox).not.toBeNull();
+    expect(labelBox).not.toBeNull();
+    expect(copyBox!.y).toBeGreaterThanOrEqual(heroBox!.y + 8);
+    expect(copyBox!.y + copyBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height - 8);
+    expect(titleBox!.y).toBeGreaterThanOrEqual(heroBox!.y + 8);
+    expect(labelBox!.y).toBeGreaterThanOrEqual(heroBox!.y + 8);
+    expect(labelBox!.y + labelBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height - 8);
   }
 });
 
@@ -1131,7 +1159,7 @@ test('editorial type roles and touch targets follow the shared system', async ({
   expect(metrics.filterHeight).toBeGreaterThanOrEqual(44);
   expect(metrics.textBodyToken).toBe('1rem');
   expect(metrics.spaceSixToken).toBe('3rem');
-  expect(metrics.mobileHeroToken).toBe('clamp(3.75rem, 17vw, 6rem)');
+  expect(metrics.mobileHeroToken).toBe('clamp(2.5rem, 12vw, 4.75rem)');
 });
 
 test('primary content routes are reachable', async ({ page }) => {
