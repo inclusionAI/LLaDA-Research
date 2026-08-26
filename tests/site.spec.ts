@@ -55,42 +55,33 @@ test('site chrome uses the approved black LLaDA wordmark through base-safe paths
   expect(headerBox!.width / headerBox!.height).toBeGreaterThan(3);
 });
 
-test('hero CTA reveals its rule on hover and keyboard focus', async ({ page }) => {
+test('hero CTA uses an arrow cue without any underline decoration', async ({ page }) => {
   await page.goto('/');
 
   const heroLink = page.locator('.hero-links a').first();
-  const ruleMetrics = async () => heroLink.evaluate((element) => {
-    const linkBox = element.getBoundingClientRect();
-    const textRange = document.createRange();
-    textRange.selectNodeContents(element);
-    const textBox = textRange.getBoundingClientRect();
-    const rule = getComputedStyle(element, '::after');
-    const ruleTop = linkBox.bottom - Number.parseFloat(rule.bottom) - Number.parseFloat(rule.height);
-    return {
-      borderWidth: getComputedStyle(element).borderBottomWidth,
-      content: rule.content,
-      clearance: ruleTop - textBox.bottom,
-      transform: rule.transform,
-    };
-  });
-
-  expect(await ruleMetrics()).toMatchObject({
+  const arrow = heroLink.locator('span');
+  const decoration = await heroLink.evaluate((element) => ({
+    borderWidth: getComputedStyle(element).borderBottomWidth,
+    pseudoContent: getComputedStyle(element, '::after').content,
+    textDecorationLine: getComputedStyle(element).textDecorationLine,
+  }));
+  expect(decoration).toEqual({
     borderWidth: '0px',
-    content: '""',
-    transform: 'matrix(0, 0, 0, 1, 0, 0)',
+    pseudoContent: 'none',
+    textDecorationLine: 'none',
   });
-  expect((await ruleMetrics()).clearance).toBeGreaterThanOrEqual(10);
+  await expect(arrow).toHaveCSS('transform', 'none');
 
   await heroLink.hover();
-  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(1, 0, 0, 1, 0, 0)');
+  await expect(arrow).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 2, -2)');
 
   await page.mouse.move(0, 0);
-  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(0, 0, 0, 1, 0, 0)');
+  await expect(arrow).toHaveCSS('transform', 'none');
   await heroLink.focus();
-  await expect.poll(async () => (await ruleMetrics()).transform).toBe('matrix(1, 0, 0, 1, 0, 0)');
+  await expect(arrow).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 2, -2)');
 });
 
-test('hero CTA rule stays clear of the denoise field readout', async ({ page }) => {
+test('hero CTA stays clear of the denoise field readout', async ({ page }) => {
   const intersects = (first: { x: number; y: number; width: number; height: number }, second: typeof first) => !(
     first.x + first.width <= second.x
     || second.x + second.width <= first.x

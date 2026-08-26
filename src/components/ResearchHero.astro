@@ -84,28 +84,19 @@ const base = import.meta.env.BASE_URL;
     transition: color var(--motion-fast);
   }
 
-  .hero-links a::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 1px;
-    background: currentColor;
-    content: '';
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform var(--motion-fast);
-  }
-
   .hero-links a:hover,
   .hero-links a:focus-visible {
     color: var(--hero-ink);
   }
 
-  .hero-links a:hover::after,
-  .hero-links a:focus-visible::after {
-    transform: scaleX(1);
-    transform-origin: left;
+  .hero-links a span {
+    display: inline-block;
+    transition: transform var(--motion-fast);
+  }
+
+  .hero-links a:hover span,
+  .hero-links a:focus-visible span {
+    transform: translate(2px, -2px);
   }
 
   @media (max-width: 800px) {
