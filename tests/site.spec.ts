@@ -382,7 +382,12 @@ test('mobile archive cards reserve the full row for readable copy', async ({ pag
       expect(cardBox, `${path} card at ${width}px`).not.toBeNull();
       expect(copyBox, `${path} copy at ${width}px`).not.toBeNull();
       expect(copyBox!.width / cardBox!.width, `${path} copy measure at ${width}px`).toBeGreaterThanOrEqual(0.85);
-      expect(copyBox!.y, `${path} copy should follow its compact art band at ${width}px`).toBeGreaterThan(cardBox!.y);
+      const hasArt = await card.locator('.card-art').count();
+      if (hasArt > 0) {
+        expect(copyBox!.y, `${path} copy should follow its compact art band at ${width}px`).toBeGreaterThan(cardBox!.y);
+      } else {
+        expect(copyBox!.y, `${path} copy starts at card top at ${width}px`).toBeGreaterThanOrEqual(cardBox!.y);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         await page.evaluate(() => document.documentElement.clientWidth + 1),
       );

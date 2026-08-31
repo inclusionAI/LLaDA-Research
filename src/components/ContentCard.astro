@@ -49,6 +49,8 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     transition: border-color 180ms ease;
   }
 
+  .content-card:first-child { border-top: 0; }
+
   .content-card:hover { border-color: var(--line-strong); }
 
   .card-art {
