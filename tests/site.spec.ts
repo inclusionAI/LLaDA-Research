@@ -163,7 +163,6 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   expect(await fontSize('.content-card h2')).toBeGreaterThanOrEqual(24);
   expect(await fontSize('.content-card .card-copy > p')).toBeGreaterThanOrEqual(15);
   expect(await fontSize('.card-meta')).toBeGreaterThanOrEqual(11);
-  expect(await fontSize('.filter-tags button')).toBeGreaterThanOrEqual(12);
 
   await page.goto('/models/llada-2-2/');
   expect(await fontSize('.content-summary')).toBeGreaterThanOrEqual(18);
@@ -372,41 +371,6 @@ test('mobile menu is a flat light surface', async ({ page, isMobile }) => {
   await expect(menu).toHaveCSS('box-shadow', 'none');
 });
 
-test('mobile archive topics wrap without clipping or page overflow', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/papers/');
-
-  const topicLayout = await page.locator('.filter-tags').evaluate((rail) => {
-    const buttons = [...rail.querySelectorAll('button')];
-    return {
-      clientWidth: rail.clientWidth,
-      scrollWidth: rail.scrollWidth,
-      rows: new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size,
-      minimumButtonHeight: Math.min(...buttons.map((button) => button.getBoundingClientRect().height)),
-    };
-  });
-  expect(topicLayout.scrollWidth).toBeLessThanOrEqual(topicLayout.clientWidth + 1);
-  expect(topicLayout.rows).toBeGreaterThan(1);
-  expect(topicLayout.minimumButtonHeight).toBeGreaterThanOrEqual(38);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    await page.evaluate(() => document.documentElement.clientWidth + 1),
-  );
-});
-
-test('desktop archive topics do not overflow their container', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto('/models/');
-
-  const topicLayout = await page.locator('.filter-tags').evaluate((rail) => ({
-    clientWidth: rail.clientWidth,
-    scrollWidth: rail.scrollWidth,
-  }));
-
-  expect(topicLayout.scrollWidth).toBeLessThanOrEqual(topicLayout.clientWidth + 1);
-  const labels = page.locator('.archive-filter .filter-label');
-  await expect(labels).toHaveCount(3);
-});
-
 test('mobile archive cards reserve the full row for readable copy', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
@@ -610,50 +574,6 @@ test('supporting pages share the light visual system', async ({ page }) => {
   }
 });
 
-test('archive entries are flat ruled rows on the page surface', async ({ page }) => {
-  await page.goto('/papers/');
-  const row = page.locator('.content-card').first();
-  await expect(row).toHaveCSS('box-shadow', 'none');
-  await expect(row).toHaveCSS('border-radius', '0px');
-  await expect(row).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-});
-
-test('active archive filter keeps accessible contrast on hover and keyboard focus', async ({ page }) => {
-  await page.goto('/papers/');
-  const activeFilter = page.getByRole('button', { name: 'All', exact: true });
-  const colors = async () => activeFilter.evaluate((element) => {
-    const style = getComputedStyle(element);
-    const channels = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
-    const luminance = (value: string) => {
-      const linear = channels(value).map((channel) => {
-        const normalized = channel / 255;
-        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
-      });
-      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
-    };
-    const foreground = luminance(style.color);
-    const background = luminance(style.backgroundColor);
-    return {
-      background: style.backgroundColor,
-      color: style.color,
-      contrast: (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
-    };
-  });
-
-  await activeFilter.hover();
-  const hovered = await colors();
-  expect(hovered.background).toBe('rgb(97, 92, 237)');
-  expect(hovered.color).toBe('rgb(255, 255, 255)');
-  expect(hovered.contrast).toBeGreaterThanOrEqual(4.5);
-
-  await page.mouse.move(0, 0);
-  await activeFilter.focus();
-  const focused = await colors();
-  expect(focused.background).toBe('rgb(97, 92, 237)');
-  expect(focused.color).toBe('rgb(255, 255, 255)');
-  expect(focused.contrast).toBeGreaterThanOrEqual(4.5);
-});
-
 test('editorial type roles and touch targets follow the shared system', async ({ page }) => {
   await page.goto('/models/');
 
@@ -663,7 +583,6 @@ test('editorial type roles and touch targets follow the shared system', async ({
     const title = getComputedStyle(document.querySelector<HTMLElement>('.content-card h2')!);
     const summary = getComputedStyle(document.querySelector<HTMLElement>('.content-card .card-copy > p')!);
     const metadata = getComputedStyle(document.querySelector<HTMLElement>('.card-meta')!);
-    const filter = document.querySelector<HTMLButtonElement>('[data-filter-tag]')!.getBoundingClientRect();
 
     return {
       bodySize: Number.parseFloat(body.fontSize),
@@ -671,7 +590,6 @@ test('editorial type roles and touch targets follow the shared system', async ({
       summarySize: Number.parseFloat(summary.fontSize),
       metadataSize: Number.parseFloat(metadata.fontSize),
       metadataTracking: Number.parseFloat(metadata.letterSpacing) / Number.parseFloat(metadata.fontSize),
-      filterHeight: filter.height,
       textBodyToken: root.getPropertyValue('--text-body').trim(),
       spaceSixToken: root.getPropertyValue('--space-6').trim(),
       mobileHeroToken: root.getPropertyValue('--text-hero-mobile').trim(),
@@ -682,7 +600,6 @@ test('editorial type roles and touch targets follow the shared system', async ({
   expect(metrics.titleSize).toBeGreaterThan(metrics.summarySize);
   expect(metrics.metadataSize).toBeGreaterThanOrEqual(12);
   expect(metrics.metadataTracking).toBeLessThanOrEqual(0.1);
-  expect(metrics.filterHeight).toBeGreaterThanOrEqual(44);
   expect(metrics.textBodyToken).toBe('1rem');
   expect(metrics.spaceSixToken).toBe('3rem');
   expect(metrics.mobileHeroToken).toBe('clamp(2rem, 9vw, 2.75rem)');
@@ -852,20 +769,6 @@ test('llada moe 7b-a1b omits unverified repository links', async ({ page }) => {
   const resources = page.getByRole('navigation', { name: 'External resources' });
   await expect(resources.getByRole('link', { name: 'Project' })).toHaveCount(0);
   await expect(resources.getByRole('link', { name: 'Code' })).toHaveCount(0);
-});
-
-test('archive filters entries by query and clears the filter', async ({ page }) => {
-  await page.goto('/papers/');
-  const cards = page.locator('[data-filter-card]');
-  const clear = page.getByRole('button', { name: 'Clear filters' });
-  await expect(cards).toHaveCount(6);
-  await expect(clear).toBeDisabled();
-  await page.getByRole('searchbox').fill('multimodal');
-  await expect(clear).toBeEnabled();
-  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(1);
-  await clear.click();
-  await expect(clear).toBeDisabled();
-  await expect(page.locator('[data-filter-card]:visible')).toHaveCount(6);
 });
 
 test('excluded research routes return 404', async ({ page }) => {

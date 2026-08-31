@@ -1,7 +1,8 @@
 ---
 /**
- * Lightweight floating-dot background for the homepage hero.
- * Pure canvas, no dependencies, ~50 dots drifting slowly.
+ * Diffusion-pulse hero background.
+ * Concentric rings expand outward from random seeds, fade as they grow — evoking
+ * the iterative denoising process. Accent-tinted, subtle on white.
  * Respects prefers-reduced-motion.
  */
 ---
@@ -11,25 +12,30 @@
 <script>
   const el = document.querySelector<HTMLCanvasElement>('[data-hero-bg]')!;
   const ctx = el.getContext('2d')!;
-
   const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const DOT_COUNT = 50;
-  const MAX_R = 2.5;
-  const SPD = prefersReduced ? 0 : 0.15;
-  const C1 = 'rgba(97, 92, 237, 0.12)';
-  const C2 = 'rgba(170, 170, 180, 0.08)';
 
-  type Dot = { x: number; y: number; vx: number; vy: number; r: number; c: string };
-  const dots: Dot[] = [];
+  const RING_INTERVAL = 1200;          /* ms between new ring spawns */
+  const MAX_RINGS = 18;
+  const EXPAND_SPEED = 0.35;           /* px per frame */
+  const MAX_RADIUS_RATIO = 0.45;       /* fraction of canvas diagonal */
+  const BASE_ALPHA = 0.07;
+  const ACCENT = [97, 92, 237];        /* #615ced */
+  const MUTED  = [180, 180, 195];
+
+  type Ring = { cx: number; cy: number; r: number; maxR: number; rgb: number[]; phase: number };
+  const rings: Ring[] = [];
   let w = 0;
   let h = 0;
+  let diag = 0;
   let raf = 0;
+  let lastSpawn = 0;
 
   function resize() {
     const rect = el.parentElement!.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio, 2);
     w = rect.width;
     h = rect.height;
+    diag = Math.hypot(w, h);
     el.width = w * dpr;
     el.height = h * dpr;
     el.style.width = `${w}px`;
@@ -37,45 +43,71 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function seed() {
-    resize();
-    dots.length = 0;
-    for (let i = 0; i < DOT_COUNT; i++) {
-      dots.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * SPD * 2,
-        vy: (Math.random() - 0.5) * SPD * 2,
-        r: Math.random() * MAX_R + 0.5,
-        c: Math.random() > 0.4 ? C1 : C2,
-      });
-    }
+  function spawnRing() {
+    if (rings.length >= MAX_RINGS) return;
+    rings.push({
+      cx: w * (0.15 + Math.random() * 0.7),
+      cy: h * (0.1 + Math.random() * 0.8),
+      r: 0,
+      maxR: diag * (MAX_RADIUS_RATIO * (0.6 + Math.random() * 0.4)),
+      rgb: Math.random() > 0.35 ? ACCENT : MUTED,
+      phase: Math.random() * Math.PI * 2,
+    });
   }
 
-  function frame() {
+  function frame(t: number) {
     ctx.clearRect(0, 0, w, h);
-    for (const d of dots) {
-      d.x += d.vx;
-      d.y += d.vy;
-      if (d.x < -10) d.x = w + 10;
-      if (d.x > w + 10) d.x = -10;
-      if (d.y < -10) d.y = h + 10;
-      if (d.y > h + 10) d.y = -10;
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      ctx.fillStyle = d.c;
-      ctx.fill();
+
+    /* spawn new rings periodically */
+    if (!prefersReduced && t - lastSpawn > RING_INTERVAL) {
+      spawnRing();
+      lastSpawn = t;
     }
+
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const ring = rings[i]!;
+      ring.r += EXPAND_SPEED + ring.r * 0.002;   /* accelerate slightly as it grows */
+      const life = ring.r / ring.maxR;            /* 0 → 1 */
+      if (life >= 1) { rings.splice(i, 1); continue; }
+
+      const alpha = BASE_ALPHA * (1 - life * life);   /* fade out quadratically */
+      const lineW = Math.max(0.5, 1.5 * (1 - life));
+      const [cr, cg, cb] = ring.rgb;
+
+      ctx.beginPath();
+      ctx.arc(ring.cx, ring.cy, ring.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha})`;
+      ctx.lineWidth = lineW;
+      ctx.stroke();
+
+      /* faint filled glow for the inner area of young rings */
+      if (life < 0.3) {
+        ctx.beginPath();
+        ctx.arc(ring.cx, ring.cy, ring.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha * 0.25})`;
+        ctx.fill();
+      }
+    }
+
     raf = requestAnimationFrame(frame);
   }
 
-  seed();
-  frame();
-  if (prefersReduced) cancelAnimationFrame(raf);
+  resize();
+  /* seed a few rings so it's not empty on load */
+  for (let i = 0; i < 6; i++) {
+    spawnRing();
+    /* stagger initial sizes so they don't all start at r=0 */
+    rings[i]!.r = diag * MAX_RADIUS_RATIO * Math.random() * 0.5;
+  }
+  raf = requestAnimationFrame(frame);
+  if (prefersReduced) {
+    frame(0);
+    cancelAnimationFrame(raf);
+  }
 
   addEventListener('resize', () => {
     resize();
-    if (prefersReduced) { frame(); cancelAnimationFrame(raf); }
+    if (prefersReduced) { frame(0); cancelAnimationFrame(raf); }
   });
 </script>
 
