@@ -78,10 +78,10 @@ const { tags, total } = Astro.props;
 <style>
   .archive-filter {
     display: grid;
-    grid-template-columns: minmax(15rem, 0.8fr) minmax(0, 1.4fr) auto;
-    gap: var(--space-3);
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
     align-items: start;
-    margin-block: var(--space-4);
+    margin-block: var(--space-3);
     padding-block: var(--space-2);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
@@ -160,16 +160,16 @@ const { tags, total } = Astro.props;
   }
 
   .filter-summary {
-    justify-items: end;
     color: var(--muted);
     font-size: var(--type-label);
     line-height: var(--leading-label);
   }
 
   .filter-result-row {
-    display: grid;
-    gap: var(--space-1);
-    justify-items: end;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: space-between;
   }
 
   [data-filter-clear] {
@@ -184,23 +184,6 @@ const { tags, total } = Astro.props;
     color: var(--muted);
     cursor: default;
     opacity: 0.45;
-  }
-
-  @media (max-width: 900px) {
-    .archive-filter {
-      grid-template-columns: 1fr;
-      align-items: stretch;
-    }
-
-    .filter-summary {
-      justify-items: start;
-    }
-
-    .filter-result-row {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-    }
   }
 
 </style>

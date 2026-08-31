@@ -16,25 +16,14 @@ interface Props {
 const { href, title, summary, date, tags, meta = 'Research', cover, links } = Astro.props;
 const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) : undefined;
-const titleTokens = title
-  .replace(/[^A-Za-z0-9.\- ]/g, ' ')
-  .split(/\s+/)
-  .filter(Boolean)
-  .slice(0, 5);
 ---
 
 <article class="content-card" data-filter-card data-title={title.toLowerCase()} data-tags={JSON.stringify(tags.map((tag) => tag.toLowerCase()))}>
-  <div class="card-art" aria-hidden="true">
-    {resolvedCover ? (
+  {resolvedCover && (
+    <div class="card-art" aria-hidden="true">
       <img src={resolvedCover} alt="" width="420" height="300" loading="lazy" />
-    ) : (
-      <span class="token-art" aria-hidden="true">
-        <span class="token-seed token-prompt">[MASK] →</span>
-        <span class="token-output">{titleTokens.join(' ') || 'LLaDA'}</span>
-        <span class="token-index">{date.getFullYear()} / {String(date.getMonth() + 1).padStart(2, '0')}</span>
-      </span>
-    )}
-  </div>
+    </div>
+  )}
   <div class="card-copy">
     <div class="card-meta">
       <span>{meta}</span>
@@ -55,7 +44,7 @@ const titleTokens = title
 <style>
   .content-card {
     display: grid;
-    grid-template-columns: minmax(11rem, 28%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     overflow: hidden;
     border-top: 1px solid var(--line);
     border-radius: 0;
@@ -69,7 +58,8 @@ const titleTokens = title
   .card-art {
     position: relative;
     display: block;
-    min-height: 13rem;
+    max-height: 13rem;
+    margin-top: var(--space-3);
     background: var(--surface);
   }
 
@@ -79,66 +69,11 @@ const titleTokens = title
     object-fit: cover;
   }
 
-  .token-art {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: var(--space-1);
-    row-gap: var(--space-1);
-    align-content: center;
-    align-items: baseline;
-    padding: var(--space-3);
-    overflow: hidden;
-    border-right: 1px solid var(--line);
-    background: var(--surface);
-    font-family: var(--font-mono);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
-    letter-spacing: var(--tracking-technical);
-  }
-
-  .token-art::after {
-    position: absolute;
-    width: 8rem;
-    height: 8rem;
-    right: -3rem;
-    bottom: -3rem;
-    border: 1px solid var(--line-strong);
-    border-radius: 50%;
-    content: "";
-    opacity: 0.45;
-  }
-
-  .token-art > * { position: relative; z-index: 1; }
-
-  .token-prompt {
-    grid-column: 1;
-    grid-row: 1;
-    color: var(--ink-soft);
-    white-space: nowrap;
-  }
-
-  .token-output {
-    grid-column: 2;
-    grid-row: 1;
-    color: var(--ink);
-    overflow-wrap: anywhere;
-  }
-
-  .token-index {
-    grid-column: 2;
-    grid-row: 2;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-
   .card-copy {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: clamp(var(--space-3), 3vw, var(--space-4));
+    padding: clamp(var(--space-3), 3vw, var(--space-4)) 0;
   }
 
   .card-meta {
@@ -159,7 +94,7 @@ const titleTokens = title
   }
 
   h2 {
-    max-width: 28ch;
+    max-width: 40ch;
     margin: var(--space-1) 0 var(--space-1);
     font-size: var(--text-title-md);
     font-weight: 500;
@@ -169,7 +104,7 @@ const titleTokens = title
   }
 
   h2 a:hover {
-    color: var(--accent-deep);
+    color: var(--accent);
   }
 
   h2 a {
@@ -207,25 +142,7 @@ const titleTokens = title
     font-weight: 600;
   }
 
-  @media (max-width: 650px) {
-    .content-card {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .card-art {
-      min-height: 5rem;
-      height: 5rem;
-      margin-top: var(--space-2);
-    }
-
-    .token-art {
-      padding: var(--space-1);
-      border-right: 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .card-copy {
-      padding: var(--space-2) 0 var(--space-3);
-    }
+  .read-link:hover {
+    color: var(--accent);
   }
 </style>

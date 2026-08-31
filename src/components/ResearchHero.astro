@@ -1,16 +1,14 @@
 ---
-import DenoiseField from './DenoiseField.astro';
 import { withBase } from '../lib/site-config';
 
 const base = import.meta.env.BASE_URL;
 ---
 
 <section class="research-hero shell" aria-labelledby="hero-title">
-  <DenoiseField />
   <div class="hero-copy">
     <p class="hero-kicker">LLaDA / Diffusion Language Models</p>
     <h1 id="hero-title">Beyond next-token prediction.</h1>
-    <p class="hero-summary">We study how language and multimodal systems emerge through iterative diffusion and editing.</p>
+    <p class="hero-summary">LLaDA is a family of diffusion language models exploring how language and multimodal intelligence emerge through iterative denoising rather than autoregressive prediction.</p>
     <div class="hero-links">
       <a href={withBase(base, 'papers/')} data-hero-cta>
         <span class="hero-link-label">Read the publications</span>
@@ -22,26 +20,19 @@ const base = import.meta.env.BASE_URL;
 
 <style>
   .research-hero {
-    --hero-ink: var(--ink);
-    --hero-muted: var(--muted);
-    position: relative;
     display: flex;
-    align-items: center;
-    height: clamp(24rem, 60vh, 42rem);
-    overflow: hidden;
+    justify-content: center;
+    padding-block: clamp(4rem, 12vh, 8rem) clamp(2.5rem, 6vh, 4rem);
+    text-align: center;
   }
 
   .hero-copy {
-    position: relative;
-    z-index: 2;
-    width: min(38rem, 48%);
-    padding-bottom: 0.5rem;
-    pointer-events: none;
+    max-width: 46rem;
   }
 
   .hero-kicker {
     margin: 0 0 var(--space-2);
-    color: var(--hero-muted);
+    color: var(--muted);
     font-family: var(--font-mono);
     font-size: var(--text-meta);
     font-weight: 500;
@@ -52,26 +43,26 @@ const base = import.meta.env.BASE_URL;
 
   h1 {
     margin: 0;
-    color: var(--hero-ink);
+    color: var(--ink);
     font-size: var(--text-hero);
-    font-weight: 400;
-    line-height: var(--leading-hero);
-    letter-spacing: var(--tracking-hero);
+    font-weight: 500;
+    line-height: var(--leading-page);
+    letter-spacing: var(--tracking-title);
   }
 
   .hero-summary {
-    max-width: 31rem;
-    margin: var(--space-3) 0 0;
-    color: var(--hero-muted);
+    max-width: 34rem;
+    margin: var(--space-3) auto 0;
+    color: var(--muted);
     font-size: var(--text-lead);
     line-height: var(--leading-lead);
   }
 
   .hero-links {
     display: flex;
+    justify-content: center;
     gap: var(--space-3);
     margin-top: var(--space-3);
-    pointer-events: auto;
   }
 
   .hero-links a {
@@ -81,17 +72,16 @@ const base = import.meta.env.BASE_URL;
     align-items: center;
     min-height: var(--control-size);
     overflow: visible;
-    color: var(--hero-ink);
+    color: var(--ink);
     font-size: var(--text-label);
     font-weight: 600;
     line-height: var(--leading-label);
-    isolation: isolate;
     transition: color var(--motion-fast);
   }
 
   .hero-links a:hover,
   .hero-links a:focus-visible {
-    color: var(--hero-ink);
+    color: var(--accent);
   }
 
   .hero-link-label {
@@ -115,26 +105,16 @@ const base = import.meta.env.BASE_URL;
 
   @media (max-width: 800px) {
     .research-hero {
-      align-items: flex-end;
-      height: clamp(23.5rem, 70svh, 34rem);
-      padding-bottom: var(--space-5);
-    }
-
-    .hero-copy {
-      width: 84%;
-    }
-
-    .hero-kicker {
-      margin-bottom: var(--space-1);
+      padding-block: 3rem 2rem;
     }
 
     h1 {
       font-size: var(--text-hero-mobile);
-      line-height: 0.94;
+      line-height: 1.05;
     }
 
     .hero-summary {
-      max-width: 18rem;
+      max-width: 24rem;
       margin-top: var(--space-2);
       line-height: 1.55;
     }

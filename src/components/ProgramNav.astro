@@ -13,17 +13,11 @@ const programs = [
     description: 'Methods, results, and technical reports.',
     href: 'papers/',
   },
-  {
-    title: 'Notes',
-    description: 'Research updates and implementation perspectives.',
-    href: 'blog/',
-  },
 ];
 ---
 
 <section class="program-nav shell" aria-labelledby="program-nav-title">
-  <p class="program-label">Research program</p>
-  <h2 id="program-nav-title">Explore the program</h2>
+  <h2 id="program-nav-title">Explore</h2>
   <nav aria-label="Research program">
     {programs.map((program) => (
       <a href={withBase(base, program.href)} data-program-link>
@@ -40,27 +34,17 @@ const programs = [
     padding-block: clamp(1.5rem, 3vw, 2.5rem) 1rem;
   }
 
-  .program-label {
-    margin: 0 0 var(--space-1);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--type-meta);
-    line-height: var(--leading-meta);
-    letter-spacing: var(--tracking-meta);
-    text-transform: uppercase;
-  }
-
   h2 {
-    margin: 0 0 clamp(var(--space-4), 4vw, var(--space-6));
-    font-size: var(--text-section);
-    font-weight: 500;
-    line-height: var(--leading-section);
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-title-md);
+    font-weight: 600;
+    line-height: var(--leading-title-md);
     letter-spacing: var(--tracking-title);
   }
 
   nav {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     border-top: 1px solid var(--line);
   }
 
