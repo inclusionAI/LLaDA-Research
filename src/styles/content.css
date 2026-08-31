@@ -15,6 +15,8 @@
 .prose pre { overflow-x: auto; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font-size: var(--text-label); line-height: var(--leading-small); }
 .prose code:not(pre code) { padding: 0.14rem 0.35rem; border: 1px solid var(--line); border-radius: 0.2rem; background: var(--surface-soft); font-size: 0.88em; }
 .prose blockquote { margin: var(--space-4) 0; padding: var(--space-1) 0 var(--space-1) var(--space-3); border-left: 1px solid var(--ink-soft); color: var(--muted); font-size: var(--text-body); }
+.prose ul { list-style: none; margin: var(--space-2) 0; padding: 0; }
+.prose ul li { margin: 0; padding: 0.2rem 0; }
 .prose img { width: 100%; margin-block: var(--space-5); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .content-aside { order: -1; min-width: 0; }
 .content-related { min-width: 0; }
