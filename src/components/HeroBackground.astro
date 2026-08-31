@@ -1,8 +1,10 @@
 ---
 /**
- * Diffusion-pulse hero background.
- * Concentric rings expand outward from random seeds, fade as they grow — evoking
- * the iterative denoising process. Accent-tinted, subtle on white.
+ * Diffusion-field hero background.
+ *
+ * Particles start as noise, converge toward center forming structure,
+ * then disperse outward — a continuous denoising/diffusion cycle.
+ * Black/dark-grey palette on white to match the site's monochrome style.
  * Respects prefers-reduced-motion.
  */
 ---
@@ -14,28 +16,40 @@
   const ctx = el.getContext('2d')!;
   const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const RING_INTERVAL = 1200;          /* ms between new ring spawns */
-  const MAX_RINGS = 18;
-  const EXPAND_SPEED = 0.35;           /* px per frame */
-  const MAX_RADIUS_RATIO = 0.45;       /* fraction of canvas diagonal */
-  const BASE_ALPHA = 0.07;
-  const ACCENT = [97, 92, 237];        /* #615ced */
-  const MUTED  = [180, 180, 195];
+  /* ── Config ─────────────────────────────────────────────── */
+  const COUNT = 220;
+  const CYCLE_MS  = 6000;       /* one full noise→form→disperse cycle */
+  const LINE_PROB = 0.12;       /* fraction of particles that draw connecting lines */
 
-  type Ring = { cx: number; cy: number; r: number; maxR: number; rgb: number[]; phase: number };
-  const rings: Ring[] = [];
+  type P = {
+    /* noise position (random scatter) */
+    nx: number; ny: number;
+    /* formed position (structured cluster near center) */
+    fx: number; fy: number;
+    /* current render position */
+    x: number; y: number;
+    size: number;
+    shade: number;             /* 0–1 darkness */
+    kind: 'dot' | 'stroke' | 'glyph';
+    glyph: string;
+  };
+
+  const glyphs = ['[MASK]', '▧', '░', '∇', 'Δ', '···'];
+  const particles: P[] = [];
   let w = 0;
   let h = 0;
-  let diag = 0;
+  let cx = 0;
+  let cy = 0;
+  let startTime = 0;
   let raf = 0;
-  let lastSpawn = 0;
 
   function resize() {
     const rect = el.parentElement!.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio, 2);
     w = rect.width;
     h = rect.height;
-    diag = Math.hypot(w, h);
+    cx = w / 2;
+    cy = h / 2;
     el.width = w * dpr;
     el.height = h * dpr;
     el.style.width = `${w}px`;
@@ -43,71 +57,137 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function spawnRing() {
-    if (rings.length >= MAX_RINGS) return;
-    rings.push({
-      cx: w * (0.15 + Math.random() * 0.7),
-      cy: h * (0.1 + Math.random() * 0.8),
-      r: 0,
-      maxR: diag * (MAX_RADIUS_RATIO * (0.6 + Math.random() * 0.4)),
-      rgb: Math.random() > 0.35 ? ACCENT : MUTED,
-      phase: Math.random() * Math.PI * 2,
-    });
+  /* Easing: smooth bell curve — peaks at 0.5, zero at 0 and 1 */
+  function bell(t: number) {
+    return Math.sin(t * Math.PI);
   }
 
-  function frame(t: number) {
-    ctx.clearRect(0, 0, w, h);
+  function seed() {
+    resize();
+    particles.length = 0;
+    const spread = Math.min(w, h) * 0.42;
+    const formSpread = Math.min(w, h) * 0.15;
 
-    /* spawn new rings periodically */
-    if (!prefersReduced && t - lastSpawn > RING_INTERVAL) {
-      spawnRing();
-      lastSpawn = t;
+    for (let i = 0; i < COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = Math.random() * spread;
+      const fAngle = Math.random() * Math.PI * 2;
+      const fDist  = Math.pow(Math.random(), 0.6) * formSpread;
+
+      const r = Math.random();
+      let kind: P['kind'] = 'dot';
+      if (r < 0.08) kind = 'glyph';
+      else if (r < 0.25) kind = 'stroke';
+
+      particles.push({
+        nx: cx + Math.cos(angle) * dist,
+        ny: cy + Math.sin(angle) * dist,
+        fx: cx + Math.cos(fAngle) * fDist,
+        fy: cy + Math.sin(fAngle) * fDist,
+        x: 0, y: 0,
+        size: 1 + Math.random() * 2,
+        shade: 0.08 + Math.random() * 0.18,
+        kind,
+        glyph: glyphs[i % glyphs.length],
+      });
+    }
+  }
+
+  function lerp(a: number, b: number, t: number) {
+    return a + (b - a) * t;
+  }
+
+  function frame(ts: number) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+
+    /* Phase: 0→1 over each cycle. 0–0.45 = converge, 0.45–0.55 = hold, 0.55–1.0 = disperse */
+    const cycleT = (elapsed % CYCLE_MS) / CYCLE_MS;
+    let formAmount: number;
+    if (cycleT < 0.45) {
+      formAmount = bell(cycleT / 0.45 * 0.5);           /* ramp up to 1 */
+    } else if (cycleT < 0.55) {
+      formAmount = 1;                                    /* hold formed */
+    } else {
+      formAmount = bell(0.5 + (cycleT - 0.55) / 0.45 * 0.5); /* ramp down */
     }
 
-    for (let i = rings.length - 1; i >= 0; i--) {
-      const ring = rings[i]!;
-      ring.r += EXPAND_SPEED + ring.r * 0.002;   /* accelerate slightly as it grows */
-      const life = ring.r / ring.maxR;            /* 0 → 1 */
-      if (life >= 1) { rings.splice(i, 1); continue; }
+    ctx.clearRect(0, 0, w, h);
 
-      const alpha = BASE_ALPHA * (1 - life * life);   /* fade out quadratically */
-      const lineW = Math.max(0.5, 1.5 * (1 - life));
-      const [cr, cg, cb] = ring.rgb;
-
-      ctx.beginPath();
-      ctx.arc(ring.cx, ring.cy, ring.r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha})`;
-      ctx.lineWidth = lineW;
-      ctx.stroke();
-
-      /* faint filled glow for the inner area of young rings */
-      if (life < 0.3) {
-        ctx.beginPath();
-        ctx.arc(ring.cx, ring.cy, ring.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha * 0.25})`;
-        ctx.fill();
+    /* Draw connecting lines between nearby formed particles */
+    if (formAmount > 0.3) {
+      const lineAlpha = (formAmount - 0.3) * 0.1;
+      ctx.strokeStyle = `rgba(23, 25, 28, ${lineAlpha})`;
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < particles.length; i++) {
+        if (Math.random() > LINE_PROB) continue;
+        const a = particles[i];
+        for (let j = i + 1; j < Math.min(i + 15, particles.length); j++) {
+          const b = particles[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 50) {
+            ctx.globalAlpha = lineAlpha * (1 - d / 50);
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
       }
+      ctx.globalAlpha = 1;
+    }
+
+    /* Draw particles */
+    for (const p of particles) {
+      p.x = lerp(p.nx, p.fx, formAmount);
+      p.y = lerp(p.ny, p.fy, formAmount);
+
+      const alpha = p.shade * (0.5 + formAmount * 0.5);
+
+      if (p.kind === 'glyph') {
+        ctx.font = `${6 + formAmount * 2}px "IBM Plex Mono", monospace`;
+        ctx.fillStyle = `rgba(23, 25, 28, ${alpha * 0.6})`;
+        ctx.fillText(p.glyph, p.x, p.y);
+        continue;
+      }
+
+      if (p.kind === 'stroke') {
+        const angle = Math.atan2(p.fy - p.ny, p.fx - p.nx);
+        const len = 3 + formAmount * 5;
+        ctx.strokeStyle = `rgba(23, 25, 28, ${alpha * 0.7})`;
+        ctx.lineWidth = 0.6 + formAmount * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + Math.cos(angle) * len, p.y + Math.sin(angle) * len);
+        ctx.stroke();
+        continue;
+      }
+
+      /* dot */
+      const r = p.size * (0.6 + formAmount * 0.5);
+      ctx.fillStyle = `rgba(23, 25, 28, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     raf = requestAnimationFrame(frame);
   }
 
-  resize();
-  /* seed a few rings so it's not empty on load */
-  for (let i = 0; i < 6; i++) {
-    spawnRing();
-    /* stagger initial sizes so they don't all start at r=0 */
-    rings[i]!.r = diag * MAX_RADIUS_RATIO * Math.random() * 0.5;
-  }
+  seed();
   raf = requestAnimationFrame(frame);
   if (prefersReduced) {
-    frame(0);
+    /* draw one static frame at the "formed" state */
+    frame(CYCLE_MS * 0.5);
     cancelAnimationFrame(raf);
   }
 
   addEventListener('resize', () => {
-    resize();
-    if (prefersReduced) { frame(0); cancelAnimationFrame(raf); }
+    seed();
+    if (prefersReduced) {
+      frame(CYCLE_MS * 0.5);
+      cancelAnimationFrame(raf);
+    }
   });
 </script>
 

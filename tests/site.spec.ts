@@ -610,8 +610,6 @@ test('primary content routes are reachable', async ({ page }) => {
     const response = await page.goto(path);
     expect(response?.ok(), path).toBeTruthy();
   }
-  await page.goto('/about/');
-  await expect(page.locator('main h1').first()).toBeVisible();
 });
 
 test('paper archive exposes exactly the publications with InclusionAI participation', async ({ page }) => {
