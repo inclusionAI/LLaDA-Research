@@ -13,10 +13,6 @@ const base = import.meta.env.BASE_URL;
 
 <BaseLayout title="Models" description="Explore released models across the LLaDA diffusion research family.">
   <div class="archive-page shell">
-    <header class="page-intro">
-      <h1>Models</h1>
-      <p>Language and multimodal diffusion models with InclusionAI participation, with checkpoints, code, and verified release resources.</p>
-    </header>
     <ArchiveFilter tags={tags} total={entries.length} />
     <div class="archive-list">
       {entries.map((entry) => (

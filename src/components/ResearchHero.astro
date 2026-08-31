@@ -1,10 +1,12 @@
 ---
 import { withBase } from '../lib/site-config';
+import HeroBackground from './HeroBackground.astro';
 
 const base = import.meta.env.BASE_URL;
 ---
 
 <section class="research-hero shell" aria-labelledby="hero-title">
+  <HeroBackground />
   <div class="hero-copy">
     <p class="hero-kicker">LLaDA / Diffusion Language Models</p>
     <h1 id="hero-title">Beyond next-token prediction.</h1>
@@ -20,13 +22,17 @@ const base = import.meta.env.BASE_URL;
 
 <style>
   .research-hero {
+    position: relative;
     display: flex;
     justify-content: center;
     padding-block: clamp(4rem, 12vh, 8rem) clamp(2.5rem, 6vh, 4rem);
     text-align: center;
+    overflow: hidden;
   }
 
   .hero-copy {
+    position: relative;
+    z-index: 1;
     max-width: 46rem;
   }
 

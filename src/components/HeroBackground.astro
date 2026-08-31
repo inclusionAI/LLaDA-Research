@@ -1,0 +1,89 @@
+---
+/**
+ * Lightweight floating-dot background for the homepage hero.
+ * Pure canvas, no dependencies, ~50 dots drifting slowly.
+ * Respects prefers-reduced-motion.
+ */
+---
+
+<canvas class="hero-bg" aria-hidden="true" data-hero-bg></canvas>
+
+<script>
+  const el = document.querySelector<HTMLCanvasElement>('[data-hero-bg]')!;
+  const ctx = el.getContext('2d')!;
+
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DOT_COUNT = 50;
+  const MAX_R = 2.5;
+  const SPD = prefersReduced ? 0 : 0.15;
+  const C1 = 'rgba(97, 92, 237, 0.12)';
+  const C2 = 'rgba(170, 170, 180, 0.08)';
+
+  type Dot = { x: number; y: number; vx: number; vy: number; r: number; c: string };
+  const dots: Dot[] = [];
+  let w = 0;
+  let h = 0;
+  let raf = 0;
+
+  function resize() {
+    const rect = el.parentElement!.getBoundingClientRect();
+    const dpr = Math.min(devicePixelRatio, 2);
+    w = rect.width;
+    h = rect.height;
+    el.width = w * dpr;
+    el.height = h * dpr;
+    el.style.width = `${w}px`;
+    el.style.height = `${h}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function seed() {
+    resize();
+    dots.length = 0;
+    for (let i = 0; i < DOT_COUNT; i++) {
+      dots.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * SPD * 2,
+        vy: (Math.random() - 0.5) * SPD * 2,
+        r: Math.random() * MAX_R + 0.5,
+        c: Math.random() > 0.4 ? C1 : C2,
+      });
+    }
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, w, h);
+    for (const d of dots) {
+      d.x += d.vx;
+      d.y += d.vy;
+      if (d.x < -10) d.x = w + 10;
+      if (d.x > w + 10) d.x = -10;
+      if (d.y < -10) d.y = h + 10;
+      if (d.y > h + 10) d.y = -10;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = d.c;
+      ctx.fill();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  seed();
+  frame();
+  if (prefersReduced) cancelAnimationFrame(raf);
+
+  addEventListener('resize', () => {
+    resize();
+    if (prefersReduced) { frame(); cancelAnimationFrame(raf); }
+  });
+</script>
+
+<style>
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+</style>
