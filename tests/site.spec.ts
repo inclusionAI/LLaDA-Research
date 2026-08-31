@@ -504,8 +504,17 @@ test('citation live status meets WCAG AA contrast', async ({ page }) => {
       });
       return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
     };
+    const resolveBackground = (el: Element): string => {
+      let node: Element | null = el;
+      while (node) {
+        const color = getComputedStyle(node).backgroundColor;
+        if (color && !color.startsWith('rgba(0, 0, 0, 0') && color !== 'transparent') return color;
+        node = node.parentElement;
+      }
+      return 'rgb(255, 255, 255)';
+    };
     const foreground = luminance(getComputedStyle(element).color);
-    const background = luminance(getComputedStyle(element.closest('.citation')!).backgroundColor);
+    const background = luminance(resolveBackground(element));
     return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
   });
   expect(contrast).toBeGreaterThanOrEqual(4.5);

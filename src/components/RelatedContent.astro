@@ -30,8 +30,7 @@ const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blo
 
 {related.length > 0 && (
   <section class="related" aria-labelledby="related-title">
-    <p class="eyebrow">Continue exploring</p>
-    <h2 id="related-title">Related research</h2>
+    <h2 id="related-title">Related</h2>
     <div class="related-grid">
       {related.map((entry) => (
         <a href={withBase(base, `${pathByKind[entry.kind]}/${entry.id}/`)}>
@@ -46,31 +45,29 @@ const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blo
 
 <style>
   .related {
-    margin-top: var(--space-4);
+    margin-top: var(--space-6);
     padding-top: var(--space-4);
     border-top: 1px solid var(--line);
   }
 
   .related > h2 {
     margin: 0 0 var(--space-3);
-    font-size: var(--text-section);
-    font-weight: 500;
-    line-height: var(--leading-section);
+    font-size: var(--text-title-md);
+    font-weight: 600;
+    line-height: var(--leading-title-md);
     letter-spacing: var(--tracking-title);
   }
 
   .related-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-    border-bottom: 1px solid var(--line);
+    gap: var(--space-4);
   }
 
   .related-grid a {
-    min-height: 10rem;
-    padding: var(--space-2);
-    border-top: 1px solid var(--line);
-    border-right: 1px solid var(--line);
+    display: block;
+    padding: 0;
+    border: 0;
     text-decoration: none;
   }
 
@@ -85,7 +82,7 @@ const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blo
   }
 
   .related-grid h3 {
-    margin: var(--space-1) 0;
+    margin: var(--space-1) 0 0;
     font-size: var(--text-title-sm);
     font-weight: 500;
     line-height: var(--leading-title-sm);
@@ -93,7 +90,7 @@ const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blo
   }
 
   .related-grid p {
-    margin: 0;
+    margin: var(--space-1) 0 0;
     color: var(--muted);
     font-size: var(--type-small);
     line-height: var(--leading-small);

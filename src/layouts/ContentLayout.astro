@@ -41,8 +41,8 @@ const formatDate = (value: Date) => value.toLocaleDateString('en-US', {
       </div>
     </header>
     <div class="content-body shell">
-      <div class="prose"><slot /></div>
       <aside class="content-aside"><slot name="aside" /></aside>
+      <div class="prose"><slot /></div>
       <div class="content-related"><slot name="related" /></div>
     </div>
   </article>
