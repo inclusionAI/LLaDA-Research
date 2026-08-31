@@ -38,11 +38,6 @@ const formatDate = (value: Date) => value.toLocaleDateString('en-US', {
         {updatedDate && <span>Updated {formatDate(updatedDate)}</span>}
         {authors.length > 0 && <span>{authors.join(', ')}</span>}
         {participants.length > 0 && <span>Research with {participants.join(', ')}</span>}
-        {tags.length > 0 && (
-          <ul class="tag-list" aria-label="Tags">
-            {tags.map((tag) => <li class="tag">{tag}</li>)}
-          </ul>
-        )}
       </div>
     </header>
     <div class="content-body shell">

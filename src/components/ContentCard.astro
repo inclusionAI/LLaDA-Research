@@ -31,9 +31,6 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     </div>
     <h2><a href={href}>{title}</a></h2>
     <p>{summary}</p>
-    <ul class="tag-list" aria-label="Tags">
-      {tags.map((tag) => <li class="tag">{tag}</li>)}
-    </ul>
     <div class="card-footer">
       <a class="read-link" href={href}>Read more <span aria-hidden="true">→</span></a>
       <ResourceLinks links={links} compact />
