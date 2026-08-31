@@ -5,7 +5,7 @@
 }
 .content-summary { max-width: 48rem; margin: 0; color: var(--muted); font-size: var(--text-lead); line-height: var(--leading-lead); }
 .content-meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: center; margin-top: var(--space-4); color: var(--muted); font-family: var(--font-mono); font-size: var(--text-meta); line-height: var(--leading-meta); letter-spacing: var(--tracking-technical); }
-.content-body { display: grid; grid-template-columns: 1fr; row-gap: var(--space-5); align-items: start; padding-block: var(--space-6) var(--space-10); }
+.content-body { display: grid; grid-template-columns: 1fr; row-gap: var(--space-5); align-items: start; padding-block: var(--space-6) var(--space-6); }
 .prose { min-width: 0; max-width: 44rem; color: var(--ink-soft); font-size: var(--text-reading); line-height: var(--leading-reading); }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3 { color: var(--ink); font-weight: 500; letter-spacing: var(--tracking-title); }

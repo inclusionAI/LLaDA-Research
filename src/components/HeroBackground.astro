@@ -2,10 +2,10 @@
 /**
  * Diffusion-field hero background.
  *
- * Particles start as noise, converge toward center forming structure,
- * then disperse outward — a continuous denoising/diffusion cycle.
- * Black/dark-grey palette on white to match the site's monochrome style.
- * Respects prefers-reduced-motion.
+ * Particles start as scattered noise, converge into a ring-shaped structure
+ * around the headline, hold, then disperse outward and fade — one denoising
+ * cycle every 7s. Monochrome ink + a few accent-tinted particles.
+ * Respects prefers-reduced-motion (renders the formed state once).
  */
 ---
 
@@ -16,32 +16,52 @@
   const ctx = el.getContext('2d')!;
   const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── Config ─────────────────────────────────────────────── */
-  const COUNT = 220;
-  const CYCLE_MS  = 6000;       /* one full noise→form→disperse cycle */
-  const LINE_PROB = 0.12;       /* fraction of particles that draw connecting lines */
+  const CYCLE_MS = 7000;
+  const INK = '23, 25, 28';
+  const ACCENT = '97, 92, 237';
+  const GLYPHS = ['[MASK]', '▧', '░', '∇', '···'];
 
+  type Kind = 'dot' | 'stroke' | 'glyph';
   type P = {
-    /* noise position (random scatter) */
-    nx: number; ny: number;
-    /* formed position (structured cluster near center) */
-    fx: number; fy: number;
-    /* current render position */
-    x: number; y: number;
+    nx: number; ny: number;      /* noise position */
+    fx: number; fy: number;      /* formed position (ring) */
+    ex: number; ey: number;      /* exploded position */
+    x: number; y: number;        /* current */
+    a: number;                   /* current alpha scale 0–1 */
     size: number;
-    shade: number;             /* 0–1 darkness */
-    kind: 'dot' | 'stroke' | 'glyph';
+    shade: number;
+    accent: boolean;
+    kind: Kind;
     glyph: string;
+    wob: number;
   };
 
-  const glyphs = ['[MASK]', '▧', '░', '∇', 'Δ', '···'];
   const particles: P[] = [];
   let w = 0;
   let h = 0;
   let cx = 0;
   let cy = 0;
-  let startTime = 0;
+  let start = 0;
   let raf = 0;
+
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const smooth = (v: number) => {
+    const c = Math.max(0, Math.min(1, v));
+    return c * c * (3 - 2 * c);
+  };
+
+  /* Returns 0 inside the headline text zone, 1 outside, smooth in between.
+     Keeps particles from colliding with the copy. */
+  function textFade(x: number, y: number) {
+    const rx = w * 0.26;
+    const ry = h * 0.24;
+    const dx = (x - cx) / rx;
+    const dy = (y - cy) / ry;
+    const d = Math.hypot(dx, dy);
+    if (d > 1.15) return 1;
+    if (d < 0.72) return 0;
+    return smooth((d - 0.72) / (1.15 - 0.72));
+  }
 
   function resize() {
     const rect = el.parentElement!.getBoundingClientRect();
@@ -57,137 +77,147 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  /* Easing: smooth bell curve — peaks at 0.5, zero at 0 and 1 */
-  function bell(t: number) {
-    return Math.sin(t * Math.PI);
-  }
-
   function seed() {
     resize();
     particles.length = 0;
-    const spread = Math.min(w, h) * 0.42;
-    const formSpread = Math.min(w, h) * 0.15;
+    const count = w < 700 ? 170 : 320;
+    const rx = Math.min(w * 0.44, 600);
+    const ry = Math.min(h * 0.36, 320);
 
-    for (let i = 0; i < COUNT; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist  = Math.random() * spread;
-      const fAngle = Math.random() * Math.PI * 2;
-      const fDist  = Math.pow(Math.random(), 0.6) * formSpread;
+    for (let i = 0; i < count; i++) {
+      /* noise: anywhere across the canvas */
+      const na = Math.random() * Math.PI * 2;
+      const nd = 0.25 + Math.random() * 0.75;
+      const nx = cx + Math.cos(na) * (w / 2) * nd * 1.15;
+      const ny = cy + Math.sin(na) * (h / 2) * nd * 1.15;
+
+      /* formed: elliptical annulus around the centered text */
+      const fa = Math.random() * Math.PI * 2;
+      const fd = 0.4 + 0.6 * Math.sqrt(Math.random());
+      const fx = cx + Math.cos(fa) * rx * fd;
+      const fy = cy + Math.sin(fa) * ry * fd;
+
+      /* exploded: beyond the noise position */
+      const ex = cx + (nx - cx) * 1.5;
+      const ey = cy + (ny - cy) * 1.5;
 
       const r = Math.random();
-      let kind: P['kind'] = 'dot';
-      if (r < 0.08) kind = 'glyph';
-      else if (r < 0.25) kind = 'stroke';
+      const kind: Kind = r < 0.07 ? 'glyph' : r < 0.24 ? 'stroke' : 'dot';
 
       particles.push({
-        nx: cx + Math.cos(angle) * dist,
-        ny: cy + Math.sin(angle) * dist,
-        fx: cx + Math.cos(fAngle) * fDist,
-        fy: cy + Math.sin(fAngle) * fDist,
-        x: 0, y: 0,
-        size: 1 + Math.random() * 2,
-        shade: 0.08 + Math.random() * 0.18,
+        nx, ny, fx, fy, ex, ey,
+        x: nx, y: ny, a: 0,
+        size: 1.2 + Math.random() * 2.2,
+        shade: 0.22 + Math.random() * 0.3,
+        accent: Math.random() < 0.12,
         kind,
-        glyph: glyphs[i % glyphs.length],
+        glyph: GLYPHS[i % GLYPHS.length] ?? '·',
+        wob: Math.random() * Math.PI * 2,
       });
     }
   }
 
-  function lerp(a: number, b: number, t: number) {
-    return a + (b - a) * t;
-  }
-
-  function frame(ts: number) {
-    if (!startTime) startTime = ts;
-    const elapsed = ts - startTime;
-
-    /* Phase: 0→1 over each cycle. 0–0.45 = converge, 0.45–0.55 = hold, 0.55–1.0 = disperse */
-    const cycleT = (elapsed % CYCLE_MS) / CYCLE_MS;
-    let formAmount: number;
-    if (cycleT < 0.45) {
-      formAmount = bell(cycleT / 0.45 * 0.5);           /* ramp up to 1 */
-    } else if (cycleT < 0.55) {
-      formAmount = 1;                                    /* hold formed */
-    } else {
-      formAmount = bell(0.5 + (cycleT - 0.55) / 0.45 * 0.5); /* ramp down */
-    }
-
+  function draw(t: number, timeMs: number) {
     ctx.clearRect(0, 0, w, h);
 
-    /* Draw connecting lines between nearby formed particles */
-    if (formAmount > 0.3) {
-      const lineAlpha = (formAmount - 0.3) * 0.1;
-      ctx.strokeStyle = `rgba(23, 25, 28, ${lineAlpha})`;
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < particles.length; i++) {
-        if (Math.random() > LINE_PROB) continue;
-        const a = particles[i];
-        for (let j = i + 1; j < Math.min(i + 15, particles.length); j++) {
-          const b = particles[j];
-          const d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < 50) {
-            ctx.globalAlpha = lineAlpha * (1 - d / 50);
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
+    /* ── update positions ── */
+    for (const p of particles) {
+      let ax: number;
+      let ay: number;
+      if (t < 0.4) {                      /* converge: noise → formed */
+        const k = smooth(t / 0.4);
+        ax = lerp(p.nx, p.fx, k);
+        ay = lerp(p.ny, p.fy, k);
+        p.a = 0.35 + 0.65 * k;
+      } else if (t < 0.52) {              /* hold formed */
+        ax = p.fx;
+        ay = p.fy;
+        p.a = 1;
+      } else if (t < 0.85) {              /* disperse: formed → exploded, fade */
+        const k = smooth((t - 0.52) / 0.33);
+        ax = lerp(p.fx, p.ex, k);
+        ay = lerp(p.fy, p.ey, k);
+        p.a = 1 - k;
+      } else {                            /* respawn at noise, fade in */
+        ax = p.nx;
+        ay = p.ny;
+        p.a = 0.35 * ((t - 0.85) / 0.15);
       }
-      ctx.globalAlpha = 1;
+      p.x = ax + Math.sin(timeMs * 0.0009 + p.wob) * 2.2;
+      p.y = ay + Math.cos(timeMs * 0.0011 + p.wob * 1.3) * 2.2;
+      /* skip particles that fall inside the text-protect zone */
+      p.a *= textFade(p.x, p.y);
     }
 
-    /* Draw particles */
-    for (const p of particles) {
-      p.x = lerp(p.nx, p.fx, formAmount);
-      p.y = lerp(p.ny, p.fy, formAmount);
+    /* ── connecting lines between formed neighbours ── */
+    ctx.lineWidth = 0.7;
+    for (let i = 0; i < particles.length; i++) {
+      const a = particles[i]!;
+      if (a.a < 0.5) continue;
+      const channel = a.accent ? ACCENT : INK;
+      for (let j = i + 1; j < Math.min(i + 12, particles.length); j++) {
+        const b = particles[j]!;
+        if (b.a < 0.5) continue;
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d > 64) continue;
+        const alpha = 0.14 * (1 - d / 64) * Math.min(a.a, b.a);
+        ctx.strokeStyle = `rgba(${channel}, ${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
 
-      const alpha = p.shade * (0.5 + formAmount * 0.5);
+    /* ── particles ── */
+    for (const p of particles) {
+      if (p.a <= 0.02) continue;
+      const channel = p.accent ? ACCENT : INK;
 
       if (p.kind === 'glyph') {
-        ctx.font = `${6 + formAmount * 2}px "IBM Plex Mono", monospace`;
-        ctx.fillStyle = `rgba(23, 25, 28, ${alpha * 0.6})`;
+        ctx.font = `${7 + p.size * 1.6}px "IBM Plex Mono", monospace`;
+        ctx.fillStyle = `rgba(${channel}, ${p.shade * p.a * 0.75})`;
         ctx.fillText(p.glyph, p.x, p.y);
         continue;
       }
 
       if (p.kind === 'stroke') {
-        const angle = Math.atan2(p.fy - p.ny, p.fx - p.nx);
-        const len = 3 + formAmount * 5;
-        ctx.strokeStyle = `rgba(23, 25, 28, ${alpha * 0.7})`;
-        ctx.lineWidth = 0.6 + formAmount * 0.3;
+        const ang = Math.atan2(p.fy - p.ny, p.fx - p.nx);
+        const len = 4 + p.size * 2.4;
+        ctx.strokeStyle = `rgba(${channel}, ${p.shade * p.a * 0.85})`;
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x + Math.cos(angle) * len, p.y + Math.sin(angle) * len);
+        ctx.lineTo(p.x + Math.cos(ang) * len, p.y + Math.sin(ang) * len);
         ctx.stroke();
         continue;
       }
 
-      /* dot */
-      const r = p.size * (0.6 + formAmount * 0.5);
-      ctx.fillStyle = `rgba(23, 25, 28, ${alpha})`;
+      const r = p.size * (0.7 + p.a * 0.4);
+      ctx.fillStyle = `rgba(${channel}, ${p.shade * p.a})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
 
-    raf = requestAnimationFrame(frame);
+  function loop(ts: number) {
+    if (!start) start = ts;
+    const t = ((ts - start) % CYCLE_MS) / CYCLE_MS;
+    draw(t, ts);
+    raf = requestAnimationFrame(loop);
   }
 
   seed();
-  raf = requestAnimationFrame(frame);
   if (prefersReduced) {
-    /* draw one static frame at the "formed" state */
-    frame(CYCLE_MS * 0.5);
-    cancelAnimationFrame(raf);
+    draw(0.45, 0);   /* static formed state */
+  } else {
+    raf = requestAnimationFrame(loop);
   }
 
   addEventListener('resize', () => {
     seed();
-    if (prefersReduced) {
-      frame(CYCLE_MS * 0.5);
-      cancelAnimationFrame(raf);
-    }
+    if (prefersReduced) draw(0.45, 0);
   });
 </script>
 

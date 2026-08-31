@@ -204,7 +204,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   color: var(--muted); font-size: var(--type-meta); font-weight: 500; line-height: var(--leading-meta);
 }
 
-.site-footer { margin-top: var(--space-12); border-top: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.site-footer { margin-top: var(--space-8); border-top: 1px solid var(--line); background: var(--surface); color: var(--muted); }
 .footer-inner { display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-6); align-items: center; min-height: 8rem; }
 .site-footer .brand { color: var(--ink); }
 .site-footer .brand-logo { width: 5.5rem; }
