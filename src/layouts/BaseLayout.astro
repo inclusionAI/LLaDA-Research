@@ -15,7 +15,7 @@ interface Props {
 const {
   title = 'LLaDA — Diffusion Language Models',
   description = 'Models and publications from the LLaDA research family.',
-  image,
+  image = 'og-card.png',
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
