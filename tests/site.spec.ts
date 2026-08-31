@@ -149,14 +149,15 @@ test('site typography hierarchy distinguishes headings, supporting copy, and met
   expect(workSummary).toBeGreaterThanOrEqual(14);
   expect(programTitle).toBeGreaterThanOrEqual(16);
   expect(programDescription).toBeGreaterThanOrEqual(13);
-  expect(sectionTitle).toBeGreaterThan(workTitle);
+  /* unified scale: section titles and entry titles share the 32px step */
+  expect(Math.abs(sectionTitle - workTitle)).toBeLessThanOrEqual(1);
   const sectionTitleWeight = await page.locator('.selected-work h2').first().evaluate((element) => (
     Number.parseInt(getComputedStyle(element).fontWeight, 10)
   ));
   const workTitleWeight = await page.locator('.work-copy h3').first().evaluate((element) => (
     Number.parseInt(getComputedStyle(element).fontWeight, 10)
   ));
-  expect(sectionTitleWeight).toBeLessThanOrEqual(workTitleWeight);
+  expect(sectionTitleWeight).toBeGreaterThanOrEqual(workTitleWeight);
   expect(await fontSize('.desktop-nav a')).toBeGreaterThanOrEqual(12);
 
   await page.goto('/models/');
@@ -571,7 +572,8 @@ test('homepage editorial hierarchy separates labels, sections, entries, and supp
   });
 
   expect(metrics.hero).toBeGreaterThan(metrics.section);
-  expect(metrics.section).toBeGreaterThan(metrics.item);
+  /* unified scale: section title and entry title share the same step */
+  expect(Math.abs(metrics.section - metrics.item)).toBeLessThanOrEqual(1);
   expect(metrics.item).toBeGreaterThan(metrics.summary);
   expect(metrics.summary).toBeGreaterThan(metrics.metadata);
   expect(metrics.heroSummary).toBeGreaterThan(metrics.heroKicker);
