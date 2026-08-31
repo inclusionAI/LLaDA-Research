@@ -351,15 +351,14 @@ test('primary navigation uses journal labels without changing route paths', asyn
   });
   await expect(navigation.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
   await expect(navigation.getByRole('link', { name: 'Papers', exact: true })).toHaveCount(0);
-  await expect(navigation.getByRole('link', { name: 'Blog', exact: true })).toHaveCount(0);
-  await expect(navigation.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
+  await expect(navigation.getByRole('link', { name: 'Blog', exact: true })).toHaveAttribute('href', '/blog/');
 });
 
 test('publication labels are consistent across recovery pages', async ({ page }) => {
   await page.goto('/404.html');
   const recovery = page.getByRole('navigation', { name: 'Page recovery' });
   await expect(recovery.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
-  await expect(recovery.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
+  await expect(recovery.getByRole('link', { name: 'Blog', exact: true })).toHaveAttribute('href', '/blog/');
 });
 
 test('mobile menu is a flat light surface', async ({ page, isMobile }) => {

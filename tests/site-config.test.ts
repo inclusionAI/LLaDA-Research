@@ -19,10 +19,10 @@ describe('public assets', () => {
     expect(withBase('/ant-llada', 'llada-logo-black.svg')).toBe('/ant-llada/llada-logo-black.svg');
   });
 
-  it('uses Notes as the RSS channel title', () => {
+  it('uses Blog as the RSS channel title', () => {
     const source = readFileSync(new URL('../src/pages/rss.xml.ts', import.meta.url), 'utf8');
 
-    expect(source).toContain("title: 'LLaDA Research Notes'");
+    expect(source).toContain("title: 'LLaDA Blog'");
     expect(source).not.toContain('LLaDA Research Blog');
   });
 });
