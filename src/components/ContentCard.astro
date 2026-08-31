@@ -31,8 +31,8 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     </div>
     <h2><a href={href}>{title}</a></h2>
     <p>{summary}</p>
-    <div class="card-footer">
-      <a class="read-link" href={href}>Read more <span aria-hidden="true">→</span></a>
+    <div class="card-links">
+      <a class="card-link" href={href}>Read more <span aria-hidden="true">→</span></a>
       <ResourceLinks links={links} compact />
     </div>
   </div>
@@ -119,27 +119,25 @@ const resolvedCover = cover ? resolveAssetUrl(import.meta.env.BASE_URL, cover) :
     line-height: var(--leading-body);
   }
 
-  .card-footer {
+  .card-links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-3);
     align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--line);
+    margin-top: var(--space-1);
   }
 
-  .read-link {
+  .card-link {
     display: inline-flex;
     align-items: center;
     min-height: var(--control-size);
     color: var(--ink-soft);
     font-size: var(--type-label);
     font-weight: 600;
+    transition: color var(--motion-fast);
   }
 
-  .read-link:hover {
+  .card-link:hover {
     color: var(--accent);
   }
 </style>

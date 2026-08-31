@@ -74,18 +74,18 @@ const available = definitions.filter(([key]) => Boolean(links[key]));
 
   .compact .resource-link {
     min-height: var(--control-size);
-    min-width: var(--control-size);
-    padding: 0 var(--space-1);
+    padding: 0;
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: var(--muted);
-    font-size: var(--type-meta);
+    color: var(--ink-soft);
+    font-size: var(--type-label);
+    font-weight: 600;
     justify-content: center;
   }
 
   .compact .resource-link:hover {
-    color: var(--ink);
+    color: var(--accent);
     transform: none;
   }
 </style>
