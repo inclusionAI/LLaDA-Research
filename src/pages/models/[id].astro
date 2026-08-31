@@ -13,13 +13,15 @@ export async function getStaticPaths() {
 interface Props { entry: CollectionEntry<'models'> }
 const { entry } = Astro.props as Props;
 const { Content } = await render(entry);
-const [models, papers] = await Promise.all([
+const [models, papers, posts] = await Promise.all([
   getCollection('models', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
   getCollection('papers', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
+  getCollection('blog', ({ data }) => isEntryVisible(data.draft, import.meta.env.DEV)),
 ]);
 const relatedEntries = [
   ...models.map((item) => ({ ...item, kind: 'model' as const })),
   ...papers.map((item) => ({ ...item, kind: 'paper' as const })),
+  ...posts.map((item) => ({ ...item, kind: 'blog' as const })),
 ];
 ---
 

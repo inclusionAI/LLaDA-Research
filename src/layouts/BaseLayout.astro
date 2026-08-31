@@ -14,7 +14,7 @@ interface Props {
 
 const {
   title = 'LLaDA — Diffusion Language Models',
-  description = 'Models and publications from the LLaDA research family.',
+  description = 'Models, publications, and notes from the LLaDA research family.',
   image = 'og-card.png',
 } = Astro.props;
 
@@ -34,6 +34,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
     <meta name="description" content={description} />
     <meta name="theme-color" content="#FFFFFF" />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="LLaDA Notes" href={local('rss.xml')} />
     <link rel="icon" type="image/png" href={favicon} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
@@ -53,6 +54,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
         <nav class="desktop-nav" aria-label="Primary navigation">
           <a href={local('models/')}>Models</a>
           <a href={local('papers/')}>Publications</a>
+          <a href={local('blog/')}>Notes</a>
           <a href={local('about/')}>About</a>
           <a href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub <span class="external-arrow">↗</span></a>
         </nav>
@@ -61,6 +63,7 @@ const openGraphImage = image ? new URL(resolveAssetUrl(base, image), Astro.site)
           <nav class="mobile-menu" aria-label="Mobile navigation">
             <a href={local('models/')}>Models</a>
             <a href={local('papers/')}>Publications</a>
+            <a href={local('blog/')}>Notes</a>
             <a href={local('about/')}>About</a>
             <a href="https://github.com/inclusionAI/LLaDA2.X" target="_blank" rel="noreferrer">GitHub ↗</a>
           </nav>

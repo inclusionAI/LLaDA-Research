@@ -1,17 +1,16 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
-import CitationCopy from '../../components/CitationCopy.astro';
 import RelatedContent from '../../components/RelatedContent.astro';
 import ResourceLinks from '../../components/ResourceLinks.astro';
 import ContentLayout from '../../layouts/ContentLayout.astro';
 import { isEntryVisible } from '../../lib/content';
 
 export async function getStaticPaths() {
-  const entries = (await getCollection('papers')).filter(({ data }) => isEntryVisible(data.draft, import.meta.env.DEV));
+  const entries = (await getCollection('blog')).filter(({ data }) => isEntryVisible(data.draft, import.meta.env.DEV));
   return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
 }
 
-interface Props { entry: CollectionEntry<'papers'> }
+interface Props { entry: CollectionEntry<'blog'> }
 const { entry } = Astro.props as Props;
 const { Content } = await render(entry);
 const [models, papers, posts] = await Promise.all([
@@ -28,10 +27,9 @@ const relatedEntries = [
 
 <ContentLayout {...entry.data}>
   <div slot="aside" class="resource-panel">
-    <p>{entry.data.venue ?? 'Research paper'}</p>
+    <p>{entry.data.category}</p>
     <ResourceLinks links={entry.data.links} />
-    <CitationCopy citation={entry.data.citation} />
   </div>
   <Content />
-  <RelatedContent slot="related" currentId={entry.id} currentKind="paper" entries={relatedEntries} tags={entry.data.tags} />
+  <RelatedContent slot="related" currentId={entry.id} currentKind="blog" entries={relatedEntries} tags={entry.data.tags} />
 </ContentLayout>

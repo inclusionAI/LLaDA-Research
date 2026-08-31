@@ -44,3 +44,9 @@ export const paperSchema = commonSchema.extend({
   citation: z.string().optional(),
   links: resourceLinksSchema,
 });
+
+export const blogSchema = commonSchema.extend({
+  category: z.enum(['Release', 'Research', 'Engineering', 'Perspective']),
+  readingTime: z.string().optional(),
+  links: resourceLinksSchema,
+});

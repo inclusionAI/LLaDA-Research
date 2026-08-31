@@ -352,14 +352,14 @@ test('primary navigation uses journal labels without changing route paths', asyn
   await expect(navigation.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
   await expect(navigation.getByRole('link', { name: 'Papers', exact: true })).toHaveCount(0);
   await expect(navigation.getByRole('link', { name: 'Blog', exact: true })).toHaveCount(0);
-  await expect(navigation.getByRole('link', { name: 'Notes', exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
 });
 
 test('publication labels are consistent across recovery pages', async ({ page }) => {
   await page.goto('/404.html');
   const recovery = page.getByRole('navigation', { name: 'Page recovery' });
   await expect(recovery.getByRole('link', { name: 'Publications', exact: true })).toHaveAttribute('href', '/papers/');
-  await expect(recovery.getByRole('link', { name: 'Notes', exact: true })).toHaveCount(0);
+  await expect(recovery.getByRole('link', { name: 'Notes', exact: true })).toHaveAttribute('href', '/blog/');
 });
 
 test('mobile menu is a flat light surface', async ({ page, isMobile }) => {
@@ -583,7 +583,7 @@ test('homepage editorial hierarchy separates labels, sections, entries, and supp
 });
 
 test('supporting pages share the light visual system', async ({ page }) => {
-  for (const path of ['/models/', '/papers/', '/about/', '/404.html']) {
+  for (const path of ['/models/', '/papers/', '/blog/', '/about/', '/404.html']) {
     await page.goto(path);
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await expect(page.locator('body')).toHaveCSS('color', 'rgb(23, 25, 28)');
@@ -622,7 +622,7 @@ test('editorial type roles and touch targets follow the shared system', async ({
 });
 
 test('primary content routes are reachable', async ({ page }) => {
-  for (const path of ['/models/', '/papers/', '/about/']) {
+  for (const path of ['/models/', '/papers/', '/blog/', '/about/']) {
     const response = await page.goto(path);
     expect(response?.ok(), path).toBeTruthy();
   }

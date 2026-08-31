@@ -2,7 +2,7 @@
 import { selectRelated } from '../lib/archive';
 import { withBase } from '../lib/site-config';
 
-type Kind = 'model' | 'paper';
+type Kind = 'model' | 'paper' | 'blog';
 
 interface Entry {
   id: string;
@@ -25,7 +25,7 @@ interface Props {
 const { currentId, currentKind, entries, tags } = Astro.props;
 const related = selectRelated(entries, { id: currentId, kind: currentKind }, tags);
 const base = import.meta.env.BASE_URL;
-const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers' };
+const pathByKind: Record<Kind, string> = { model: 'models', paper: 'papers', blog: 'blog' };
 ---
 
 {related.length > 0 && (
